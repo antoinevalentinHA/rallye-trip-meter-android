@@ -90,6 +90,7 @@ fun TripMeterScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 PartialCorrectionControls(
+                    enabled = state.arePartialControlsEnabled,
                     onAdjustPartialMinus100 = onAdjustPartialMinus100,
                     onAdjustPartialMinus10 = onAdjustPartialMinus10,
                     onResetPartial = onResetPartial,
@@ -190,6 +191,7 @@ private fun StatusBar(
 
 @Composable
 private fun PartialCorrectionControls(
+    enabled: Boolean,
     onAdjustPartialMinus100: () -> Unit,
     onAdjustPartialMinus10: () -> Unit,
     onResetPartial: () -> Unit,
@@ -203,30 +205,35 @@ private fun PartialCorrectionControls(
         TripButton(
             label = "-100 m",
             onClick = onAdjustPartialMinus100,
+            enabled = enabled,
             modifier = Modifier.weight(1f)
         )
 
         TripButton(
             label = "-10 m",
             onClick = onAdjustPartialMinus10,
+            enabled = enabled,
             modifier = Modifier.weight(1f)
         )
 
         TripButton(
             label = "RESET\nPARTIEL",
             onClick = onResetPartial,
+            enabled = enabled,
             modifier = Modifier.weight(1.6f)
         )
 
         TripButton(
             label = "+10 m",
             onClick = onAdjustPartialPlus10,
+            enabled = enabled,
             modifier = Modifier.weight(1f)
         )
 
         TripButton(
             label = "+100 m",
             onClick = onAdjustPartialPlus100,
+            enabled = enabled,
             modifier = Modifier.weight(1f)
         )
     }
