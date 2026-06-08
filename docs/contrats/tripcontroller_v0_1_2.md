@@ -1,6 +1,6 @@
 # Trip Meter Rallye Android — TripController v0.1.2
 
-Statut : PROPOSITION (révision v0.1.2)  
+Statut : VALIDÉ  
 Dépend de :
 
 - Contrat fonctionnel v0.2 validé
@@ -9,6 +9,14 @@ Dépend de :
 - LocationEngine v0.1
 
 Objet : couche de commande métier entre l’interface utilisateur et TripState
+
+---
+
+## Validation du palier documentaire
+
+TripController v0.1.2 est VALIDÉ. Revue de validation : aucune décision ouverte, aucun invariant
+contradictoire, GPS_DISCONTINUITY reçu et traité, writer unique de distance_reference_dirty
+respecté, stratégie de persistance cohérente. Le fond n'a pas été modifié lors de la validation.
 
 ---
 

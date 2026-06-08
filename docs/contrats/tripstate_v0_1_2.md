@@ -1,8 +1,16 @@
 # Trip Meter Rallye Android — TripState v0.1.2
 
-Statut : PROPOSITION (révision v0.1.2)  
+Statut : VALIDÉ  
 Dépend de : Contrat fonctionnel v0.2 validé, LocationEngine v0.1  
 Objet : état métier central de l’application
+
+---
+
+## Validation du palier documentaire
+
+TripState v0.1.2 est VALIDÉ. Revue de validation : aucune décision ouverte, aucun invariant
+contradictoire, writers et seuils partagés cohérents avec les autres contrats. Le fond n'a pas
+été modifié lors de la validation.
 
 ---
 

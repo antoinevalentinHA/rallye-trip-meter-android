@@ -1,6 +1,6 @@
 # Trip Meter Rallye Android — DistanceEngine v0.1.2
 
-Statut : PROPOSITION (révision v0.1.2)  
+Statut : VALIDÉ  
 Dépend de :
 
 - Contrat fonctionnel v0.2 validé
@@ -8,6 +8,14 @@ Dépend de :
 - LocationEngine v0.1
 
 Objet : validation des positions GPS et production de distances métier applicables à TripState
+
+---
+
+## Validation du palier documentaire
+
+DistanceEngine v0.1.2 est VALIDÉ. Revue de validation : aucune décision ouverte, aucun invariant
+contradictoire, pseudo-algorithme §21 cohérent avec les seuils et les writers. Le fond n'a pas été
+modifié lors de la validation.
 
 ---
 

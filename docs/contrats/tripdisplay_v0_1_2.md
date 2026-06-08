@@ -1,6 +1,6 @@
 # Trip Meter Rallye Android — TripDisplay v0.1.2
 
-Statut : PROPOSITION (révision v0.1.2 — recadrage navigation au roadbook)  
+Statut : VALIDÉ (recadrage navigation au roadbook)  
 Dépend de :
 
 - Contrat fonctionnel v0.2 validé
@@ -9,6 +9,14 @@ Dépend de :
 - TripController v0.1.2
 
 Objet : affichage principal, interaction utilisateur et règles de lisibilité de l’application
+
+---
+
+## Validation du palier documentaire
+
+TripDisplay v0.1.2 est VALIDÉ. Revue de validation : aucune décision ouverte, recadrage PARTIEL
+appliqué de façon cohérente, mapping vers stage_distance_m documenté, ergonomie roadbook formalisée
+en invariants. Le fond n'a pas été modifié lors de la validation.
 
 ---
 
