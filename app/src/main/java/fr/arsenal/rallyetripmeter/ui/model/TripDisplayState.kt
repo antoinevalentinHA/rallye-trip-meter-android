@@ -20,6 +20,15 @@ data class TripDisplayState(
     val sessionStatusText: String
         get() = sessionStatus.label
 
+    val sessionActionText: String
+        get() {
+            return when (sessionStatus) {
+                UiSessionStatus.Stopped -> "START"
+                UiSessionStatus.Active -> "PAUSE"
+                UiSessionStatus.Paused -> "REPRISE"
+            }
+        }
+
     companion object {
         fun preview(): TripDisplayState {
             return TripDisplayState(

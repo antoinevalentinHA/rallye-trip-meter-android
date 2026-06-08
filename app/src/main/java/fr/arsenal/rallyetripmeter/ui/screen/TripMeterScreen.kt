@@ -98,6 +98,7 @@ fun TripMeterScreen(
                 )
 
                 SessionControls(
+                    sessionActionLabel = state.sessionActionText,
                     onPause = onPause,
                     onStop = onStop,
                     onOptions = onOptions
@@ -232,6 +233,7 @@ private fun PartialCorrectionControls(
 
 @Composable
 private fun SessionControls(
+    sessionActionLabel: String,
     onPause: () -> Unit,
     onStop: () -> Unit,
     onOptions: () -> Unit
@@ -241,7 +243,7 @@ private fun SessionControls(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         TripButton(
-            label = "PAUSE",
+            label = sessionActionLabel,
             onClick = onPause,
             modifier = Modifier.weight(1f)
         )
