@@ -1,22 +1,31 @@
-# Trip Meter Rallye Android — TripDisplay v0.1.1
+# Trip Meter Rallye Android — TripDisplay v0.1.2
 
-Statut : PROPOSITION (révision v0.1.1)  
+Statut : PROPOSITION (révision v0.1.2 — recadrage navigation au roadbook)  
 Dépend de :
 
-- Contrat fonctionnel v0.1 validé
-- TripState v0.1
-- DistanceEngine v0.1
-- TripController v0.1
+- Contrat fonctionnel v0.2 validé
+- TripState v0.1.2
+- DistanceEngine v0.1.2
+- TripController v0.1.2
 
 Objet : affichage principal, interaction utilisateur et règles de lisibilité de l’application
 
 ---
 
+## Changelog v0.1.2 (recadrage navigation au roadbook)
+
+- **D1** — Libellé UI « ÉTAPE » → « PARTIEL ». Le compteur partiel est l'instrument de navigation
+  au roadbook. Champ interne inchangé (`stage_distance_m`).
+- **D3** — Hiérarchie visuelle : le partiel reste dominant, motivé explicitement comme instrument
+  de navigation actif. Les corrections rapides du partiel sont des commandes principales.
+- **D4** — Ergonomie durcie en règles : zones tactiles larges et espacées pour les commandes
+  principales, gants/vibrations/regard bref formalisés, gestes fins/cachés interdits pour
+  l'essentiel, actions dangereuses jamais en accès direct.
+
 ## Changelog v0.1.1
 
 - **A2** — Affichage vitesse forcé à 0 sous `seuil_stationnaire`. Voir §6.3.
-- **M5** — Cadence d'affichage fixe `display_refresh_hz = 3`, découplée des mutations GPS.
-  Voir §34.
+- **M5** — Cadence d'affichage fixe `display_refresh_hz = 3`, découplée des mutations GPS. Voir §34.
 
 ---
 
@@ -25,6 +34,12 @@ Objet : affichage principal, interaction utilisateur et règles de lisibilité d
 `TripDisplay` est la couche d’affichage et d’interaction.
 
 Il montre l’état courant de `TripState` et transmet les intentions utilisateur à `TripController`.
+
+Convention terminologique (v0.1.2, D1) : le compteur historiquement nommé « ÉTAPE » s'affiche
+désormais **PARTIEL**. C'est le compteur partiel de navigation au roadbook (contrat fonctionnel
+§3.2). Dans ce document, « étape » et « partiel » désignent la même grandeur ; le libellé d'affichage
+est **PARTIEL**, le champ interne reste `stage_distance_m`. Les anciennes occurrences « ÉTAPE » dans
+les schémas ci-dessous sont à lire « PARTIEL ».
 
 Principe central :
 
@@ -52,14 +67,21 @@ Utilisateur
 
 ## 2. Objectif d’usage
 
-L’application doit être utilisable dans une voiture en rallye :
+Usage principal (recadrage v0.1.2) : **navigation au roadbook**. Le copilote suit des distances
+imprimées et pilote en permanence le compteur PARTIEL (reset à chaque instruction, correction au
+mètre). L'écran et les commandes principales doivent servir cet usage en priorité.
 
-- vibration ;
-- luminosité variable ;
+Contexte d'usage réel (formalisé, D4) :
+
+```text
+- véhicule en mouvement, vibrations permanentes ;
+- luminosité variable (plein soleil, tunnel, nuit) ;
 - gants possibles ;
-- copilote concentré sur le roadbook ;
-- très peu de temps pour lire ;
-- risque d’appui accidentel.
+- copilote concentré sur le roadbook, regard bref vers l'écran ;
+- conducteur pouvant lire l'écran d'un coup d'œil ;
+- stress, précision tactile réduite ;
+- risque d'appui accidentel.
+```
 
 L’interface doit privilégier :
 
@@ -71,6 +93,19 @@ contraste > esthétique
 fonctionnel > joli
 ```
 
+Contraintes tactiles (D4, normatives) :
+
+```text
+- les commandes principales (reset partiel, ±10 m, ±100 m) ont des zones tactiles larges
+  et nettement espacées, utilisables avec des gants ;
+- aucune commande essentielle n'est accessible uniquement par un geste fin ou caché
+  (swipe, double tap caché, appui long obligatoire) ;
+- aucune action dangereuse (reset total, set distance) n'est en accès direct ni adjacente
+  à une commande de correction rapide ;
+- une commande lue ou actionnée en un regard bref ne doit jamais exiger de précision visuelle
+  ou tactile élevée.
+```
+
 ---
 
 ## 3. Écran principal v0.1
@@ -79,8 +114,8 @@ fonctionnel > joli
 
 L’écran principal affiche toujours :
 
+- compteur PARTIEL de navigation ;
 - kilométrage total ;
-- kilométrage étape ;
 - vitesse instantanée ;
 - statut GPS ;
 - état de session.
@@ -101,14 +136,17 @@ Décision v0.1 : précision GPS affichée, coefficient de calibration masqué ou
 
 Priorité d’affichage :
 
-1. kilométrage étape ;
+1. compteur PARTIEL de navigation ;
 2. kilométrage total ;
 3. vitesse ;
 4. statut GPS ;
 5. état session ;
 6. commandes.
 
-Décision importante : le kilométrage étape doit être l’information dominante.
+Décision importante (D3) : le compteur PARTIEL est l'**information dominante**, car c'est
+l'instrument actif de navigation au roadbook — celui que le copilote lit et corrige en permanence.
+Le total est un repère de progression secondaire. La hiérarchie typographique (§20) doit refléter
+cette dominance sans ambiguïté : le PARTIEL est le plus gros chiffre de l'écran.
 
 ---
 
@@ -118,8 +156,8 @@ Décision importante : le kilométrage étape doit être l’information dominan
 
 ```text
 ┌──────────────────────────────┐
-│ ÉTAPE                         │
-│        12.84 km               │
+│ PARTIEL                       │
+│         0.80 km               │
 ├──────────────────────────────┤
 │ TOTAL                         │
 │       124.37 km               │
@@ -135,18 +173,21 @@ Décision importante : le kilométrage étape doit être l’information dominan
 └──────────────────────────────┘
 ```
 
+Le bloc de correction (-100 / -10 / RESET / +10 / +100) agit sur le PARTIEL et constitue la zone
+de commandes principale de navigation.
+
 ### 5.2 Mode paysage
 
 Mode recommandé en voiture.
 
 ```text
 ┌────────────────────────────────────────────────────────┐
-│ ÉTAPE                         │ TOTAL                  │
-│ 12.84 km                      │ 124.37 km              │
+│ PARTIEL                       │ TOTAL                  │
+│ 0.80 km                       │ 124.37 km              │
 ├───────────────────────────────┴────────────────────────┤
 │ VITESSE  76 km/h       GPS OK ±4 m       ACTIVE         │
 ├────────────────────────────────────────────────────────┤
-│ -100       -10       RESET ÉTAPE       +10       +100    │
+│ -100      -10      RESET PARTIEL      +10      +100      │
 ├────────────────────────────────────────────────────────┤
 │ PAUSE                    STOP                 OPTIONS   │
 └────────────────────────────────────────────────────────┘
@@ -158,9 +199,10 @@ Décision v0.1 : le mode paysage est prioritaire. Le mode portrait existe, mais 
 
 ## 6. Format des valeurs
 
-### 6.1 Kilométrage étape
+### 6.1 Compteur PARTIEL
 
-Source : `TripState.stage_distance_m`
+Libellé affiché : **PARTIEL**. Source : `TripState.stage_distance_m` (champ interne conservé,
+mapping documenté dans TripState).
 
 Affichage :
 
@@ -267,19 +309,23 @@ Décision v0.1 : alerte GPS sur bandeau statut, pas en popup bloquante.
 
 ## 9. Commandes visibles v0.1
 
-### 9.1 Commandes principales
+### 9.1 Commandes principales (commandes de navigation)
 
-Toujours accessibles :
+Toujours accessibles, zones tactiles larges et espacées (D4) :
 
 ```text
-RESET ÉTAPE
-+10 m étape
--10 m étape
-+100 m étape
--100 m étape
+RESET PARTIEL
++10 m partiel
+-10 m partiel
++100 m partiel
+-100 m partiel
 START / PAUSE / RESUME selon état
 STOP
 ```
+
+Décision (D3) : les corrections rapides du partiel (RESET, ±10 m, ±100 m) sont des **commandes de
+navigation principales**, pas des réglages secondaires. Le copilote les actionne en permanence pour
+recaler le partiel sur le roadbook. Elles sont donc sur l'écran principal, en gros boutons.
 
 ### 9.2 Commandes secondaires
 
@@ -287,7 +333,7 @@ Accessibles via bouton ou panneau :
 
 ```text
 correction total
-définir étape exacte
+définir partiel exact
 définir total exact
 calibration
 reset total
@@ -295,23 +341,23 @@ historique
 paramètres GPS
 ```
 
-Décision v0.1 : les corrections étape sont sur l’écran principal. Les corrections total sont dans un panneau secondaire.
+Décision v0.1 : les corrections du partiel sont sur l’écran principal. Les corrections total sont dans un panneau secondaire.
 
 ---
 
-## 10. Boutons de correction étape
+## 10. Boutons de correction PARTIEL
 
-Boutons obligatoires :
+Boutons obligatoires (zones tactiles larges et espacées, utilisables avec gants — D4) :
 
 ```text
 -100 m
 -10 m
-RESET ÉTAPE
+RESET PARTIEL
 +10 m
 +100 m
 ```
 
-Ces boutons concernent `stage_distance_m` uniquement.
+Ces boutons concernent `stage_distance_m` uniquement (compteur partiel).
 
 Effet :
 
@@ -325,7 +371,11 @@ ou :
 TripController.RESET_STAGE
 ```
 
-Invariant UI : une commande visible dans la zone ÉTAPE ne modifie jamais le total.
+Invariant UI : une commande visible dans la zone PARTIEL ne modifie jamais le total.
+
+Disposition (D4) : `RESET PARTIEL` est central et visuellement distinct ; les correctifs ±10 / ±100
+l'encadrent avec un espacement net. Aucune action dangereuse (reset total, set distance) n'est
+placée dans cette zone ni adjacente à elle.
 
 ---
 
@@ -366,7 +416,7 @@ Protection obligatoire : confirmation utilisateur.
 Texte de confirmation :
 
 ```text
-Remettre TOTAL et ÉTAPE à zéro ?
+Remettre TOTAL et PARTIEL à zéro ?
 ```
 
 Boutons :
@@ -420,9 +470,10 @@ SET TOTAL DISTANCE
 -100 m
 ```
 
-### 13.3 RESET ÉTAPE
+### 13.3 RESET PARTIEL
 
-Décision v0.1 : pas de confirmation obligatoire. Bouton central clairement séparé.
+Décision v0.1 : pas de confirmation obligatoire (commande de navigation fréquente). Bouton central
+clairement séparé, large, utilisable avec gants.
 
 ---
 
@@ -432,8 +483,8 @@ Décision v0.1 : pas de confirmation obligatoire. Bouton central clairement sép
 - `PAUSE` actif si `session_state = ACTIVE` ;
 - `RESUME` actif si `session_state = PAUSED` ;
 - `STOP` actif si `session_state = ACTIVE` ou `PAUSED` ;
-- corrections étape actives dans tous les états ;
-- `RESET ÉTAPE` actif dans tous les états ;
+- corrections partiel actives dans tous les états ;
+- `RESET PARTIEL` actif dans tous les états ;
 - `RESET TOTAL` disponible dans tous les états, mais protégé.
 
 ---
@@ -528,7 +579,7 @@ CALIBRATION_CHANGED
 Format :
 
 ```text
-22:14:32  Étape +100 m
+22:14:32  Partiel +100 m
 22:16:08  GPS perdu
 22:16:21  GPS récupéré
 ```
@@ -554,17 +605,18 @@ pas de typographie fine
 
 ## 20. Tailles minimales
 
-Ratio conceptuel :
+Ratio conceptuel (le PARTIEL domine — D3) :
 
 ```text
-ÉTAPE   = 100 %
+PARTIEL = 100 %   (plus gros chiffre de l'écran)
 TOTAL   = 75 %
 VITESSE = 55 %
 STATUT  = 25 %
 BOUTONS = 35 %
 ```
 
-Les boutons doivent être assez grands pour un usage en voiture : hauteur confortable, espacement net, aucun bouton dangereux collé à une correction rapide.
+Les boutons doivent être assez grands pour un usage en voiture avec gants : hauteur confortable,
+espacement net, zones tactiles larges, aucun bouton dangereux collé à une correction rapide (D4).
 
 ---
 
@@ -585,7 +637,7 @@ En session `ACTIVE`, une notification de service actif peut être nécessaire si
 Affichage notification :
 
 ```text
-Trip actif — Étape 12.84 km — Total 124.37 km
+Trip actif — Partiel 0.80 km — Total 124.37 km
 ```
 
 La notification peut proposer :
@@ -623,7 +675,7 @@ Décision v0.1 : `START` désactivé si permission GPS absente.
 Au lancement sans session existante :
 
 ```text
-ÉTAPE      0.00 km
+PARTIEL    0.00 km
 TOTAL      0.00 km
 VITESSE    0 km/h
 GPS        RECHERCHE ou GPS ?
@@ -637,7 +689,7 @@ START actif
 PAUSE masqué
 RESUME masqué
 STOP masqué ou désactivé
-Corrections étape actives
+Corrections partiel actives
 OPTIONS actif
 ```
 
@@ -648,7 +700,7 @@ OPTIONS actif
 Affichage :
 
 ```text
-ÉTAPE      distance courante
+PARTIEL    distance courante
 TOTAL      distance courante
 VITESSE    vitesse courante
 GPS        statut courant
@@ -662,7 +714,7 @@ PAUSE visible
 STOP visible
 START masqué
 RESUME masqué
-Corrections étape visibles
+Corrections partiel visibles
 ```
 
 Écran maintenu allumé.
@@ -674,7 +726,7 @@ Corrections étape visibles
 Affichage :
 
 ```text
-ÉTAPE      figée
+PARTIEL    figé
 TOTAL      figé
 VITESSE    0 km/h
 GPS        statut courant
@@ -688,7 +740,7 @@ RESUME visible
 STOP visible
 PAUSE masqué
 START masqué
-Corrections étape visibles
+Corrections partiel visibles
 ```
 
 Écran maintenu allumé. `PAUSE` doit être très visible.
@@ -700,7 +752,7 @@ Corrections étape visibles
 Affichage :
 
 ```text
-ÉTAPE      dernière valeur ou 0.00 km
+PARTIEL    dernière valeur ou 0.00 km
 TOTAL      dernière valeur ou 0.00 km
 VITESSE    0 km/h
 GPS        statut courant
@@ -724,7 +776,7 @@ Contenu recommandé :
 
 ```text
 - Correction total
-- Définir étape exacte
+- Définir partiel exact
 - Définir total exact
 - Calibration
 - Historique
@@ -734,7 +786,7 @@ Contenu recommandé :
 
 Ordre recommandé :
 
-1. définir étape exacte ;
+1. définir partiel exact ;
 2. correction total ;
 3. calibration ;
 4. historique ;
@@ -745,7 +797,7 @@ Ordre recommandé :
 
 ## 29. Saisie distance exacte
 
-### 29.1 Définir étape exacte
+### 29.1 Définir partiel exact
 
 Format : km avec deux décimales.
 
@@ -900,8 +952,8 @@ Messages courts uniquement.
 Exemples :
 
 ```text
-Étape remise à zéro
-Étape +100 m
+Partiel remis à zéro
+Partiel +100 m
 Total corrigé
 GPS perdu
 GPS récupéré
@@ -911,14 +963,14 @@ Sauvegarde impossible
 
 ---
 
-## 37. Invariants TripDisplay v0.1
+## 37. Invariants TripDisplay v0.1.2
 
 ```text
 TD-01 — TripDisplay ne modifie jamais TripState directement.
 TD-02 — Toute action utilisateur est transmise à TripController.
-TD-03 — L’écran principal affiche toujours étape, total, vitesse, GPS et état session.
-TD-04 — Le kilométrage étape est visuellement prioritaire.
-TD-05 — Les corrections étape visibles ne modifient jamais le total.
+TD-03 — L’écran principal affiche toujours partiel, total, vitesse, GPS et état session.
+TD-04 — Le compteur PARTIEL est visuellement prioritaire (plus gros chiffre de l'écran).
+TD-05 — Les corrections partiel visibles ne modifient jamais le total.
 TD-06 — RESET_TOTAL n’est jamais déclenchable sans confirmation.
 TD-07 — Les actions destructrices ne sont pas en accès principal direct.
 TD-08 — Le statut GPS est toujours visible.
@@ -936,6 +988,9 @@ TD-19 — L’interface doit rester lisible en plein jour et de nuit.
 TD-20 — Aucune animation ne doit nuire à la lecture.
 TD-21 — TripDisplay lit TripState à cadence fixe (3 Hz), sans redessiner à chaque point GPS. (M5)
 TD-22 — TripDisplay affiche speed_kmh telle quelle, sans appliquer de seuil ni de recalcul. (A2)
+TD-23 — Le libellé d'affichage du compteur partiel est PARTIEL ; le champ interne reste stage_distance_m. (D1)
+TD-24 — Les corrections rapides du partiel (reset, ±10 m, ±100 m) sont des commandes principales, en zones tactiles larges et espacées utilisables avec gants. (D3, D4)
+TD-25 — Aucune commande essentielle n'est accessible uniquement par un geste fin ou caché ; aucune action dangereuse n'est en accès direct ni adjacente aux corrections rapides. (D4)
 ```
 
 ---
@@ -951,7 +1006,7 @@ Il ne calcule pas, ne décide pas et ne modifie jamais directement l’état mé
 
 Affichage obligatoire :
 
-- kilométrage étape ;
+- compteur PARTIEL de navigation ;
 - kilométrage total ;
 - vitesse instantanée ;
 - statut GPS ;
@@ -959,7 +1014,7 @@ Affichage obligatoire :
 
 Priorité visuelle :
 
-1. étape ;
+1. partiel (dominant) ;
 2. total ;
 3. vitesse ;
 4. GPS ;
@@ -968,7 +1023,7 @@ Priorité visuelle :
 
 ## Format
 
-- étape : km, deux décimales ;
+- partiel : km, deux décimales ;
 - total : km, deux décimales ;
 - vitesse : km/h, zéro décimale ;
 - GPS : statut + précision si disponible ;
@@ -980,16 +1035,16 @@ Priorité visuelle :
 - `PAUSE` ;
 - `RESUME` ;
 - `STOP` ;
-- `RESET ÉTAPE` ;
-- étape `+10 m` ;
-- étape `-10 m` ;
-- étape `+100 m` ;
-- étape `-100 m`.
+- `RESET PARTIEL` ;
+- partiel `+10 m` ;
+- partiel `-10 m` ;
+- partiel `+100 m` ;
+- partiel `-100 m`.
 
 ## Commandes secondaires
 
 - correction total ;
-- définir étape exacte ;
+- définir partiel exact ;
 - définir total exact ;
 - calibration ;
 - historique ;
@@ -998,9 +1053,11 @@ Priorité visuelle :
 
 ## Règles
 
-- L’étape est l’information dominante.
-- Les corrections étape ne modifient jamais le total.
-- `RESET_TOTAL` exige confirmation.
+- Le partiel est l’information dominante (instrument de navigation au roadbook).
+- Les corrections rapides du partiel sont des commandes principales, en zones larges utilisables avec gants.
+- Les corrections partiel ne modifient jamais le total.
+- `RESET_TOTAL` exige confirmation et n'est jamais en accès direct.
+- Aucune commande essentielle n'est cachée derrière un geste fin.
 - Le statut GPS reste toujours visible.
 - Les alertes ne masquent pas les compteurs.
 - L’écran reste allumé en `ACTIVE` et `PAUSED`.

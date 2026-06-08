@@ -3,7 +3,7 @@
 Statut : VALIDÉ  
 Dépend de :
 
-- Contrat fonctionnel v0.1 validé
+- Contrat fonctionnel v0.2 validé
 - TripState v0.1.2
 - DistanceEngine v0.1.2
 - TripController v0.1.2

@@ -1,7 +1,7 @@
 # Trip Meter Rallye Android — TripState v0.1.2
 
 Statut : PROPOSITION (révision v0.1.2)  
-Dépend de : Contrat fonctionnel v0.1 validé, LocationEngine v0.1  
+Dépend de : Contrat fonctionnel v0.2 validé, LocationEngine v0.1  
 Objet : état métier central de l’application
 
 ---
@@ -11,6 +11,9 @@ Objet : état métier central de l’application
 - **G4** — `last_gps_timestamp` est écrit **uniquement** par LocationEngine (exception technique
   documentée). Retrait de `last_gps_timestamp = now` des effets de `updateGpsStatus` (§7.12).
   Nouvel invariant I-21. Voir §5.8, §7.12, §8, §11.
+- **D2** (recadrage navigation au roadbook) — note de mapping : `stage_distance_m` = compteur
+  partiel de navigation (libellé UI PARTIEL). Champ interne conservé ; renommage `stage` → `partial`
+  signalé comme candidat v0.2 sous arbitrage, non appliqué. Voir §5.3.
 
 ## Changelog v0.1.1
 
@@ -203,7 +206,17 @@ Décision recommandée : stockage interne en mètres, affichage en kilomètres.
 Type : `integer` ou `double`  
 Unité : mètres
 
-Rôle : distance validée depuis le dernier reset étape.
+Rôle : distance validée depuis le dernier reset partiel.
+
+Mapping métier/UI (D2, recadrage navigation au roadbook) : `stage_distance_m` est le **compteur
+partiel de navigation** (contrat fonctionnel v0.2 §3.2). Côté affichage, son libellé est **PARTIEL**
+(TripDisplay v0.1.2). Le nom interne `stage_distance_m` est **conservé** en l'état : un renommage
+`stage` → `partial` propagé sur tous les contrats et la future implémentation créerait un bruit
+disproportionné par rapport au gain. Le mapping documenté ici suffit à lever l'ambiguïté.
+
+Renommage interne `stage` → `partial` : signalé comme **candidat v0.2 sous arbitrage**. À envisager
+seulement si le code généré gagne en clarté à le faire, et jamais sans arbitrage explicite. En v0.1.x,
+le nom interne reste `stage_distance_m`.
 
 Règles :
 

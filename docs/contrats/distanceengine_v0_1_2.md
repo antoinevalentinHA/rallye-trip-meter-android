@@ -3,7 +3,7 @@
 Statut : PROPOSITION (révision v0.1.2)  
 Dépend de :
 
-- Contrat fonctionnel v0.1 validé
+- Contrat fonctionnel v0.2 validé
 - TripState v0.1.2
 - LocationEngine v0.1
 
