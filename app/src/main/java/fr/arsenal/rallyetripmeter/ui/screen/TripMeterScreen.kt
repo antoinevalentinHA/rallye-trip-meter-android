@@ -28,12 +28,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import fr.arsenal.rallyetripmeter.ui.theme.RallyeTripMeterTheme
+import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
+import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
+import fr.arsenal.rallyetripmeter.domain.model.TripState
+import fr.arsenal.rallyetripmeter.ui.mapper.toTripDisplayState
 import fr.arsenal.rallyetripmeter.ui.model.TripDisplayState
+import fr.arsenal.rallyetripmeter.ui.theme.RallyeTripMeterTheme
 
 @Composable
 fun TripMeterScreen(
-    state: TripDisplayState = TripDisplayState.preview()
+    state: TripDisplayState
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -256,10 +260,21 @@ private enum class TripValueEmphasis {
     Tertiary
 }
 
+private fun previewTripState(): TripState {
+    return TripState(
+        totalDistanceMeters = 124370.0,
+        partialDistanceMeters = 800.0,
+        gpsStatus = GpsStatus.Fixed,
+        sessionState = TripSessionState.Running
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun TripMeterScreenPreview() {
     RallyeTripMeterTheme {
-        TripMeterScreen()
+        TripMeterScreen(
+            state = previewTripState().toTripDisplayState()
+        )
     }
 }
