@@ -1,8 +1,20 @@
-# Trip Meter Rallye Android — TripState v0.1
+# Trip Meter Rallye Android — TripState v0.1.1
 
-Statut : PROPOSITION  
+Statut : PROPOSITION (révision v0.1.1)  
 Dépend de : Contrat fonctionnel v0.1 validé  
 Objet : état métier central de l’application
+
+---
+
+## Changelog v0.1.1
+
+- **C4** — `updateSpeed` hors ACTIVE est ignoré sans mutation ni erreur ;
+  `speed_kmh = 0` est garanti par la transition d'état, pas par les updates. Voir §5.4, §7.11.
+- **C5** — Règle de vitesse périmée : `speed_kmh` retombe à 0 si aucune décision ACCEPTED
+  ne l'a mis à jour depuis `speed_timeout_ms` (3000 ms). Voir §5.4.
+- **A2** — Plancher stationnaire : vitesse forcée à 0 sous `seuil_stationnaire`. Voir §5.4.
+- **M3** — `SET_TOTAL_DISTANCE` est l'unique commande pouvant réduire `total_distance_m`,
+  de façon explicite, journalisée et confirmée. Voir §11 (I-05).
 
 ---
 
@@ -202,10 +214,28 @@ Unité : km/h
 
 Règles :
 
-- mise à jour en session `ACTIVE` ;
+- mise à jour en session `ACTIVE` uniquement ;
 - mise à zéro en `STOPPED` ;
 - mise à zéro en `PAUSED` pour la v0.1 ;
 - ne peut jamais être négative.
+
+Comportement hors ACTIVE (C4) :
+
+- en `PAUSED` et `STOPPED`, `updateSpeed` est **ignoré** sans mutation et sans erreur ;
+- `speed_kmh = 0` est garanti par la transition d'état (`pauseSession`, `stopSession`),
+  pas par les mises à jour de vitesse ;
+- aucune valeur postérieure à l'entrée en PAUSED/STOPPED n'est appliquée.
+
+Plancher stationnaire (A2) :
+
+- sous `seuil_stationnaire` (≈ 0.5 m/s), `speed_kmh = 0`.
+
+Vitesse périmée (C5) :
+
+- si aucune décision `ACCEPTED` n'a mis à jour `speed_kmh` depuis `speed_timeout_ms` (3000 ms),
+  alors `speed_kmh = 0` ;
+- invariant : la vitesse affichée ne reste jamais figée sur une valeur non nulle alors qu'aucune
+  distance n'est plus produite.
 
 Arrondi affichage : 0 décimale.
 
@@ -529,7 +559,8 @@ session_state = ACTIVE
 speed_kmh >= 0
 ```
 
-En `STOPPED` ou `PAUSED`, `speed_kmh = 0`.
+En `STOPPED` ou `PAUSED`, `updateSpeed` est **ignoré** (ni mutation, ni erreur) ; `speed_kmh`
+reste à 0, garanti par la transition d'état. (C4)
 
 ### 7.12 `updateGpsStatus(status, accuracy_m)`
 
@@ -647,7 +678,8 @@ I-01 — session_state ∈ {STOPPED, ACTIVE, PAUSED}
 I-02 — total_distance_m >= 0
 I-03 — stage_distance_m >= 0
 I-04 — speed_kmh >= 0
-I-05 — total_distance_m ne diminue jamais sans correction explicite ou reset total confirmé
+I-05 — total_distance_m ne diminue jamais sans correction explicite, reset total confirmé ou SET_TOTAL_DISTANCE confirmé
+I-05b — SET_TOTAL_DISTANCE est l'unique commande pouvant réduire total_distance_m ; cette diminution est volontaire, journalisée (TOTAL_SET) et soumise à confirmation. (M3)
 I-06 — stage_distance_m ne diminue jamais sans correction explicite, reset étape ou reset total confirmé
 I-07 — resetStage ne modifie jamais total_distance_m
 I-08 — correctStage ne modifie jamais total_distance_m

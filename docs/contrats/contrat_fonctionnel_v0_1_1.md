@@ -263,6 +263,13 @@ Règle :
 Aucune session active ne doit être perdue sans confirmation utilisateur.
 ```
 
+Précision v0.1.1 (A4) : l'état mémoire est la source de vérité immédiate. Les mutations métier
+explicites (session, reset, correction, set, calibration) sont persistées immédiatement.
+L'accumulation fine de distance GPS est persistée de façon throttlée (toutes les 5 s, et forcée
+à chaque mutation explicite et changement d'état). Au pire, une interruption brutale perd
+quelques secondes d'accumulation de distance, jamais la session ni les compteurs. Voir
+TripController §16.
+
 ---
 
 ## 10. Architecture logique validée

@@ -1,6 +1,6 @@
-# Trip Meter Rallye Android — TripDisplay v0.1
+# Trip Meter Rallye Android — TripDisplay v0.1.1
 
-Statut : PROPOSITION  
+Statut : PROPOSITION (révision v0.1.1)  
 Dépend de :
 
 - Contrat fonctionnel v0.1 validé
@@ -9,6 +9,14 @@ Dépend de :
 - TripController v0.1
 
 Objet : affichage principal, interaction utilisateur et règles de lisibilité de l’application
+
+---
+
+## Changelog v0.1.1
+
+- **A2** — Affichage vitesse forcé à 0 sous `seuil_stationnaire`. Voir §6.3.
+- **M5** — Cadence d'affichage fixe `display_refresh_hz = 3`, découplée des mutations GPS.
+  Voir §34.
 
 ---
 
@@ -189,6 +197,10 @@ Format : 0 décimale, suffixe km/h.
 
 En `STOPPED` : `0 km/h`.  
 En `PAUSED` : `0 km/h`.
+
+v0.1.1 (A2) : `TripState.speed_kmh` est déjà nul sous `seuil_stationnaire` et après vitesse
+périmée (géré en amont par DistanceEngine/TripState/TripController). TripDisplay affiche
+simplement la valeur reçue sans recalcul ; il n'applique aucun seuil lui-même.
 
 ---
 
@@ -842,13 +854,21 @@ Déconseillées :
 
 ---
 
-## 34. Rafraîchissement affichage
+## 34. Rafraîchissement affichage (v0.1.1, M5)
 
-Les compteurs se mettent à jour quand `TripState` change.
+`TripDisplay` lit `TripState` à cadence fixe, indépendamment de la fréquence des mutations métier
+et de l'arrivée des points GPS.
 
-Vitesse : pas besoin d’afficher plus vite que 1 à 5 Hz.
+```text
+display_refresh_hz = 3
+```
 
-Distance : mise à jour sur mutation `TripState` suffisante.
+- L'affichage ne se redessine pas à chaque point GPS reçu.
+- 3 Hz suffit largement pour un instrument de lecture et évite le papillonnement du second
+  décimal du km et le sautillement de la vitesse.
+- Les valeurs changent sans animation de transition (cohérent §33 : pas de compteurs qui roulent).
+
+Cohérent avec le principe « TripDisplay affiche un état, il ne réagit pas à chaque événement ».
 
 ---
 
@@ -914,6 +934,8 @@ TD-17 — Les messages utilisateur sont courts et non bloquants, sauf confirmati
 TD-18 — Le mode paysage est prioritaire.
 TD-19 — L’interface doit rester lisible en plein jour et de nuit.
 TD-20 — Aucune animation ne doit nuire à la lecture.
+TD-21 — TripDisplay lit TripState à cadence fixe (3 Hz), sans redessiner à chaque point GPS. (M5)
+TD-22 — TripDisplay affiche speed_kmh telle quelle, sans appliquer de seuil ni de recalcul. (A2)
 ```
 
 ---

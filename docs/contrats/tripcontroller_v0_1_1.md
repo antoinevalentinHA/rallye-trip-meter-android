@@ -1,6 +1,6 @@
-# Trip Meter Rallye Android — TripController v0.1
+# Trip Meter Rallye Android — TripController v0.1.1
 
-Statut : PROPOSITION  
+Statut : PROPOSITION (révision v0.1.1)  
 Dépend de :
 
 - Contrat fonctionnel v0.1 validé
@@ -8,6 +8,19 @@ Dépend de :
 - DistanceEngine v0.1
 
 Objet : couche de commande métier entre l’interface utilisateur et TripState
+
+---
+
+## Changelog v0.1.1
+
+- **C5** — Sur décision REFERENCE_ONLY portant `speed_kmh = 0`, le contrôleur applique
+  `speed_kmh = 0`. Voir §8.3.
+- **A4** — Persistance : état mémoire = source de vérité ; mutations métier explicites
+  persistées immédiatement ; accumulation GPS throttlée (`persist_throttle_ms = 5000`) ;
+  pas de rollback de l'affichage en cas d'échec. Voir §16.
+- **M2** — `SET_STAGE_DISTANCE` et `SET_TOTAL_DISTANCE` ajoutés à la liste d'entrée §3.1.
+- **M3** — `SET_TOTAL_DISTANCE` : unique voie de diminution du total, note explicite. Voir §7.10.
+- **M4** — `RESET_STAGE` / `CORRECT_STAGE` en STOPPED : intention assumée. Voir §7.5, §7.7.
 
 ---
 
@@ -75,6 +88,8 @@ RESET_STAGE
 RESET_TOTAL
 CORRECT_STAGE
 CORRECT_TOTAL
+SET_STAGE_DISTANCE
+SET_TOTAL_DISTANCE
 SET_CALIBRATION
 ```
 
@@ -314,6 +329,10 @@ Persistance : obligatoire
 
 Si `stage_distance_m = 0` : `APPLIED`, car l’utilisateur peut vouloir poser explicitement un jalon.
 
+Décision v0.1.1 (M4) : `RESET_STAGE` reste volontairement autorisé en STOPPED, pour recaler ou
+nettoyer une étape après arrêt ou avant archivage. Cette action ne réactive jamais la session
+et n'ajoute jamais de distance GPS.
+
 ### 7.6 `resetTotal`
 
 Commande : `RESET_TOTAL`
@@ -393,6 +412,9 @@ Persistance : obligatoire
 
 Invariant : `CORRECT_STAGE` ne modifie jamais `total_distance_m`.
 
+Décision v0.1.1 (M4) : `CORRECT_STAGE` reste volontairement autorisé en STOPPED (recalage avant
+archivage). Sans effet sur la session ni sur la distance GPS.
+
 ### 7.8 `correctTotal(delta_m)`
 
 Commande : `CORRECT_TOTAL`
@@ -468,6 +490,10 @@ Persistance : obligatoire
 
 Invariant : `SET_TOTAL_DISTANCE` ne modifie jamais `stage_distance_m`.
 
+Décision v0.1.1 (M3) : `SET_TOTAL_DISTANCE` est l'unique commande pouvant **réduire**
+`total_distance_m`. Cette diminution est volontaire, journalisée (`TOTAL_SET`) et soumise à
+confirmation (TripDisplay §29.2). L'interdiction de diminution automatique (I-05) reste entière.
+
 ### 7.11 `setCalibrationFactor(value)`
 
 Commande : `SET_CALIBRATION`
@@ -535,12 +561,15 @@ gps_status = decision.gps_status
 gps_accuracy_m = decision.gps_accuracy_m
 last_valid_position = decision.accepted_position
 distance_reference_dirty = false
+speed_kmh = decision.speed_kmh   (0 si micro-déplacement ou stationnaire, C5)
 session_updated_at = now
 ```
 
 Aucune distance ajoutée.
 
-Persistance : obligatoire.
+Persistance : selon la stratégie throttlée (§16). Un changement de `session_state` ou un
+événement métier force le flush ; une REFERENCE_ONLY de routine à l'arrêt n'impose pas
+d'écriture immédiate. (A4)
 
 Log selon contexte : `REFERENCE_RESET`, `GPS_RECOVERED` si applicable.
 
@@ -790,9 +819,15 @@ GPS_STATUS_ONLY        idem         idem         idem         idem
 
 ---
 
-## 16. Règles de persistance
+## 16. Règles de persistance (v0.1.1, A4)
 
-Persistance obligatoire immédiate :
+Principe : l'état mémoire de `TripState` est la **source de vérité immédiate**. La persistance
+est asynchrone et best-effort ; un échec ne provoque jamais de rollback de l'affichage, mais
+remonte un statut `ERROR` visible (§17, TripDisplay §16.1).
+
+### 16.1 Deux classes de mutation
+
+Mutations métier explicites → **persistance immédiate** :
 
 ```text
 START_SESSION
@@ -806,27 +841,44 @@ CORRECT_TOTAL
 SET_STAGE_DISTANCE
 SET_TOTAL_DISTANCE
 SET_CALIBRATION
-ACCEPTED_DISTANCE
-REFERENCE_ONLY
 RESTORE_ACTIVE_AS_PAUSED
 ```
 
-Persistance conditionnelle :
+Accumulation de distance GPS → **persistance throttlée** :
+
+```text
+ACCEPTED_DISTANCE
+REFERENCE_ONLY
+```
+
+### 16.2 Throttle
+
+```text
+persist_throttle_ms = 5000
+```
+
+L'accumulation GPS est flushée :
+
+- au plus toutes les `persist_throttle_ms` ;
+- **et** systématiquement à chaque mutation métier explicite ;
+- **et** à chaque changement de `session_state`.
+
+### 16.3 Persistance conditionnelle des statuts
 
 ```text
 REJECTED_DISTANCE
 GPS_STATUS_ONLY
 ```
 
-Persist si :
+Persist si `gps_status` change ou événement système important.
 
-```text
-gps_status change
-ou
-événement système important
-```
+### 16.4 Garanties
 
-Invariant : aucune mutation métier appliquée ne reste uniquement en mémoire.
+- Aucune mutation métier explicite appliquée ne reste uniquement en mémoire.
+- Au pire, une interruption brutale perd la distance accumulée depuis le dernier flush throttlé
+  (≤ `persist_throttle_ms`), jamais la session ni les compteurs métier persistés.
+- La règle du contrat fonctionnel « aucune session active perdue sans confirmation » reste vraie :
+  le throttle ne concerne que l'accumulation fine de distance, pas l'état de session.
 
 ---
 
@@ -988,6 +1040,10 @@ TC-17 — Une session ACTIVE restaurée après interruption est convertie en PAU
 TC-18 — Les actions destructrices sont protégées.
 TC-19 — Les corrections utilisateur sont toujours journalisées.
 TC-20 — Le contrôleur ne calcule jamais lui-même une distance GPS.
+TC-21 — Sur REFERENCE_ONLY portant speed_kmh = 0, le contrôleur applique speed_kmh = 0. (C5)
+TC-22 — L'état mémoire est la source de vérité ; un échec de persistance ne provoque jamais de rollback de l'affichage. (A4)
+TC-23 — Les mutations métier explicites sont persistées immédiatement ; l'accumulation GPS est throttlée. (A4)
+TC-24 — SET_TOTAL_DISTANCE est l'unique commande pouvant réduire total_distance_m. (M3)
 ```
 
 ---
