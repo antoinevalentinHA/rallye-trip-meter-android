@@ -1,15 +1,24 @@
-# Trip Meter Rallye Android — TripController v0.1.1
+# Trip Meter Rallye Android — TripController v0.1.2
 
-Statut : PROPOSITION (révision v0.1.1)  
+Statut : PROPOSITION (révision v0.1.2)  
 Dépend de :
 
 - Contrat fonctionnel v0.1 validé
-- TripState v0.1
-- DistanceEngine v0.1
+- TripState v0.1.2
+- DistanceEngine v0.1.2
+- LocationEngine v0.1
 
 Objet : couche de commande métier entre l’interface utilisateur et TripState
 
 ---
+
+## Changelog v0.1.2 (passe de cohérence globale)
+
+- **G1** — `GPS_DISCONTINUITY` ajouté aux événements système reçus (§3.2), avec règle de
+  traitement : `distance_reference_dirty = true`, log `REFERENCE_RESET` (source SYSTEM, note =
+  reason). Ajouté aux cas de marquage dirty (§9). Voir §3.2, §8.6, §9.
+- **G6** — `SERVICE_STARTED` / `SERVICE_STOPPED` ajoutés aux événements système (§3.2), note de
+  lifecycle léger à `APP_RESTORED` (§10). Pas de contrat lifecycle complet en v0.1.
 
 ## Changelog v0.1.1
 
@@ -99,9 +108,15 @@ SET_CALIBRATION
 DISTANCE_DECISION
 GPS_LOST
 GPS_RECOVERED
+GPS_DISCONTINUITY
+SERVICE_STARTED
+SERVICE_STOPPED
 APP_RESTORED
 SCREEN_LOCK_REQUEST
 ```
+
+`GPS_DISCONTINUITY` (G1) et `SERVICE_STARTED` / `SERVICE_STOPPED` (G6) sont émis par LocationEngine
+(LocationEngine §10.2). Leur traitement est décrit en §8.6 (discontinuité) et §10 (lifecycle léger).
 
 ### 3.3 Commandes internes
 
@@ -604,7 +619,33 @@ Persistance obligatoire seulement si changement de statut GPS.
 
 ---
 
-## 9. Gestion de la référence distance
+## 8.6 Traitement de GPS_DISCONTINUITY (G1)
+
+Événement système : `GPS_DISCONTINUITY`, émis par LocationEngine (LocationEngine §8) en cas de
+rupture de continuité de mesure (gap temporel, perte GPS, redémarrage de service, reprise).
+
+À réception :
+
+```text
+distance_reference_dirty = true
+log REFERENCE_RESET
+  source = SYSTEM
+  note = reason de la discontinuité (TIME_GAP | GPS_LOST | SERVICE_RESTART | RESUME)
+aucune mutation de compteur
+aucun changement de session_state
+```
+
+Précisions normatives :
+
+- `GPS_DISCONTINUITY` est l'événement système **reçu** ; `REFERENCE_RESET` est l'effet métier
+  **journalisé**. Pas de nouvel événement de log dédié en v0.1.
+- TripController reste seul writer de `distance_reference_dirty`. LocationEngine signale,
+  TripController arbitre.
+- Conséquence : la prochaine position valide sera traitée `REFERENCE_ONLY` par DistanceEngine
+  (`context.distance_reference_dirty`), sans ajout de distance. Cela neutralise un éventuel grand
+  `elapsed_s` post-discontinuité et protège le seuil dynamique de grand saut (DistanceEngine C1).
+- `GPS_DISCONTINUITY` et `GPS_LOST` sont distincts (LocationEngine §8.2) : une perte GPS émet les
+  deux ; un simple gap temporel peut n'émettre que `GPS_DISCONTINUITY`.
 
 Champ conceptuel :
 
@@ -622,6 +663,7 @@ stopSession
 resetTotal
 restore ACTIVE as PAUSED
 GPS_LOST
+GPS_DISCONTINUITY
 ```
 
 Cas où il redevient `false` :
@@ -672,6 +714,19 @@ distance_reference_dirty = true
 Log : `SESSION_RESTORED_AS_PAUSED`
 
 Décision v0.1 : une session `ACTIVE` interrompue est toujours restaurée en `PAUSED`.
+
+Lifecycle service à `APP_RESTORED` (G6, alignement léger) :
+
+```text
+Si l'état restauré est PAUSED :
+  → le service de localisation est relancé en cadence réduite (LocationEngine §9.3).
+Si l'état restauré est STOPPED :
+  → aucun service de localisation n'est démarré.
+```
+
+Cette note pose le lien minimal entre restauration et service. Un contrat de lifecycle de service
+complet n'est pas rédigé en v0.1 ; `SERVICE_STARTED` / `SERVICE_STOPPED` sont reçus comme événements
+système (§3.2) et l'orchestration fine est laissée à l'implémentation.
 
 ---
 

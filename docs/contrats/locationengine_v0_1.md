@@ -4,9 +4,9 @@ Statut : VALIDÉ
 Dépend de :
 
 - Contrat fonctionnel v0.1 validé
-- TripState v0.1.1
-- DistanceEngine v0.1.1
-- TripController v0.1.1
+- TripState v0.1.2
+- DistanceEngine v0.1.2
+- TripController v0.1.2
 
 Objet : acquisition de la localisation Android brute, détection de perte GPS, alimentation de DistanceEngine et de TripState en données GPS
 
@@ -451,8 +451,15 @@ gps_lost_after_ms             = 10000
 discontinuity_gap_ms          = 10000
 ```
 
-Ces valeurs sont alignées avec DistanceEngine v0.1.1 (`gps_lost_after_ms`). Tout changement de
+Ces valeurs sont alignées avec DistanceEngine v0.1.2 (`gps_lost_after_ms`). Tout changement de
 `gps_lost_after_ms` doit être répercuté des deux côtés (candidat à une config partagée en v0.2).
+
+Note (G5) — distinction `discontinuity_gap_ms` / `gps_lost_after_ms` : les deux valent 10000 en
+v0.1, mais sont distincts par nature. `discontinuity_gap_ms` déclenche un **re-référencement**
+(GPS_DISCONTINUITY → REFERENCE_ONLY) ; `gps_lost_after_ms` déclare la **perte GPS** (GPS_LOST). Leur
+égalité est un choix de réglage, pas une équivalence sémantique. Ils peuvent diverger en v0.2 (par
+exemple re-référencer dès 5 s de gap sans déclarer la perte avant 10 s) et ne doivent jamais être
+fusionnés.
 
 ---
 

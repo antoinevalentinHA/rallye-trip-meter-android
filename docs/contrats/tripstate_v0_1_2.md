@@ -1,10 +1,16 @@
-# Trip Meter Rallye Android — TripState v0.1.1
+# Trip Meter Rallye Android — TripState v0.1.2
 
-Statut : PROPOSITION (révision v0.1.1)  
-Dépend de : Contrat fonctionnel v0.1 validé  
+Statut : PROPOSITION (révision v0.1.2)  
+Dépend de : Contrat fonctionnel v0.1 validé, LocationEngine v0.1  
 Objet : état métier central de l’application
 
 ---
+
+## Changelog v0.1.2 (passe de cohérence globale)
+
+- **G4** — `last_gps_timestamp` est écrit **uniquement** par LocationEngine (exception technique
+  documentée). Retrait de `last_gps_timestamp = now` des effets de `updateGpsStatus` (§7.12).
+  Nouvel invariant I-21. Voir §5.8, §7.12, §8, §11.
 
 ## Changelog v0.1.1
 
@@ -307,6 +313,12 @@ last_gps_timestamp ≠ timestamp de dernière position valide
 
 On peut recevoir du GPS invalide. Il faut pouvoir dire que le GPS parle encore, mais que ce qu’il raconte n’est pas exploitable.
 
+Writer (G4) : `last_gps_timestamp` est écrit **uniquement** par LocationEngine (LocationEngine §11,
+LE-08b), à chaque position reçue, valide ou non. C'est le **seul** champ de TripState échappant au
+writer souverain TripController/DistanceEngine. Cette exception est assumée : le watchdog de perte
+GPS en dépend en temps réel et ce champ n'a aucun effet métier (ce n'est pas un compteur). Aucune
+commande TripController ni décision DistanceEngine ne l'écrit.
+
 ### 5.9 `calibration_factor`
 
 Type : `double`  
@@ -571,9 +583,11 @@ Effets :
 ```text
 gps_status = status
 gps_accuracy_m = accuracy_m
-last_gps_timestamp = now
 session_updated_at = now
 ```
+
+Note (G4) : `updateGpsStatus` n'écrit **pas** `last_gps_timestamp`. Ce champ est alimenté
+exclusivement par LocationEngine (§5.8, LE-08b).
 
 ---
 
@@ -595,6 +609,10 @@ applyDistanceUpdate   ACTIVE             +         +         idem      -     non
 updateSpeed           ACTIVE             idem      idem      update    -     non
 updateGpsStatus       tous               idem      idem      idem      +     selon cas
 ```
+
+Note (G4) : la colonne GPS de `updateGpsStatus` couvre `gps_status` et `gps_accuracy_m` uniquement.
+`last_gps_timestamp` n'est écrit par aucune commande de cette matrice : il est alimenté
+exclusivement par LocationEngine (§5.8).
 
 ---
 
@@ -695,6 +713,7 @@ I-17 — après restauration d’une session ACTIVE interrompue, l’état resta
 I-18 — toute correction utilisateur est journalisée
 I-19 — last_valid_position n’est jamais mise à jour par une position GPS rejetée
 I-20 — TripState est persisté après chaque mutation métier
+I-21 — last_gps_timestamp est écrit uniquement par LocationEngine ; aucune commande TripController ni décision DistanceEngine ne l'écrit. (G4)
 ```
 
 ---

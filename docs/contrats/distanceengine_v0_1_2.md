@@ -1,14 +1,24 @@
-# Trip Meter Rallye Android — DistanceEngine v0.1.1
+# Trip Meter Rallye Android — DistanceEngine v0.1.2
 
-Statut : PROPOSITION (révision v0.1.1)  
+Statut : PROPOSITION (révision v0.1.2)  
 Dépend de :
 
 - Contrat fonctionnel v0.1 validé
-- TripState v0.1
+- TripState v0.1.2
+- LocationEngine v0.1
 
 Objet : validation des positions GPS et production de distances métier applicables à TripState
 
 ---
+
+## Changelog v0.1.2 (passe de cohérence globale)
+
+- **G2** — La détection de perte GPS (passage à LOST) appartient au watchdog actif de LocationEngine,
+  pas à DistanceEngine (réactif, donc incapable de détecter une absence). §16.1 reformulé en réaction.
+  Retrait de « update last_gps_timestamp » du pseudo-algorithme §21 : ce champ est écrit uniquement
+  par LocationEngine. Voir §6, §16.1, §21.
+- **G3** — Retrait de la ligne « marquer distance_reference_dirty = true » en §18.2 : DistanceEngine
+  ne l'écrit jamais (writer unique = TripController), il le lit seulement via context. Voir §18.2.
 
 ## Changelog v0.1.1
 
@@ -281,6 +291,13 @@ Position impossible ou incohérente
 → INVALID
 ```
 
+Répartition des responsabilités (G2) : DistanceEngine produit les statuts liés à une **position
+reçue** (`OK`, `DEGRADED`, `INVALID`, et `SEARCHING` tant qu'aucune position n'est encore arrivée).
+Le statut `LOST` (absence prolongée de réception) est produit par le **watchdog de LocationEngine**
+(LocationEngine §7), car il ne peut être détecté qu'activement. La ligne « aucune position récente
+depuis plus de 10 s → LOST » décrit donc un statut que DistanceEngine **reçoit et respecte**, pas
+qu'il calcule.
+
 ---
 
 ## 7. Validation d’une position
@@ -351,7 +368,9 @@ gps_status = INVALID
 rejection_reason = ACCURACY_TOO_POOR
 ```
 
-Une position imprécise peut mettre à jour `last_gps_timestamp`. Elle ne doit pas mettre à jour `last_valid_position`.
+Une position imprécise ne met pas à jour `last_valid_position`. Le suivi de réception
+(`last_gps_timestamp`) est assuré par LocationEngine (LE-08b), indépendamment de la validité métier
+de la position.
 
 ---
 
@@ -632,21 +651,25 @@ Aucune distance de rattrapage n’est ajoutée.
 
 ## 16. Perte GPS
 
-### 16.1 Détection
+### 16.1 Détection (assurée par LocationEngine)
 
-Si :
+La détection de la perte GPS — le passage à `LOST` après `gps_lost_after_ms` d'absence — est
+assurée par le **watchdog actif de LocationEngine** (LocationEngine §7), pas par DistanceEngine.
+
+Raison : une perte GPS n'émet aucune position. DistanceEngine étant réactif (il ne s'exécute qu'à
+réception d'une position via `onLocationReceived`), il ne peut structurellement pas détecter une
+absence. Seul un timer actif le peut.
+
+DistanceEngine **réagit** à un statut `LOST` déjà établi :
 
 ```text
-now - last_gps_timestamp > gps_lost_after_ms
+gps_status = LOST (établi par LocationEngine)
+→ aucune distance ajoutée
+→ speed_kmh = 0 via TripState (vitesse périmée / plancher)
 ```
 
-Alors :
-
-```text
-gps_status = LOST
-```
-
-Effets : aucune distance ajoutée, `speed_kmh = 0` via TripState, événement `GPS_LOST` si transition nouvelle.
+La condition `now - last_gps_timestamp > gps_lost_after_ms` reste la définition sémantique du seuil,
+mais son évaluation périodique est portée par LocationEngine, pas par DistanceEngine.
 
 ### 16.2 Récupération
 
@@ -740,9 +763,12 @@ Décision recommandée :
 En PAUSED :
 - update GPS status ;
 - speed = 0 ;
-- ne pas modifier last_valid_position pour la distance ;
-- marquer distance_reference_dirty = true.
+- ne pas modifier last_valid_position pour la distance.
 ```
+
+Note (G3) : `distance_reference_dirty` est déjà marqué par TripController à l'entrée en PAUSED
+(`pauseSession`, §7.2). DistanceEngine ne l'écrit jamais — writer unique = TripController. Il le
+lit seulement via `context` (§21).
 
 ### 18.3 En session STOPPED
 
@@ -821,7 +847,7 @@ onLocationReceived(location, context):
   if timestamp missing:
       return REJECTED MISSING_TIMESTAMP
 
-  update last_gps_timestamp candidate
+  # last_gps_timestamp est alimenté par LocationEngine (LE-08b), pas ici.
 
   if location too old (now - timestamp > max_location_age_ms):
       return REJECTED STALE_LOCATION
