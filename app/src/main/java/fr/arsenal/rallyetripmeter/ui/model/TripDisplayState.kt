@@ -29,6 +29,9 @@ data class TripDisplayState(
             }
         }
 
+    val isStopEnabled: Boolean
+        get() = sessionStatus != UiSessionStatus.Stopped
+
     companion object {
         fun preview(): TripDisplayState {
             return TripDisplayState(
