@@ -43,7 +43,7 @@ fun TripMeterScreen(
     onResetPartial: () -> Unit,
     onAdjustPartialPlus10: () -> Unit,
     onAdjustPartialPlus100: () -> Unit,
-    onPause: () -> Unit,
+    onSessionAction: () -> Unit,
     onStop: () -> Unit,
     onOptions: () -> Unit
 ) {
@@ -101,7 +101,7 @@ fun TripMeterScreen(
                 SessionControls(
                     sessionActionLabel = state.sessionActionText,
                     isStopEnabled = state.isStopEnabled,
-                    onPause = onPause,
+                    onSessionAction = onSessionAction,
                     onStop = onStop,
                     onOptions = onOptions
                 )
@@ -243,7 +243,7 @@ private fun PartialCorrectionControls(
 private fun SessionControls(
     sessionActionLabel: String,
     isStopEnabled: Boolean,
-    onPause: () -> Unit,
+    onSessionAction: () -> Unit,
     onStop: () -> Unit,
     onOptions: () -> Unit
 ) {
@@ -253,7 +253,7 @@ private fun SessionControls(
     ) {
         TripButton(
             label = sessionActionLabel,
-            onClick = onPause,
+            onClick = onSessionAction,
             modifier = Modifier.weight(1f)
         )
 
@@ -328,7 +328,7 @@ private fun TripMeterScreenPreview() {
             onResetPartial = {},
             onAdjustPartialPlus10 = {},
             onAdjustPartialPlus100 = {},
-            onPause = {},
+            onSessionAction = {},
             onStop = {},
             onOptions = {}
         )

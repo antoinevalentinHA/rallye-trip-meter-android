@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
                             deltaMeters = 100.0
                         )
                     },
-                    onPause = {
+                    onSessionAction = {
                         tripState = when (tripState.sessionState) {
                             TripSessionState.Running -> controller.pause(tripState)
                             TripSessionState.Paused -> controller.resume(tripState)
