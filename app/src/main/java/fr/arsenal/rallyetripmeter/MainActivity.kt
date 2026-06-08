@@ -19,7 +19,15 @@ class MainActivity : ComponentActivity() {
         setContent {
             RallyeTripMeterTheme {
                 TripMeterScreen(
-                    state = bootstrapTripState().toTripDisplayState()
+                    state = bootstrapTripState().toTripDisplayState(),
+                    onAdjustPartialMinus100 = {},
+                    onAdjustPartialMinus10 = {},
+                    onResetPartial = {},
+                    onAdjustPartialPlus10 = {},
+                    onAdjustPartialPlus100 = {},
+                    onPause = {},
+                    onStop = {},
+                    onOptions = {}
                 )
             }
         }
