@@ -29,9 +29,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import fr.arsenal.rallyetripmeter.ui.theme.RallyeTripMeterTheme
+import fr.arsenal.rallyetripmeter.ui.model.TripDisplayState
 
 @Composable
-fun TripMeterScreen() {
+fun TripMeterScreen(
+    state: TripDisplayState = TripDisplayState.preview()
+) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
@@ -49,25 +52,25 @@ fun TripMeterScreen() {
             ) {
                 TripValueCard(
                     label = "PARTIEL",
-                    value = "0.80 km",
+                    value = state.partialDistanceText,
                     emphasis = TripValueEmphasis.Primary
                 )
 
                 TripValueCard(
                     label = "TOTAL",
-                    value = "124.37 km",
+                    value = state.totalDistanceText,
                     emphasis = TripValueEmphasis.Secondary
                 )
 
                 TripValueCard(
                     label = "VITESSE",
-                    value = "76 km/h",
+                    value = state.speedText,
                     emphasis = TripValueEmphasis.Tertiary
                 )
 
                 StatusBar(
-                    gpsStatus = "GPS OK ±4 m",
-                    sessionStatus = "ACTIF"
+                    gpsStatus = state.gpsStatusText,
+                    sessionStatus = state.sessionStatusText
                 )
             }
 
