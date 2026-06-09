@@ -251,7 +251,7 @@ private fun SessionControls(
         Spacer(modifier = Modifier.width(12.dp))
 
         TripButton(
-            label = "OPTIONS",
+            label = "SIM GPS",
             onClick = { onEvent(TripMeterUiEvent.SimulateLocationStep) },
             modifier = Modifier.weight(1f)
         )
