@@ -18,6 +18,15 @@ class TripMeterViewModelTest {
     }
 
     @Test
+    fun initialState_exposesUnknownLocationPermissionStatus() {
+        val viewModel = TripMeterViewModel()
+
+        val state = viewModel.uiState
+
+        assertEquals("POSITION ?", state.locationPermissionStatusText)
+    }
+
+    @Test
     fun adjustPartialPlus10_increasesPartialDistanceText() {
         val viewModel = TripMeterViewModel()
 
