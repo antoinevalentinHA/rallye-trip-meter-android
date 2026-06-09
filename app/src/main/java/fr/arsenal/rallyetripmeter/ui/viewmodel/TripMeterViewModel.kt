@@ -41,6 +41,9 @@ import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
  */
 class TripMeterViewModel(
     initialLocationPermissionState: LocationPermissionState = LocationPermissionState.Unknown,
+    private val readLocationPermissionState: () -> LocationPermissionState = {
+        LocationPermissionState.Unknown
+    },
     private val controller: TripController = ImmutableTripController(),
     private val progressEngine: TripProgressEngine = DistanceTripProgressEngine(
         distanceEngine = HaversineDistanceEngine()
@@ -109,6 +112,10 @@ class TripMeterViewModel(
 
             TripMeterUiEvent.Options -> state
 
+            TripMeterUiEvent.RefreshLocationPermission -> {
+                locationPermissionState = readLocationPermissionState()
+                state
+            }
             TripMeterUiEvent.ApplyLocationSample -> applyLocationEngineSample(state)
 
             TripMeterUiEvent.SimulateLocationStep -> progressEngine.applyLocationSample(
@@ -163,5 +170,3 @@ class TripMeterViewModel(
         }
     }
 }
-
-

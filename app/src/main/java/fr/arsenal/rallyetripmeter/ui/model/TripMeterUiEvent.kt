@@ -33,6 +33,8 @@ sealed interface TripMeterUiEvent {
 
     data object Options : TripMeterUiEvent
 
+    data object RefreshLocationPermission : TripMeterUiEvent
+
     data object ApplyLocationSample : TripMeterUiEvent
 
     data object SimulateLocationStep : TripMeterUiEvent
