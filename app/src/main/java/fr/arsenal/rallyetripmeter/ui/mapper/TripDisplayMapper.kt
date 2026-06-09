@@ -6,6 +6,7 @@ import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.ui.model.TripDisplayState
 import fr.arsenal.rallyetripmeter.ui.model.UiGpsStatus
 import fr.arsenal.rallyetripmeter.ui.model.UiSessionStatus
+import java.util.Locale
 
 /*
  * ARSENAL RALLYE — UI mapper
@@ -32,7 +33,11 @@ fun TripState.toTripDisplayState(): TripDisplayState {
 }
 
 private fun Double.toKilometerText(): String {
-    return "%.2f km".format(this / 1000.0)
+    return String.format(
+        Locale.US,
+        "%.2f km",
+        this / 1000.0
+    )
 }
 
 private fun GpsStatus.toUiGpsStatus(): UiGpsStatus {

@@ -1,0 +1,99 @@
+package fr.arsenal.rallyetripmeter.ui.viewmodel
+
+import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
+import org.junit.Assert.assertEquals
+import org.junit.Test
+
+class TripMeterViewModelTest {
+    @Test
+    fun initialState_isRunningWithBootstrapDistances() {
+        val viewModel = TripMeterViewModel()
+
+        val state = viewModel.uiState
+
+        assertEquals("0.80 km", state.partialDistanceText)
+        assertEquals("124.37 km", state.totalDistanceText)
+        assertEquals("ACTIF", state.sessionStatusText)
+        assertEquals("PAUSE", state.sessionActionText)
+    }
+
+    @Test
+    fun adjustPartialPlus10_increasesPartialDistanceText() {
+        val viewModel = TripMeterViewModel()
+
+        viewModel.onEvent(TripMeterUiEvent.AdjustPartialPlus10)
+
+        assertEquals("0.81 km", viewModel.uiState.partialDistanceText)
+    }
+
+    @Test
+    fun adjustPartialMinus100_decreasesPartialDistanceText() {
+        val viewModel = TripMeterViewModel()
+
+        viewModel.onEvent(TripMeterUiEvent.AdjustPartialMinus100)
+
+        assertEquals("0.70 km", viewModel.uiState.partialDistanceText)
+    }
+
+    @Test
+    fun resetPartial_setsPartialDistanceTextToZero() {
+        val viewModel = TripMeterViewModel()
+
+        viewModel.onEvent(TripMeterUiEvent.ResetPartial)
+
+        assertEquals("0.00 km", viewModel.uiState.partialDistanceText)
+    }
+
+    @Test
+    fun sessionAction_fromRunning_pausesSession() {
+        val viewModel = TripMeterViewModel()
+
+        viewModel.onEvent(TripMeterUiEvent.SessionAction)
+
+        assertEquals("PAUSE", viewModel.uiState.sessionStatusText)
+        assertEquals("REPRISE", viewModel.uiState.sessionActionText)
+    }
+
+    @Test
+    fun sessionAction_fromPaused_resumesSession() {
+        val viewModel = TripMeterViewModel()
+
+        viewModel.onEvent(TripMeterUiEvent.SessionAction)
+        viewModel.onEvent(TripMeterUiEvent.SessionAction)
+
+        assertEquals("ACTIF", viewModel.uiState.sessionStatusText)
+        assertEquals("PAUSE", viewModel.uiState.sessionActionText)
+    }
+
+    @Test
+    fun stop_stopsSessionAndDisablesStop() {
+        val viewModel = TripMeterViewModel()
+
+        viewModel.onEvent(TripMeterUiEvent.Stop)
+
+        assertEquals("ARRÊTÉ", viewModel.uiState.sessionStatusText)
+        assertEquals("START", viewModel.uiState.sessionActionText)
+        assertEquals(false, viewModel.uiState.isStopEnabled)
+    }
+
+    @Test
+    fun sessionAction_fromStopped_startsSession() {
+        val viewModel = TripMeterViewModel()
+
+        viewModel.onEvent(TripMeterUiEvent.Stop)
+        viewModel.onEvent(TripMeterUiEvent.SessionAction)
+
+        assertEquals("ACTIF", viewModel.uiState.sessionStatusText)
+        assertEquals("PAUSE", viewModel.uiState.sessionActionText)
+    }
+
+    @Test
+    fun options_keepsStateUnchanged() {
+        val viewModel = TripMeterViewModel()
+        val initialState = viewModel.uiState
+
+        viewModel.onEvent(TripMeterUiEvent.Options)
+
+        assertEquals(initialState, viewModel.uiState)
+    }
+}
