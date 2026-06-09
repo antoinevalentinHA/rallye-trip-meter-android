@@ -6,7 +6,8 @@ data class TripDisplayState(
     val speedText: String,
     val gpsStatus: UiGpsStatus,
     val gpsAccuracyText: String?,
-    val sessionStatus: UiSessionStatus
+    val sessionStatus: UiSessionStatus,
+    val locationPermissionStatus: UiLocationPermissionStatus = UiLocationPermissionStatus.Unknown
 ) {
     val gpsStatusText: String
         get() {
@@ -19,6 +20,9 @@ data class TripDisplayState(
 
     val sessionStatusText: String
         get() = sessionStatus.label
+
+    val locationPermissionStatusText: String
+        get() = locationPermissionStatus.label
 
     val sessionActionText: String
         get() {
@@ -43,7 +47,8 @@ data class TripDisplayState(
                 speedText = "76 km/h",
                 gpsStatus = UiGpsStatus.Ok,
                 gpsAccuracyText = "±4 m",
-                sessionStatus = UiSessionStatus.Active
+                sessionStatus = UiSessionStatus.Active,
+                locationPermissionStatus = UiLocationPermissionStatus.Granted
             )
         }
     }
