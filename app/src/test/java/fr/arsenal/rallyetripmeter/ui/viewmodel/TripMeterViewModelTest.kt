@@ -1,6 +1,7 @@
 package fr.arsenal.rallyetripmeter.ui.viewmodel
 
 import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
+import fr.arsenal.rallyetripmeter.android.permission.LocationPermissionState
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -24,6 +25,28 @@ class TripMeterViewModelTest {
         val state = viewModel.uiState
 
         assertEquals("POSITION ?", state.locationPermissionStatusText)
+    }
+
+    @Test
+    fun initialState_withGrantedLocationPermission_exposesGrantedStatus() {
+        val viewModel = TripMeterViewModel(
+            initialLocationPermissionState = LocationPermissionState.Granted
+        )
+
+        val state = viewModel.uiState
+
+        assertEquals("POSITION OK", state.locationPermissionStatusText)
+    }
+
+    @Test
+    fun initialState_withDeniedLocationPermission_exposesDeniedStatus() {
+        val viewModel = TripMeterViewModel(
+            initialLocationPermissionState = LocationPermissionState.Denied
+        )
+
+        val state = viewModel.uiState
+
+        assertEquals("POSITION REFUSÉE", state.locationPermissionStatusText)
     }
 
     @Test
