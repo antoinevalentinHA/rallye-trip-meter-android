@@ -176,10 +176,10 @@ class TripMeterViewModel(
             gpsStatus: GpsStatus
         ): TripState {
             return TripState(
-                totalDistanceMeters = 124370.0,
-                partialDistanceMeters = 800.0,
+                totalDistanceMeters = 0.0,
+                partialDistanceMeters = 0.0,
                 gpsStatus = gpsStatus,
-                sessionState = TripSessionState.Running
+                sessionState = TripSessionState.Stopped
             )
         }
     }

@@ -45,15 +45,15 @@ class TripMeterViewModelTest {
     }
 
     @Test
-    fun initialState_isRunningWithBootstrapDistances() {
+    fun initialState_isStoppedWithNeutralDistances() {
         val viewModel = TripMeterViewModel()
 
         val state = viewModel.uiState
 
-        assertEquals("0.80 km", state.partialDistanceText)
-        assertEquals("124.37 km", state.totalDistanceText)
-        assertEquals("ACTIF", state.sessionStatusText)
-        assertEquals("PAUSE", state.sessionActionText)
+        assertEquals("0.00 km", state.partialDistanceText)
+        assertEquals("0.00 km", state.totalDistanceText)
+        assertEquals("ARRÊTÉ", state.sessionStatusText)
+        assertEquals("START", state.sessionActionText)
     }
 
     @Test
@@ -93,7 +93,7 @@ class TripMeterViewModelTest {
 
         viewModel.onEvent(TripMeterUiEvent.AdjustPartialPlus10)
 
-        assertEquals("0.81 km", viewModel.uiState.partialDistanceText)
+        assertEquals("0.01 km", viewModel.uiState.partialDistanceText)
     }
 
     @Test
@@ -102,7 +102,7 @@ class TripMeterViewModelTest {
 
         viewModel.onEvent(TripMeterUiEvent.AdjustPartialMinus100)
 
-        assertEquals("0.70 km", viewModel.uiState.partialDistanceText)
+        assertEquals("0.00 km", viewModel.uiState.partialDistanceText)
     }
 
     @Test
@@ -116,7 +116,11 @@ class TripMeterViewModelTest {
 
     @Test
     fun sessionAction_fromRunning_pausesSession() {
-        val viewModel = TripMeterViewModel()
+        val viewModel = TripMeterViewModel(
+            initialTripState = TripState(
+                sessionState = TripSessionState.Running
+            )
+        )
 
         viewModel.onEvent(TripMeterUiEvent.SessionAction)
 
@@ -126,9 +130,12 @@ class TripMeterViewModelTest {
 
     @Test
     fun sessionAction_fromPaused_resumesSession() {
-        val viewModel = TripMeterViewModel()
+        val viewModel = TripMeterViewModel(
+            initialTripState = TripState(
+                sessionState = TripSessionState.Paused
+            )
+        )
 
-        viewModel.onEvent(TripMeterUiEvent.SessionAction)
         viewModel.onEvent(TripMeterUiEvent.SessionAction)
 
         assertEquals("ACTIF", viewModel.uiState.sessionStatusText)
@@ -276,8 +283,8 @@ class TripMeterViewModelTest {
         )
 
         viewModel.onEvent(TripMeterUiEvent.ApplyLocationSample)
-        assertEquals("0.80 km", viewModel.uiState.partialDistanceText)
-        assertEquals("124.37 km", viewModel.uiState.totalDistanceText)
+        assertEquals("0.00 km", viewModel.uiState.partialDistanceText)
+        assertEquals("0.00 km", viewModel.uiState.totalDistanceText)
 
         viewModel.onEvent(TripMeterUiEvent.ApplyLocationSample)
         assertEquals("0.70 km", viewModel.uiState.partialDistanceText)
@@ -288,10 +295,11 @@ class TripMeterViewModelTest {
     fun simulateLocationStep_whenRunning_increasesTotalAndPartialDistances() {
         val viewModel = TripMeterViewModel()
 
+        viewModel.onEvent(TripMeterUiEvent.SessionAction)
         viewModel.onEvent(TripMeterUiEvent.SimulateLocationStep)
 
-        assertEquals("0.83 km", viewModel.uiState.partialDistanceText)
-        assertEquals("124.40 km", viewModel.uiState.totalDistanceText)
+        assertEquals("0.03 km", viewModel.uiState.partialDistanceText)
+        assertEquals("0.03 km", viewModel.uiState.totalDistanceText)
     }
 
     @Test
