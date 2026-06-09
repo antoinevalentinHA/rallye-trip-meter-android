@@ -168,6 +168,27 @@ class TripMeterViewModelTest {
     }
 
     @Test
+    fun locationLifecycle_delegatesStartAndStopHandles() {
+        var startCount = 0
+        var stopCount = 0
+
+        val viewModel = TripMeterViewModel(
+            startLocationUpdates = {
+                startCount += 1
+            },
+            stopLocationUpdates = {
+                stopCount += 1
+            }
+        )
+
+        viewModel.onStartLocation()
+        viewModel.onStopLocation()
+
+        assertEquals(1, startCount)
+        assertEquals(1, stopCount)
+    }
+
+    @Test
     fun applyLocationSample_withoutCurrentSample_keepsDistancesUnchanged() {
         val viewModel = TripMeterViewModel(
             locationEngine = FakeLocationEngine(
@@ -298,4 +319,3 @@ class TripMeterViewModelTest {
         }
     }
 }
-

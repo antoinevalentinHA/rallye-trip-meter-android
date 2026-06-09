@@ -37,12 +37,16 @@ class TripMeterViewModelFactory(
                 context = applicationContext
             )
 
+            val locationEngine = AndroidLocationEngine(
+                context = applicationContext
+            )
+
             return TripMeterViewModel(
                 initialLocationPermissionState = locationPermissionChecker.getLocationPermissionState(),
                 readLocationPermissionState = locationPermissionChecker::getLocationPermissionState,
-                locationEngine = AndroidLocationEngine(
-                    context = applicationContext
-                )
+                locationEngine = locationEngine,
+                startLocationUpdates = locationEngine::start,
+                stopLocationUpdates = locationEngine::stop
             ) as T
         }
 

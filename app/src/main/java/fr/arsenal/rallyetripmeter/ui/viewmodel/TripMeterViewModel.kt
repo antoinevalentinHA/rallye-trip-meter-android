@@ -44,6 +44,8 @@ class TripMeterViewModel(
     private val readLocationPermissionState: () -> LocationPermissionState = {
         LocationPermissionState.Unknown
     },
+    private val startLocationUpdates: () -> Unit = {},
+    private val stopLocationUpdates: () -> Unit = {},
     private val controller: TripController = ImmutableTripController(),
     private val progressEngine: TripProgressEngine = DistanceTripProgressEngine(
         distanceEngine = HaversineDistanceEngine()
@@ -65,6 +67,14 @@ class TripMeterViewModel(
             .copy(
                 locationPermissionStatus = locationPermissionState.toUiLocationPermissionStatus()
             )
+
+    fun onStartLocation() {
+        startLocationUpdates()
+    }
+
+    fun onStopLocation() {
+        stopLocationUpdates()
+    }
 
     fun onEvent(event: TripMeterUiEvent) {
         tripState = handleTripMeterUiEvent(
