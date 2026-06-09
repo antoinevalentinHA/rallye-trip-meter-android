@@ -37,7 +37,9 @@ import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
  * Statut :
  * - Palier local avant intégration LocationEngine réel.
  */
-class TripMeterViewModel : ViewModel() {
+class TripMeterViewModel(
+    initialLocationPermissionState: LocationPermissionState = LocationPermissionState.Unknown
+) : ViewModel() {
     private val controller = ImmutableTripController()
 
     private val progressEngine = DistanceTripProgressEngine(
@@ -46,7 +48,7 @@ class TripMeterViewModel : ViewModel() {
 
     private var tripState by mutableStateOf(bootstrapTripState())
 
-    private var locationPermissionState by mutableStateOf(LocationPermissionState.Unknown)
+    private var locationPermissionState by mutableStateOf(initialLocationPermissionState)
 
     val uiState: TripDisplayState
         get() = tripState
