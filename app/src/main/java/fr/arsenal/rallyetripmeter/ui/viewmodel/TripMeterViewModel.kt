@@ -8,7 +8,6 @@ import fr.arsenal.rallyetripmeter.android.location.AndroidLocationEngine
 import fr.arsenal.rallyetripmeter.domain.controller.ImmutableTripController
 import fr.arsenal.rallyetripmeter.domain.controller.TripController
 import fr.arsenal.rallyetripmeter.domain.distance.HaversineDistanceEngine
-import fr.arsenal.rallyetripmeter.domain.geo.GeoPoint
 import fr.arsenal.rallyetripmeter.domain.geo.LocationSample
 import fr.arsenal.rallyetripmeter.domain.location.LocationEngine
 import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
@@ -115,8 +114,8 @@ class TripMeterViewModel(
 
             TripMeterUiEvent.SimulateLocationStep -> progressEngine.applyLocationSample(
                 state = state,
-                previousSample = simulatedPreviousSample(),
-                currentSample = simulatedCurrentSample()
+                previousSample = simulatedPreviousLocationSample(),
+                currentSample = simulatedCurrentLocationSample()
             )
         }
     }
@@ -139,28 +138,6 @@ class TripMeterViewModel(
             state = state,
             previousSample = previousSample,
             currentSample = currentSample
-        )
-    }
-
-    private fun simulatedPreviousSample(): LocationSample {
-        return LocationSample(
-            point = GeoPoint(
-                latitude = 44.8378,
-                longitude = -0.5792
-            ),
-            accuracyMeters = 4.0,
-            speedMetersPerSecond = 12.0
-        )
-    }
-
-    private fun simulatedCurrentSample(): LocationSample {
-        return LocationSample(
-            point = GeoPoint(
-                latitude = 44.8380,
-                longitude = -0.5794
-            ),
-            accuracyMeters = 4.0,
-            speedMetersPerSecond = 12.0
         )
     }
 
