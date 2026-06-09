@@ -18,4 +18,5 @@ data class TripState(
     val gpsStatus: GpsStatus = GpsStatus.Unavailable,
     val totalDistanceMeters: Double = 0.0,
     val partialDistanceMeters: Double = 0.0,
+    val accuracyMeters: Double? = null,
 )

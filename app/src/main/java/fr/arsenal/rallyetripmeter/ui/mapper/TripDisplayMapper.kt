@@ -7,6 +7,7 @@ import fr.arsenal.rallyetripmeter.ui.model.TripDisplayState
 import fr.arsenal.rallyetripmeter.ui.model.UiGpsStatus
 import fr.arsenal.rallyetripmeter.ui.model.UiSessionStatus
 import java.util.Locale
+import kotlin.math.roundToInt
 
 /*
  * ARSENAL RALLYE — UI mapper
@@ -27,7 +28,7 @@ fun TripState.toTripDisplayState(): TripDisplayState {
         totalDistanceText = totalDistanceMeters.toKilometerText(),
         speedText = "0 km/h",
         gpsStatus = gpsStatus.toUiGpsStatus(),
-        gpsAccuracyText = null,
+        gpsAccuracyText = accuracyMeters.toAccuracyText(),
         sessionStatus = sessionState.toUiSessionStatus()
     )
 }
@@ -38,6 +39,14 @@ private fun Double.toKilometerText(): String {
         "%.2f km",
         this / 1000.0
     )
+}
+
+private fun Double?.toAccuracyText(): String? {
+    if (this == null) {
+        return null
+    }
+
+    return "±${roundToInt()} m"
 }
 
 private fun GpsStatus.toUiGpsStatus(): UiGpsStatus {

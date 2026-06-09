@@ -97,9 +97,23 @@ class TripDisplayMapperTest {
     }
 
     @Test
-    fun toTripDisplayState_gpsAccuracyText_isNullPlaceholder() {
+    fun toTripDisplayState_whenAccuracyAbsent_returnsNullAccuracyText() {
         val display = TripState().toTripDisplayState()
 
         assertNull(display.gpsAccuracyText)
+    }
+
+    @Test
+    fun toTripDisplayState_whenAccuracyPresent_formatsWithSign() {
+        val display = TripState(accuracyMeters = 4.0).toTripDisplayState()
+
+        assertEquals("±4 m", display.gpsAccuracyText)
+    }
+
+    @Test
+    fun toTripDisplayState_whenAccuracyPresent_roundsToWholeMeters() {
+        val display = TripState(accuracyMeters = 3.6).toTripDisplayState()
+
+        assertEquals("±4 m", display.gpsAccuracyText)
     }
 }
