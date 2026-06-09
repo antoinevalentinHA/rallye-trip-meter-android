@@ -1,11 +1,33 @@
 package fr.arsenal.rallyetripmeter.ui.viewmodel
 
-import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
+import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
+import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
+import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.domain.permission.LocationPermissionState
+import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class TripMeterViewModelTest {
+    @Test
+    fun initialState_withInjectedTripState_exposesInjectedDistancesAndSession() {
+        val viewModel = TripMeterViewModel(
+            initialTripState = TripState(
+                totalDistanceMeters = 42_000.0,
+                partialDistanceMeters = 1_230.0,
+                gpsStatus = GpsStatus.Searching,
+                sessionState = TripSessionState.Stopped
+            )
+        )
+
+        val state = viewModel.uiState
+
+        assertEquals("1.23 km", state.partialDistanceText)
+        assertEquals("42.00 km", state.totalDistanceText)
+        assertEquals("ARRÊTÉ", state.sessionStatusText)
+        assertEquals("START", state.sessionActionText)
+    }
+
     @Test
     fun initialState_isRunningWithBootstrapDistances() {
         val viewModel = TripMeterViewModel()
@@ -152,3 +174,4 @@ class TripMeterViewModelTest {
         assertEquals(stoppedState.totalDistanceText, viewModel.uiState.totalDistanceText)
     }
 }
+
