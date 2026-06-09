@@ -4,7 +4,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import fr.arsenal.rallyetripmeter.android.location.AndroidLocationEngine
 import fr.arsenal.rallyetripmeter.domain.controller.ImmutableTripController
 import fr.arsenal.rallyetripmeter.domain.controller.TripController
 import fr.arsenal.rallyetripmeter.domain.distance.HaversineDistanceEngine
@@ -46,7 +45,7 @@ class TripMeterViewModel(
     private val progressEngine: TripProgressEngine = DistanceTripProgressEngine(
         distanceEngine = HaversineDistanceEngine()
     ),
-    private val locationEngine: LocationEngine = AndroidLocationEngine(),
+    private val locationEngine: LocationEngine = UnavailableLocationEngine(),
     initialTripState: TripState = bootstrapTripState(
         gpsStatus = locationEngine.getGpsStatus()
     )
@@ -141,6 +140,16 @@ class TripMeterViewModel(
         )
     }
 
+    private class UnavailableLocationEngine : LocationEngine {
+        override fun getGpsStatus(): GpsStatus {
+            return GpsStatus.Unavailable
+        }
+
+        override fun getLastLocationSample(): LocationSample? {
+            return null
+        }
+    }
+
     private companion object {
         fun bootstrapTripState(
             gpsStatus: GpsStatus
@@ -154,4 +163,5 @@ class TripMeterViewModel(
         }
     }
 }
+
 
