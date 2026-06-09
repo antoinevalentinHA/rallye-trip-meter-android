@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import fr.arsenal.rallyetripmeter.android.permission.LocationPermissionState
 import fr.arsenal.rallyetripmeter.domain.controller.ImmutableTripController
 import fr.arsenal.rallyetripmeter.domain.distance.HaversineDistanceEngine
 import fr.arsenal.rallyetripmeter.domain.geo.GeoPoint
@@ -13,6 +14,7 @@ import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
 import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.domain.progress.DistanceTripProgressEngine
 import fr.arsenal.rallyetripmeter.ui.mapper.toTripDisplayState
+import fr.arsenal.rallyetripmeter.ui.mapper.toUiLocationPermissionStatus
 import fr.arsenal.rallyetripmeter.ui.model.TripDisplayState
 import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
 
@@ -23,10 +25,12 @@ import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
  * - Héberge l'état UI du trip meter.
  * - Route les événements UI vers le contrôleur métier immutable.
  * - Héberge un pas de progression simulé pour valider le pipeline distance.
+ * - Expose un état de permission localisation affichable.
  *
  * Contraintes :
  * - Aucun GPS réel.
  * - Aucun Android Location.
+ * - Aucune demande de permission runtime.
  * - Aucune persistance.
  * - Aucun effet de bord externe.
  *
@@ -42,8 +46,14 @@ class TripMeterViewModel : ViewModel() {
 
     private var tripState by mutableStateOf(bootstrapTripState())
 
+    private var locationPermissionState by mutableStateOf(LocationPermissionState.Unknown)
+
     val uiState: TripDisplayState
-        get() = tripState.toTripDisplayState()
+        get() = tripState
+            .toTripDisplayState()
+            .copy(
+                locationPermissionStatus = locationPermissionState.toUiLocationPermissionStatus()
+            )
 
     fun onEvent(event: TripMeterUiEvent) {
         tripState = handleTripMeterUiEvent(
