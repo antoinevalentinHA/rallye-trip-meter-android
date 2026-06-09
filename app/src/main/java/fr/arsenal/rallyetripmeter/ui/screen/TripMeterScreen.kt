@@ -22,8 +22,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,6 +36,7 @@ import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.ui.mapper.toTripDisplayState
 import fr.arsenal.rallyetripmeter.ui.model.TripDisplayState
 import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
+import fr.arsenal.rallyetripmeter.ui.model.UiSessionStatus
 import fr.arsenal.rallyetripmeter.ui.theme.RallyeTripMeterTheme
 
 @Composable
@@ -41,6 +44,15 @@ fun TripMeterScreen(
     state: TripDisplayState,
     onEvent: (TripMeterUiEvent) -> Unit
 ) {
+    val view = LocalView.current
+
+    DisposableEffect(state.sessionStatus) {
+        view.keepScreenOn = state.sessionStatus == UiSessionStatus.Active
+        onDispose {
+            view.keepScreenOn = false
+        }
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
