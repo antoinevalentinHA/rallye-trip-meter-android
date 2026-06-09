@@ -19,4 +19,5 @@ data class TripState(
     val totalDistanceMeters: Double = 0.0,
     val partialDistanceMeters: Double = 0.0,
     val accuracyMeters: Double? = null,
+    val speedMetersPerSecond: Double? = null,
 )

@@ -147,7 +147,8 @@ class TripMeterViewModel(
 
         val stateWithGpsStatus = state.copy(
             gpsStatus = locationEngine.getGpsStatus(),
-            accuracyMeters = currentSample?.accuracyMeters
+            accuracyMeters = currentSample?.accuracyMeters,
+            speedMetersPerSecond = currentSample?.speedMetersPerSecond
         )
 
         if (currentSample == null) {

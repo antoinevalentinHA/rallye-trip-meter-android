@@ -90,10 +90,17 @@ class TripDisplayMapperTest {
     }
 
     @Test
-    fun toTripDisplayState_speedText_isCurrentPlaceholder() {
+    fun toTripDisplayState_whenSpeedAbsent_returnsDashText() {
         val display = TripState().toTripDisplayState()
 
-        assertEquals("0 km/h", display.speedText)
+        assertEquals("—", display.speedText)
+    }
+
+    @Test
+    fun toTripDisplayState_whenSpeedPresent_formatsAsRoundedKmh() {
+        val display = TripState(speedMetersPerSecond = 21.0).toTripDisplayState()
+
+        assertEquals("76 km/h", display.speedText)
     }
 
     @Test

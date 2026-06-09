@@ -26,7 +26,7 @@ fun TripState.toTripDisplayState(): TripDisplayState {
     return TripDisplayState(
         partialDistanceText = partialDistanceMeters.toKilometerText(),
         totalDistanceText = totalDistanceMeters.toKilometerText(),
-        speedText = "0 km/h",
+        speedText = speedMetersPerSecond.toSpeedText(),
         gpsStatus = gpsStatus.toUiGpsStatus(),
         gpsAccuracyText = accuracyMeters.toAccuracyText(),
         sessionStatus = sessionState.toUiSessionStatus()
@@ -47,6 +47,15 @@ private fun Double?.toAccuracyText(): String? {
     }
 
     return "±${roundToInt()} m"
+}
+
+private fun Double?.toSpeedText(): String {
+    if (this == null) {
+        return "—"
+    }
+
+    val speedKmh = (this * 3.6).roundToInt()
+    return "$speedKmh km/h"
 }
 
 private fun GpsStatus.toUiGpsStatus(): UiGpsStatus {
