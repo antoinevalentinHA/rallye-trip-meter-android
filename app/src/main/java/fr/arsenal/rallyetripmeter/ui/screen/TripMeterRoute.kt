@@ -1,9 +1,11 @@
 package fr.arsenal.rallyetripmeter.ui.screen
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
 import fr.arsenal.rallyetripmeter.ui.viewmodel.TripMeterViewModel
 import fr.arsenal.rallyetripmeter.ui.viewmodel.TripMeterViewModelFactory
 
@@ -13,10 +15,12 @@ import fr.arsenal.rallyetripmeter.ui.viewmodel.TripMeterViewModelFactory
  * Rôle :
  * - Relie le ViewModel TripMeter à l'écran Compose pur.
  * - Fournit au ViewModel ses dépendances Android via une factory dédiée.
+ * - Rafraîchit l'état de permission de localisation à l'entrée dans la route.
  *
  * Contraintes :
  * - Aucun démarrage GPS.
  * - Aucune demande de permission runtime.
+ * - Aucune popup système.
  * - Aucune logique métier locale.
  *
  * Statut :
@@ -34,6 +38,10 @@ fun TripMeterRoute() {
     val viewModel: TripMeterViewModel = viewModel(
         factory = factory
     )
+
+    LaunchedEffect(viewModel) {
+        viewModel.onEvent(TripMeterUiEvent.RefreshLocationPermission)
+    }
 
     TripMeterScreen(
         state = viewModel.uiState,
