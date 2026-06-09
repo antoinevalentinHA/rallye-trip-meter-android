@@ -252,7 +252,7 @@ private fun SessionControls(
 
         TripButton(
             label = "OPTIONS",
-            onClick = { onEvent(TripMeterUiEvent.Options) },
+            onClick = { onEvent(TripMeterUiEvent.SimulateLocationStep) },
             modifier = Modifier.weight(1f)
         )
     }

@@ -5,9 +5,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import fr.arsenal.rallyetripmeter.domain.controller.ImmutableTripController
+import fr.arsenal.rallyetripmeter.domain.distance.HaversineDistanceEngine
+import fr.arsenal.rallyetripmeter.domain.geo.GeoPoint
+import fr.arsenal.rallyetripmeter.domain.geo.LocationSample
 import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
 import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
 import fr.arsenal.rallyetripmeter.domain.model.TripState
+import fr.arsenal.rallyetripmeter.domain.progress.DistanceTripProgressEngine
 import fr.arsenal.rallyetripmeter.ui.mapper.toTripDisplayState
 import fr.arsenal.rallyetripmeter.ui.model.TripDisplayState
 import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
@@ -18,18 +22,23 @@ import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
  * Rôle :
  * - Héberge l'état UI du trip meter.
  * - Route les événements UI vers le contrôleur métier immutable.
+ * - Héberge un pas de progression simulé pour valider le pipeline distance.
  *
  * Contraintes :
  * - Aucun GPS réel.
- * - Aucun moteur de distance.
+ * - Aucun Android Location.
  * - Aucune persistance.
  * - Aucun effet de bord externe.
  *
  * Statut :
- * - Palier local avant intégration LocationEngine / DistanceEngine.
+ * - Palier local avant intégration LocationEngine réel.
  */
 class TripMeterViewModel : ViewModel() {
     private val controller = ImmutableTripController()
+
+    private val progressEngine = DistanceTripProgressEngine(
+        distanceEngine = HaversineDistanceEngine()
+    )
 
     private var tripState by mutableStateOf(bootstrapTripState())
 
@@ -81,6 +90,12 @@ class TripMeterViewModel : ViewModel() {
             TripMeterUiEvent.Stop -> controller.stop(state)
 
             TripMeterUiEvent.Options -> state
+
+            TripMeterUiEvent.SimulateLocationStep -> progressEngine.applyLocationSample(
+                state = state,
+                previousSample = simulatedPreviousSample(),
+                currentSample = simulatedCurrentSample()
+            )
         }
     }
 
@@ -90,6 +105,28 @@ class TripMeterViewModel : ViewModel() {
             partialDistanceMeters = 800.0,
             gpsStatus = GpsStatus.Fixed,
             sessionState = TripSessionState.Running
+        )
+    }
+
+    private fun simulatedPreviousSample(): LocationSample {
+        return LocationSample(
+            point = GeoPoint(
+                latitude = 44.8378,
+                longitude = -0.5792
+            ),
+            accuracyMeters = 4.0,
+            speedMetersPerSecond = 12.0
+        )
+    }
+
+    private fun simulatedCurrentSample(): LocationSample {
+        return LocationSample(
+            point = GeoPoint(
+                latitude = 44.8380,
+                longitude = -0.5794
+            ),
+            accuracyMeters = 4.0,
+            speedMetersPerSecond = 12.0
         )
     }
 }
