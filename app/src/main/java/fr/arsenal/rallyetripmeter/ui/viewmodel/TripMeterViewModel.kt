@@ -27,18 +27,18 @@ import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
  * Rôle :
  * - Héberge l'état UI du trip meter.
  * - Route les événements UI vers le contrôleur métier immutable.
- * - Héberge un pas de progression simulé pour valider le pipeline distance.
- * - Expose un état de permission localisation affichable.
+ * - Consomme un LocationEngine injecté pour le statut GPS et les échantillons de localisation.
+ * - Route les échantillons de localisation vers le moteur de progression métier.
  *
  * Contraintes :
- * - Aucun GPS réel.
- * - Aucun Android Location exposé.
+ * - Aucun GPS Android réel directement manipulé.
+ * - Aucun Android Location exposé au domaine ou à l'UI.
  * - Aucune demande de permission runtime.
  * - Aucune persistance.
  * - Aucun effet de bord externe.
  *
  * Statut :
- * - Palier local avant intégration LocationEngine réel.
+ * - Palier intermédiaire : LocationEngine injecté, adaptateur Android réel encore squelette.
  */
 class TripMeterViewModel(
     initialLocationPermissionState: LocationPermissionState = LocationPermissionState.Unknown,
