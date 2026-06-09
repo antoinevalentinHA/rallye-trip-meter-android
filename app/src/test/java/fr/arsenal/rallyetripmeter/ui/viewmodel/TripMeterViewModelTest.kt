@@ -96,4 +96,27 @@ class TripMeterViewModelTest {
 
         assertEquals(initialState, viewModel.uiState)
     }
+
+    @Test
+    fun simulateLocationStep_whenRunning_increasesTotalAndPartialDistances() {
+        val viewModel = TripMeterViewModel()
+
+        viewModel.onEvent(TripMeterUiEvent.SimulateLocationStep)
+
+        assertEquals("0.83 km", viewModel.uiState.partialDistanceText)
+        assertEquals("124.40 km", viewModel.uiState.totalDistanceText)
+    }
+
+    @Test
+    fun simulateLocationStep_whenStopped_keepsDistancesUnchanged() {
+        val viewModel = TripMeterViewModel()
+
+        viewModel.onEvent(TripMeterUiEvent.Stop)
+        val stoppedState = viewModel.uiState
+
+        viewModel.onEvent(TripMeterUiEvent.SimulateLocationStep)
+
+        assertEquals(stoppedState.partialDistanceText, viewModel.uiState.partialDistanceText)
+        assertEquals(stoppedState.totalDistanceText, viewModel.uiState.totalDistanceText)
+    }
 }
