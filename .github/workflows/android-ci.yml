@@ -32,3 +32,10 @@ jobs:
 
       - name: Unit tests + debug assembly
         run: ./gradlew testDebugUnitTest assembleDebug --stacktrace
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: rallye-trip-meter-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
