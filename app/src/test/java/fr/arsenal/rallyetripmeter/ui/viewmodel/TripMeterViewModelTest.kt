@@ -168,6 +168,61 @@ class TripMeterViewModelTest {
     }
 
     @Test
+    fun applyLocationSample_withoutCurrentSample_keepsDistancesUnchanged() {
+        val viewModel = TripMeterViewModel(
+            locationEngine = FakeLocationEngine(
+                gpsStatus = GpsStatus.Fixed
+            )
+        )
+
+        val initialState = viewModel.uiState
+
+        viewModel.onEvent(TripMeterUiEvent.ApplyLocationSample)
+
+        assertEquals(initialState.partialDistanceText, viewModel.uiState.partialDistanceText)
+        assertEquals(initialState.totalDistanceText, viewModel.uiState.totalDistanceText)
+    }
+
+    @Test
+    fun applyLocationSample_withTwoSamples_usesInjectedProgressEngine() {
+        val viewModel = TripMeterViewModel(
+            locationEngine = FakeLocationEngine(
+                gpsStatus = GpsStatus.Fixed,
+                samples = listOf(
+                    LocationSample(
+                        point = fr.arsenal.rallyetripmeter.domain.geo.GeoPoint(
+                            latitude = 44.8378,
+                            longitude = -0.5792
+                        )
+                    ),
+                    LocationSample(
+                        point = fr.arsenal.rallyetripmeter.domain.geo.GeoPoint(
+                            latitude = 44.8380,
+                            longitude = -0.5794
+                        )
+                    )
+                )
+            ),
+            progressEngine = FakeTripProgressEngine(
+                resultState = TripState(
+                    totalDistanceMeters = 3_000.0,
+                    partialDistanceMeters = 700.0,
+                    gpsStatus = GpsStatus.Fixed,
+                    sessionState = TripSessionState.Running
+                )
+            )
+        )
+
+        viewModel.onEvent(TripMeterUiEvent.ApplyLocationSample)
+        assertEquals("0.80 km", viewModel.uiState.partialDistanceText)
+        assertEquals("124.37 km", viewModel.uiState.totalDistanceText)
+
+        viewModel.onEvent(TripMeterUiEvent.ApplyLocationSample)
+        assertEquals("0.70 km", viewModel.uiState.partialDistanceText)
+        assertEquals("3.00 km", viewModel.uiState.totalDistanceText)
+    }
+
+    @Test
     fun simulateLocationStep_whenRunning_increasesTotalAndPartialDistances() {
         val viewModel = TripMeterViewModel()
 
@@ -222,16 +277,25 @@ class TripMeterViewModelTest {
     }
 
     private class FakeLocationEngine(
-        private val gpsStatus: GpsStatus
+        private val gpsStatus: GpsStatus,
+        private val samples: List<LocationSample?> = emptyList()
     ) : LocationEngine {
+        private var index = 0
+
         override fun getGpsStatus(): GpsStatus {
             return gpsStatus
         }
 
         override fun getLastLocationSample(): LocationSample? {
-            return null
+            if (index >= samples.size) {
+                return null
+            }
+
+            val sample = samples[index]
+            index += 1
+
+            return sample
         }
     }
 }
-
 

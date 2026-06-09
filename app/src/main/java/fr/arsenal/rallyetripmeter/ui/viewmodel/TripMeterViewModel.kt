@@ -47,12 +47,14 @@ class TripMeterViewModel(
     private val progressEngine: TripProgressEngine = DistanceTripProgressEngine(
         distanceEngine = HaversineDistanceEngine()
     ),
-    locationEngine: LocationEngine = AndroidLocationEngine(),
+    private val locationEngine: LocationEngine = AndroidLocationEngine(),
     initialTripState: TripState = bootstrapTripState(
         gpsStatus = locationEngine.getGpsStatus()
     )
 ) : ViewModel() {
     private var tripState by mutableStateOf(initialTripState)
+
+    private var previousLocationSample: LocationSample? = null
 
     private var locationPermissionState by mutableStateOf(initialLocationPermissionState)
 
@@ -109,12 +111,35 @@ class TripMeterViewModel(
 
             TripMeterUiEvent.Options -> state
 
+            TripMeterUiEvent.ApplyLocationSample -> applyLocationEngineSample(state)
+
             TripMeterUiEvent.SimulateLocationStep -> progressEngine.applyLocationSample(
                 state = state,
                 previousSample = simulatedPreviousSample(),
                 currentSample = simulatedCurrentSample()
             )
         }
+    }
+
+    private fun applyLocationEngineSample(
+        state: TripState
+    ): TripState {
+        val currentSample = locationEngine.getLastLocationSample()
+            ?: return state
+
+        val previousSample = previousLocationSample
+
+        previousLocationSample = currentSample
+
+        if (previousSample == null) {
+            return state
+        }
+
+        return progressEngine.applyLocationSample(
+            state = state,
+            previousSample = previousSample,
+            currentSample = currentSample
+        )
     }
 
     private fun simulatedPreviousSample(): LocationSample {
@@ -152,3 +177,4 @@ class TripMeterViewModel(
         }
     }
 }
+
