@@ -1,7 +1,7 @@
 package fr.arsenal.rallyetripmeter.ui.viewmodel
 
 import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
-import fr.arsenal.rallyetripmeter.android.permission.LocationPermissionState
+import fr.arsenal.rallyetripmeter.domain.permission.LocationPermissionState
 import org.junit.Assert.assertEquals
 import org.junit.Test
 

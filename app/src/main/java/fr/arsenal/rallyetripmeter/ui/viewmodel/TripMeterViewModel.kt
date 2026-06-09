@@ -4,7 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import fr.arsenal.rallyetripmeter.android.permission.LocationPermissionState
+import fr.arsenal.rallyetripmeter.domain.permission.LocationPermissionState
 import fr.arsenal.rallyetripmeter.domain.controller.ImmutableTripController
 import fr.arsenal.rallyetripmeter.domain.distance.HaversineDistanceEngine
 import fr.arsenal.rallyetripmeter.domain.geo.GeoPoint

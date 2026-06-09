@@ -1,14 +1,14 @@
-package fr.arsenal.rallyetripmeter.android.permission
+package fr.arsenal.rallyetripmeter.domain.permission
 
 /*
  * ARSENAL RALLYE — Location permission state
  *
  * Rôle :
- * - Représente l'état Android de permission de localisation.
+ * - Représente l'état de permission de localisation exploitable par le domaine et l'UI.
  *
  * Contraintes :
+ * - Ne dépend pas d'Android.
  * - Ne représente pas l'état GPS métier.
- * - Ne dépend pas de l'UI.
  * - Ne déclenche aucune demande de permission.
  * - Ne lit aucun service Android.
  *

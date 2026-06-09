@@ -1,6 +1,7 @@
 package fr.arsenal.rallyetripmeter.android.permission
 
 import android.Manifest
+import fr.arsenal.rallyetripmeter.domain.permission.LocationPermissionState
 import android.content.Context
 import android.content.pm.PackageManager
 import androidx.core.content.ContextCompat

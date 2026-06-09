@@ -1,6 +1,6 @@
 package fr.arsenal.rallyetripmeter.ui.mapper
 
-import fr.arsenal.rallyetripmeter.android.permission.LocationPermissionState
+import fr.arsenal.rallyetripmeter.domain.permission.LocationPermissionState
 import fr.arsenal.rallyetripmeter.ui.model.UiLocationPermissionStatus
 import org.junit.Assert.assertEquals
 import org.junit.Test
