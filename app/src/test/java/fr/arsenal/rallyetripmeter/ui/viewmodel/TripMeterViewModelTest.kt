@@ -1,9 +1,11 @@
 package fr.arsenal.rallyetripmeter.ui.viewmodel
 
+import fr.arsenal.rallyetripmeter.domain.geo.LocationSample
 import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
 import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
 import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.domain.permission.LocationPermissionState
+import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
 import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -173,5 +175,35 @@ class TripMeterViewModelTest {
         assertEquals(stoppedState.partialDistanceText, viewModel.uiState.partialDistanceText)
         assertEquals(stoppedState.totalDistanceText, viewModel.uiState.totalDistanceText)
     }
-}
 
+    @Test
+    fun simulateLocationStep_usesInjectedProgressEngine() {
+        val viewModel = TripMeterViewModel(
+            progressEngine = FakeTripProgressEngine(
+                resultState = TripState(
+                    totalDistanceMeters = 2_000.0,
+                    partialDistanceMeters = 500.0,
+                    gpsStatus = GpsStatus.Fixed,
+                    sessionState = TripSessionState.Running
+                )
+            )
+        )
+
+        viewModel.onEvent(TripMeterUiEvent.SimulateLocationStep)
+
+        assertEquals("0.50 km", viewModel.uiState.partialDistanceText)
+        assertEquals("2.00 km", viewModel.uiState.totalDistanceText)
+    }
+
+    private class FakeTripProgressEngine(
+        private val resultState: TripState
+    ) : TripProgressEngine {
+        override fun applyLocationSample(
+            state: TripState,
+            previousSample: LocationSample?,
+            currentSample: LocationSample
+        ): TripState {
+            return resultState
+        }
+    }
+}
