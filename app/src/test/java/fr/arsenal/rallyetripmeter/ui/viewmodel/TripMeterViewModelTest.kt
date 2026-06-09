@@ -173,6 +173,9 @@ class TripMeterViewModelTest {
         var stopCount = 0
 
         val viewModel = TripMeterViewModel(
+            readLocationPermissionState = {
+                LocationPermissionState.Granted
+            },
             startLocationUpdates = {
                 startCount += 1
             },
@@ -186,6 +189,44 @@ class TripMeterViewModelTest {
 
         assertEquals(1, startCount)
         assertEquals(1, stopCount)
+    }
+
+    @Test
+    fun onStartLocation_withGrantedPermission_delegatesStartHandle() {
+        var startCount = 0
+
+        val viewModel = TripMeterViewModel(
+            readLocationPermissionState = {
+                LocationPermissionState.Granted
+            },
+            startLocationUpdates = {
+                startCount += 1
+            }
+        )
+
+        viewModel.onStartLocation()
+
+        assertEquals(1, startCount)
+        assertEquals("POSITION OK", viewModel.uiState.locationPermissionStatusText)
+    }
+
+    @Test
+    fun onStartLocation_withDeniedPermission_doesNotDelegateStartHandle() {
+        var startCount = 0
+
+        val viewModel = TripMeterViewModel(
+            readLocationPermissionState = {
+                LocationPermissionState.Denied
+            },
+            startLocationUpdates = {
+                startCount += 1
+            }
+        )
+
+        viewModel.onStartLocation()
+
+        assertEquals(0, startCount)
+        assertEquals("POSITION REFUSÉE", viewModel.uiState.locationPermissionStatusText)
     }
 
     @Test

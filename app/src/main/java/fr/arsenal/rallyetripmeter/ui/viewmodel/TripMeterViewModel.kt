@@ -69,7 +69,11 @@ class TripMeterViewModel(
             )
 
     fun onStartLocation() {
-        startLocationUpdates()
+        locationPermissionState = readLocationPermissionState()
+
+        if (locationPermissionState == LocationPermissionState.Granted) {
+            startLocationUpdates()
+        }
     }
 
     fun onStopLocation() {
