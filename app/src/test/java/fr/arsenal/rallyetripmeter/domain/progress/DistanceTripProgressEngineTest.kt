@@ -86,6 +86,102 @@ class DistanceTripProgressEngineTest {
         assertEquals(32.5, result.partialDistanceMeters, 0.0)
     }
 
+    @Test
+    fun applyLocationSample_whenDistanceBelowNoiseFloor_keepsStateUnchanged() {
+        val state = runningState()
+        val filteringEngine = engineWithDistance(1.5)
+
+        val result = filteringEngine.applyLocationSample(
+            state = state,
+            previousSample = sampleAt(0L),
+            currentSample = sampleAt(1_000L)
+        )
+
+        assertEquals(state, result)
+    }
+
+    @Test
+    fun applyLocationSample_whenTimeDeltaNotPositive_keepsStateUnchanged() {
+        val state = runningState()
+        val filteringEngine = engineWithDistance(20.0)
+
+        val result = filteringEngine.applyLocationSample(
+            state = state,
+            previousSample = sampleAt(1_000L),
+            currentSample = sampleAt(1_000L)
+        )
+
+        assertEquals(state, result)
+    }
+
+    @Test
+    fun applyLocationSample_whenImplicitSpeedTooHigh_keepsStateUnchanged() {
+        val state = runningState()
+        val filteringEngine = engineWithDistance(100.0)
+
+        val result = filteringEngine.applyLocationSample(
+            state = state,
+            previousSample = sampleAt(0L),
+            currentSample = sampleAt(1_000L)
+        )
+
+        assertEquals(state, result)
+    }
+
+    @Test
+    fun applyLocationSample_whenPlausibleMovement_addsDistance() {
+        val state = runningState()
+        val filteringEngine = engineWithDistance(12.5)
+
+        val result = filteringEngine.applyLocationSample(
+            state = state,
+            previousSample = sampleAt(0L),
+            currentSample = sampleAt(1_000L)
+        )
+
+        assertEquals(112.5, result.totalDistanceMeters, 0.0)
+        assertEquals(32.5, result.partialDistanceMeters, 0.0)
+    }
+
+    @Test
+    fun applyLocationSample_whenTimestampsMissing_skipsSpeedCheck() {
+        val state = runningState()
+        val filteringEngine = engineWithDistance(500.0)
+
+        val result = filteringEngine.applyLocationSample(
+            state = state,
+            previousSample = previousSample(),
+            currentSample = currentSample()
+        )
+
+        assertEquals(600.0, result.totalDistanceMeters, 0.0)
+        assertEquals(520.0, result.partialDistanceMeters, 0.0)
+    }
+
+    private fun runningState(): TripState {
+        return TripState(
+            totalDistanceMeters = 100.0,
+            partialDistanceMeters = 20.0,
+            sessionState = TripSessionState.Running
+        )
+    }
+
+    private fun engineWithDistance(distanceMeters: Double): DistanceTripProgressEngine {
+        return DistanceTripProgressEngine(
+            distanceEngine = FakeDistanceEngine(distanceMeters = distanceMeters)
+        )
+    }
+
+    private fun sampleAt(timestampMillis: Long): LocationSample {
+        return LocationSample(
+            point = GeoPoint(
+                latitude = 44.8378,
+                longitude = -0.5792,
+                timestampMillis = timestampMillis
+            )
+        )
+    }
+
     private fun previousSample(): LocationSample {
         return LocationSample(
             point = GeoPoint(
