@@ -143,19 +143,23 @@ class TripMeterViewModel(
     private fun applyLocationEngineSample(
         state: TripState
     ): TripState {
+        val stateWithGpsStatus = state.copy(
+            gpsStatus = locationEngine.getGpsStatus()
+        )
+
         val currentSample = locationEngine.getLastLocationSample()
-            ?: return state
+            ?: return stateWithGpsStatus
 
         val previousSample = previousLocationSample
 
         previousLocationSample = currentSample
 
         if (previousSample == null) {
-            return state
+            return stateWithGpsStatus
         }
 
         return progressEngine.applyLocationSample(
-            state = state,
+            state = stateWithGpsStatus,
             previousSample = previousSample,
             currentSample = currentSample
         )

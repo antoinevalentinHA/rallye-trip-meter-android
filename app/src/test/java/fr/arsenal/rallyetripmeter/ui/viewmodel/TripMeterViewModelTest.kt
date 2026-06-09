@@ -237,6 +237,22 @@ class TripMeterViewModelTest {
     }
 
     @Test
+    fun applyLocationSample_refreshesGpsStatusFromLocationEngine() {
+        val viewModel = TripMeterViewModel(
+            initialTripState = TripState(
+                gpsStatus = GpsStatus.Unavailable
+            ),
+            locationEngine = FakeLocationEngine(
+                gpsStatus = GpsStatus.Fixed
+            )
+        )
+
+        viewModel.onEvent(TripMeterUiEvent.ApplyLocationSample)
+
+        assertEquals("GPS OK", viewModel.uiState.gpsStatusText)
+    }
+
+    @Test
     fun applyLocationSample_withoutCurrentSample_keepsDistancesUnchanged() {
         val viewModel = TripMeterViewModel(
             locationEngine = FakeLocationEngine(
