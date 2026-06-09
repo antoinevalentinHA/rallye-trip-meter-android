@@ -4,15 +4,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import fr.arsenal.rallyetripmeter.domain.permission.LocationPermissionState
 import fr.arsenal.rallyetripmeter.domain.controller.ImmutableTripController
+import fr.arsenal.rallyetripmeter.domain.controller.TripController
 import fr.arsenal.rallyetripmeter.domain.distance.HaversineDistanceEngine
 import fr.arsenal.rallyetripmeter.domain.geo.GeoPoint
 import fr.arsenal.rallyetripmeter.domain.geo.LocationSample
 import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
 import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
 import fr.arsenal.rallyetripmeter.domain.model.TripState
+import fr.arsenal.rallyetripmeter.domain.permission.LocationPermissionState
 import fr.arsenal.rallyetripmeter.domain.progress.DistanceTripProgressEngine
+import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
 import fr.arsenal.rallyetripmeter.ui.mapper.toTripDisplayState
 import fr.arsenal.rallyetripmeter.ui.mapper.toUiLocationPermissionStatus
 import fr.arsenal.rallyetripmeter.ui.model.TripDisplayState
@@ -38,15 +40,14 @@ import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
  * - Palier local avant intégration LocationEngine réel.
  */
 class TripMeterViewModel(
-    initialLocationPermissionState: LocationPermissionState = LocationPermissionState.Unknown
-) : ViewModel() {
-    private val controller = ImmutableTripController()
-
-    private val progressEngine = DistanceTripProgressEngine(
+    initialLocationPermissionState: LocationPermissionState = LocationPermissionState.Unknown,
+    private val controller: TripController = ImmutableTripController(),
+    private val progressEngine: TripProgressEngine = DistanceTripProgressEngine(
         distanceEngine = HaversineDistanceEngine()
-    )
-
-    private var tripState by mutableStateOf(bootstrapTripState())
+    ),
+    initialTripState: TripState = bootstrapTripState()
+) : ViewModel() {
+    private var tripState by mutableStateOf(initialTripState)
 
     private var locationPermissionState by mutableStateOf(initialLocationPermissionState)
 
@@ -111,15 +112,6 @@ class TripMeterViewModel(
         }
     }
 
-    private fun bootstrapTripState(): TripState {
-        return TripState(
-            totalDistanceMeters = 124370.0,
-            partialDistanceMeters = 800.0,
-            gpsStatus = GpsStatus.Fixed,
-            sessionState = TripSessionState.Running
-        )
-    }
-
     private fun simulatedPreviousSample(): LocationSample {
         return LocationSample(
             point = GeoPoint(
@@ -140,5 +132,16 @@ class TripMeterViewModel(
             accuracyMeters = 4.0,
             speedMetersPerSecond = 12.0
         )
+    }
+
+    private companion object {
+        fun bootstrapTripState(): TripState {
+            return TripState(
+                totalDistanceMeters = 124370.0,
+                partialDistanceMeters = 800.0,
+                gpsStatus = GpsStatus.Fixed,
+                sessionState = TripSessionState.Running
+            )
+        }
     }
 }
