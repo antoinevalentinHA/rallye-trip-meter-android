@@ -208,35 +208,35 @@ private fun PartialCorrectionControls(
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         TripButton(
-            label = "-100 m",
+            label = "−100",
             onClick = { onEvent(TripMeterUiEvent.AdjustPartialMinus100) },
             enabled = enabled,
             modifier = Modifier.weight(1f)
         )
 
         TripButton(
-            label = "-10 m",
+            label = "−10",
             onClick = { onEvent(TripMeterUiEvent.AdjustPartialMinus10) },
             enabled = enabled,
             modifier = Modifier.weight(1f)
         )
 
         TripButton(
-            label = "RESET\nPARTIEL",
+            label = "RAZ\nPARTIEL",
             onClick = { onEvent(TripMeterUiEvent.ResetPartial) },
             enabled = enabled,
             modifier = Modifier.weight(1.6f)
         )
 
         TripButton(
-            label = "+10 m",
+            label = "+10",
             onClick = { onEvent(TripMeterUiEvent.AdjustPartialPlus10) },
             enabled = enabled,
             modifier = Modifier.weight(1f)
         )
 
         TripButton(
-            label = "+100 m",
+            label = "+100",
             onClick = { onEvent(TripMeterUiEvent.AdjustPartialPlus100) },
             enabled = enabled,
             modifier = Modifier.weight(1f)
@@ -272,7 +272,7 @@ private fun SessionControls(
         Spacer(modifier = Modifier.width(12.dp))
 
         TripButton(
-            label = "SIM GPS",
+            label = "TEST GPS",
             onClick = { onEvent(TripMeterUiEvent.SimulateLocationStep) },
             modifier = Modifier.weight(1f)
         )
