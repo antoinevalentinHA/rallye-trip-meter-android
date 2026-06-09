@@ -33,19 +33,13 @@ import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
 import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.ui.mapper.toTripDisplayState
 import fr.arsenal.rallyetripmeter.ui.model.TripDisplayState
+import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
 import fr.arsenal.rallyetripmeter.ui.theme.RallyeTripMeterTheme
 
 @Composable
 fun TripMeterScreen(
     state: TripDisplayState,
-    onAdjustPartialMinus100: () -> Unit,
-    onAdjustPartialMinus10: () -> Unit,
-    onResetPartial: () -> Unit,
-    onAdjustPartialPlus10: () -> Unit,
-    onAdjustPartialPlus100: () -> Unit,
-    onSessionAction: () -> Unit,
-    onStop: () -> Unit,
-    onOptions: () -> Unit
+    onEvent: (TripMeterUiEvent) -> Unit
 ) {
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -91,19 +85,13 @@ fun TripMeterScreen(
             ) {
                 PartialCorrectionControls(
                     enabled = state.arePartialControlsEnabled,
-                    onAdjustPartialMinus100 = onAdjustPartialMinus100,
-                    onAdjustPartialMinus10 = onAdjustPartialMinus10,
-                    onResetPartial = onResetPartial,
-                    onAdjustPartialPlus10 = onAdjustPartialPlus10,
-                    onAdjustPartialPlus100 = onAdjustPartialPlus100
+                    onEvent = onEvent
                 )
 
                 SessionControls(
                     sessionActionLabel = state.sessionActionText,
                     isStopEnabled = state.isStopEnabled,
-                    onSessionAction = onSessionAction,
-                    onStop = onStop,
-                    onOptions = onOptions
+                    onEvent = onEvent
                 )
             }
         }
@@ -192,11 +180,7 @@ private fun StatusBar(
 @Composable
 private fun PartialCorrectionControls(
     enabled: Boolean,
-    onAdjustPartialMinus100: () -> Unit,
-    onAdjustPartialMinus10: () -> Unit,
-    onResetPartial: () -> Unit,
-    onAdjustPartialPlus10: () -> Unit,
-    onAdjustPartialPlus100: () -> Unit
+    onEvent: (TripMeterUiEvent) -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -204,35 +188,35 @@ private fun PartialCorrectionControls(
     ) {
         TripButton(
             label = "-100 m",
-            onClick = onAdjustPartialMinus100,
+            onClick = { onEvent(TripMeterUiEvent.AdjustPartialMinus100) },
             enabled = enabled,
             modifier = Modifier.weight(1f)
         )
 
         TripButton(
             label = "-10 m",
-            onClick = onAdjustPartialMinus10,
+            onClick = { onEvent(TripMeterUiEvent.AdjustPartialMinus10) },
             enabled = enabled,
             modifier = Modifier.weight(1f)
         )
 
         TripButton(
             label = "RESET\nPARTIEL",
-            onClick = onResetPartial,
+            onClick = { onEvent(TripMeterUiEvent.ResetPartial) },
             enabled = enabled,
             modifier = Modifier.weight(1.6f)
         )
 
         TripButton(
             label = "+10 m",
-            onClick = onAdjustPartialPlus10,
+            onClick = { onEvent(TripMeterUiEvent.AdjustPartialPlus10) },
             enabled = enabled,
             modifier = Modifier.weight(1f)
         )
 
         TripButton(
             label = "+100 m",
-            onClick = onAdjustPartialPlus100,
+            onClick = { onEvent(TripMeterUiEvent.AdjustPartialPlus100) },
             enabled = enabled,
             modifier = Modifier.weight(1f)
         )
@@ -243,9 +227,7 @@ private fun PartialCorrectionControls(
 private fun SessionControls(
     sessionActionLabel: String,
     isStopEnabled: Boolean,
-    onSessionAction: () -> Unit,
-    onStop: () -> Unit,
-    onOptions: () -> Unit
+    onEvent: (TripMeterUiEvent) -> Unit
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -253,7 +235,7 @@ private fun SessionControls(
     ) {
         TripButton(
             label = sessionActionLabel,
-            onClick = onSessionAction,
+            onClick = { onEvent(TripMeterUiEvent.SessionAction) },
             modifier = Modifier.weight(1f)
         )
 
@@ -261,7 +243,7 @@ private fun SessionControls(
 
         TripButton(
             label = "STOP",
-            onClick = onStop,
+            onClick = { onEvent(TripMeterUiEvent.Stop) },
             enabled = isStopEnabled,
             modifier = Modifier.weight(1f)
         )
@@ -270,7 +252,7 @@ private fun SessionControls(
 
         TripButton(
             label = "OPTIONS",
-            onClick = onOptions,
+            onClick = { onEvent(TripMeterUiEvent.Options) },
             modifier = Modifier.weight(1f)
         )
     }
@@ -323,14 +305,7 @@ private fun TripMeterScreenPreview() {
     RallyeTripMeterTheme {
         TripMeterScreen(
             state = previewTripState().toTripDisplayState(),
-            onAdjustPartialMinus100 = {},
-            onAdjustPartialMinus10 = {},
-            onResetPartial = {},
-            onAdjustPartialPlus10 = {},
-            onAdjustPartialPlus100 = {},
-            onSessionAction = {},
-            onStop = {},
-            onOptions = {}
+            onEvent = {}
         )
     }
 }

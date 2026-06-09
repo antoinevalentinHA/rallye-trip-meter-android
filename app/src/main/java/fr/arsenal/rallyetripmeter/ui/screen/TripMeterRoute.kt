@@ -10,6 +10,7 @@ import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
 import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
 import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.ui.mapper.toTripDisplayState
+import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
 
 /*
  * ARSENAL RALLYE — UI route
@@ -17,6 +18,7 @@ import fr.arsenal.rallyetripmeter.ui.mapper.toTripDisplayState
  * Rôle :
  * - Héberge temporairement l'état Compose local du trip meter.
  * - Relie l'écran UI au contrôleur métier immutable.
+ * - Route les événements UI vers les actions métier.
  *
  * Contraintes :
  * - Aucun GPS réel.
@@ -34,48 +36,56 @@ fun TripMeterRoute() {
 
     TripMeterScreen(
         state = tripState.toTripDisplayState(),
-        onAdjustPartialMinus100 = {
-            tripState = controller.adjustPartial(
+        onEvent = { event ->
+            tripState = handleTripMeterUiEvent(
+                event = event,
                 state = tripState,
-                deltaMeters = -100.0
+                controller = controller
             )
-        },
-        onAdjustPartialMinus10 = {
-            tripState = controller.adjustPartial(
-                state = tripState,
-                deltaMeters = -10.0
-            )
-        },
-        onResetPartial = {
-            tripState = controller.resetPartial(tripState)
-        },
-        onAdjustPartialPlus10 = {
-            tripState = controller.adjustPartial(
-                state = tripState,
-                deltaMeters = 10.0
-            )
-        },
-        onAdjustPartialPlus100 = {
-            tripState = controller.adjustPartial(
-                state = tripState,
-                deltaMeters = 100.0
-            )
-        },
-        onSessionAction = {
-            tripState = when (tripState.sessionState) {
-                TripSessionState.Running -> controller.pause(tripState)
-                TripSessionState.Paused -> controller.resume(tripState)
-                TripSessionState.Stopped -> controller.start(tripState)
-            }
-        },
-        onStop = {
-            tripState = controller.stop(tripState)
-        },
-        onOptions = {
-            // v0.1:
-            // écran options non implémenté.
         }
     )
+}
+
+private fun handleTripMeterUiEvent(
+    event: TripMeterUiEvent,
+    state: TripState,
+    controller: ImmutableTripController
+): TripState {
+    return when (event) {
+        TripMeterUiEvent.AdjustPartialMinus100 -> controller.adjustPartial(
+            state = state,
+            deltaMeters = -100.0
+        )
+
+        TripMeterUiEvent.AdjustPartialMinus10 -> controller.adjustPartial(
+            state = state,
+            deltaMeters = -10.0
+        )
+
+        TripMeterUiEvent.ResetPartial -> controller.resetPartial(state)
+
+        TripMeterUiEvent.AdjustPartialPlus10 -> controller.adjustPartial(
+            state = state,
+            deltaMeters = 10.0
+        )
+
+        TripMeterUiEvent.AdjustPartialPlus100 -> controller.adjustPartial(
+            state = state,
+            deltaMeters = 100.0
+        )
+
+        TripMeterUiEvent.SessionAction -> {
+            when (state.sessionState) {
+                TripSessionState.Running -> controller.pause(state)
+                TripSessionState.Paused -> controller.resume(state)
+                TripSessionState.Stopped -> controller.start(state)
+            }
+        }
+
+        TripMeterUiEvent.Stop -> controller.stop(state)
+
+        TripMeterUiEvent.Options -> state
+    }
 }
 
 private fun bootstrapTripState(): TripState {
