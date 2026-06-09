@@ -76,7 +76,8 @@ fun TripMeterScreen(
 
                 StatusBar(
                     gpsStatus = state.gpsStatusText,
-                    sessionStatus = state.sessionStatusText
+                    sessionStatus = state.sessionStatusText,
+                    locationPermissionStatus = state.locationPermissionStatusText
                 )
             }
 
@@ -148,7 +149,8 @@ private fun TripValueCard(
 @Composable
 private fun StatusBar(
     gpsStatus: String,
-    sessionStatus: String
+    sessionStatus: String,
+    locationPermissionStatus: String
 ) {
     Row(
         modifier = Modifier
@@ -163,6 +165,13 @@ private fun StatusBar(
     ) {
         Text(
             text = gpsStatus,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Text(
+            text = locationPermissionStatus,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurfaceVariant
