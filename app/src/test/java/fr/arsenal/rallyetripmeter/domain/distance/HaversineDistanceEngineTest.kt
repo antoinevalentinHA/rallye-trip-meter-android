@@ -63,6 +63,31 @@ class HaversineDistanceEngineTest {
     }
 
     @Test
+    fun computeDistanceMeters_isSymmetric() {
+        val first = GeoPoint(
+            latitude = 48.8566,
+            longitude = 2.3522
+        )
+
+        val second = GeoPoint(
+            latitude = 44.8378,
+            longitude = -0.5792
+        )
+
+        val forwardDistance = engine.computeDistanceMeters(
+            previous = first,
+            current = second
+        )
+
+        val backwardDistance = engine.computeDistanceMeters(
+            previous = second,
+            current = first
+        )
+
+        assertEquals(forwardDistance, backwardDistance, 0.0001)
+    }
+
+    @Test
     fun computeDistanceMeters_ignoresAltitude() {
         val previousWithoutAltitude = GeoPoint(
             latitude = 44.8378,
@@ -97,3 +122,4 @@ class HaversineDistanceEngineTest {
         assertEquals(distanceWithoutAltitude, distanceWithAltitude, 0.0001)
     }
 }
+
