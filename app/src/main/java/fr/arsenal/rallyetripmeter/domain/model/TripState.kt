@@ -14,8 +14,8 @@ package fr.arsenal.rallyetripmeter.domain.model
  * - Aucun comportement de contrôle.
  */
 data class TripState(
+    val sessionState: TripSessionState = TripSessionState.Stopped,
+    val gpsStatus: GpsStatus = GpsStatus.Unavailable,
     val totalDistanceMeters: Double = 0.0,
     val partialDistanceMeters: Double = 0.0,
-    val gpsStatus: GpsStatus = GpsStatus.Unavailable,
-    val sessionState: TripSessionState = TripSessionState.Stopped
 )

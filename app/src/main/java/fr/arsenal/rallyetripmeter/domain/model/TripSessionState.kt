@@ -14,5 +14,5 @@ package fr.arsenal.rallyetripmeter.domain.model
 enum class TripSessionState {
     Stopped,
     Running,
-    Paused
+    Paused,
 }

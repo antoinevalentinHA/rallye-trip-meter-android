@@ -15,5 +15,5 @@ package fr.arsenal.rallyetripmeter.domain.model
 enum class GpsStatus {
     Unavailable,
     Searching,
-    Fixed
+    Fixed,
 }
