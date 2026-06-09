@@ -1,5 +1,8 @@
 package fr.arsenal.rallyetripmeter.ui.screen
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -50,6 +53,16 @@ fun TripMeterRoute() {
     val viewModel: TripMeterViewModel = viewModel(
         factory = factory
     )
+
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) {
+        viewModel.onStartLocation()
+    }
+
+    LaunchedEffect(viewModel) {
+        locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.onEvent(TripMeterUiEvent.RefreshLocationPermission)
