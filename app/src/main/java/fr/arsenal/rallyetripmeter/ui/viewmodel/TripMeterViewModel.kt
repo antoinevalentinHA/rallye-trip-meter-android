@@ -4,11 +4,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import fr.arsenal.rallyetripmeter.android.location.AndroidLocationEngine
 import fr.arsenal.rallyetripmeter.domain.controller.ImmutableTripController
 import fr.arsenal.rallyetripmeter.domain.controller.TripController
 import fr.arsenal.rallyetripmeter.domain.distance.HaversineDistanceEngine
 import fr.arsenal.rallyetripmeter.domain.geo.GeoPoint
 import fr.arsenal.rallyetripmeter.domain.geo.LocationSample
+import fr.arsenal.rallyetripmeter.domain.location.LocationEngine
 import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
 import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
 import fr.arsenal.rallyetripmeter.domain.model.TripState
@@ -31,7 +33,7 @@ import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
  *
  * Contraintes :
  * - Aucun GPS réel.
- * - Aucun Android Location.
+ * - Aucun Android Location exposé.
  * - Aucune demande de permission runtime.
  * - Aucune persistance.
  * - Aucun effet de bord externe.
@@ -45,7 +47,10 @@ class TripMeterViewModel(
     private val progressEngine: TripProgressEngine = DistanceTripProgressEngine(
         distanceEngine = HaversineDistanceEngine()
     ),
-    initialTripState: TripState = bootstrapTripState()
+    locationEngine: LocationEngine = AndroidLocationEngine(),
+    initialTripState: TripState = bootstrapTripState(
+        gpsStatus = locationEngine.getGpsStatus()
+    )
 ) : ViewModel() {
     private var tripState by mutableStateOf(initialTripState)
 
@@ -135,11 +140,13 @@ class TripMeterViewModel(
     }
 
     private companion object {
-        fun bootstrapTripState(): TripState {
+        fun bootstrapTripState(
+            gpsStatus: GpsStatus
+        ): TripState {
             return TripState(
                 totalDistanceMeters = 124370.0,
                 partialDistanceMeters = 800.0,
-                gpsStatus = GpsStatus.Fixed,
+                gpsStatus = gpsStatus,
                 sessionState = TripSessionState.Running
             )
         }

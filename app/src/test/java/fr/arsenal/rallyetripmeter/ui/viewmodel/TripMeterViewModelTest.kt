@@ -1,6 +1,7 @@
 package fr.arsenal.rallyetripmeter.ui.viewmodel
 
 import fr.arsenal.rallyetripmeter.domain.geo.LocationSample
+import fr.arsenal.rallyetripmeter.domain.location.LocationEngine
 import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
 import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
 import fr.arsenal.rallyetripmeter.domain.model.TripState
@@ -11,6 +12,19 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class TripMeterViewModelTest {
+    @Test
+    fun initialState_withInjectedLocationEngine_exposesInjectedGpsStatus() {
+        val viewModel = TripMeterViewModel(
+            locationEngine = FakeLocationEngine(
+                gpsStatus = GpsStatus.Searching
+            )
+        )
+
+        val state = viewModel.uiState
+
+        assertEquals("GPS RECHERCHE", state.gpsStatusText)
+    }
+
     @Test
     fun initialState_withInjectedTripState_exposesInjectedDistancesAndSession() {
         val viewModel = TripMeterViewModel(
@@ -206,4 +220,18 @@ class TripMeterViewModelTest {
             return resultState
         }
     }
+
+    private class FakeLocationEngine(
+        private val gpsStatus: GpsStatus
+    ) : LocationEngine {
+        override fun getGpsStatus(): GpsStatus {
+            return gpsStatus
+        }
+
+        override fun getLastLocationSample(): LocationSample? {
+            return null
+        }
+    }
 }
+
+
