@@ -8,10 +8,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
 import fr.arsenal.rallyetripmeter.ui.viewmodel.TripMeterViewModel
 import fr.arsenal.rallyetripmeter.ui.viewmodel.TripMeterViewModelFactory
+import kotlinx.coroutines.delay
 
 /*
  * ARSENAL RALLYE — UI route
@@ -32,6 +34,8 @@ import fr.arsenal.rallyetripmeter.ui.viewmodel.TripMeterViewModelFactory
  * - Route UI avec injection contrôlée du LocationEngine Android.
  * - Lifecycle localisation câblé, moteur GPS encore no-op.
  */
+private const val LOCATION_PUMP_INTERVAL_MS = 1_000L
+
 @Composable
 fun TripMeterRoute() {
     val applicationContext = LocalContext.current.applicationContext
@@ -68,6 +72,18 @@ fun TripMeterRoute() {
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
             viewModel.onStopLocation()
+        }
+    }
+
+    LaunchedEffect(
+        lifecycleOwner,
+        viewModel
+    ) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (true) {
+                viewModel.onEvent(TripMeterUiEvent.ApplyLocationSample)
+                delay(LOCATION_PUMP_INTERVAL_MS)
+            }
         }
     }
 
