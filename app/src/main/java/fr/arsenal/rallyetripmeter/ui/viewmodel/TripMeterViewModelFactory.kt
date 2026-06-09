@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import fr.arsenal.rallyetripmeter.android.location.AndroidLocationEngine
+import fr.arsenal.rallyetripmeter.android.permission.LocationPermissionChecker
 
 /*
  * ARSENAL RALLYE — Trip meter ViewModel factory
@@ -11,6 +12,7 @@ import fr.arsenal.rallyetripmeter.android.location.AndroidLocationEngine
  * Rôle :
  * - Crée le TripMeterViewModel avec ses dépendances Android réelles.
  * - Injecte AndroidLocationEngine à partir d'un Context applicatif.
+ * - Injecte l'état initial réel des permissions de localisation.
  *
  * Contraintes :
  * - Aucun démarrage GPS.
@@ -29,9 +31,14 @@ class TripMeterViewModelFactory(
         modelClass: Class<T>
     ): T {
         if (modelClass.isAssignableFrom(TripMeterViewModel::class.java)) {
+            val applicationContext = context.applicationContext
+
             return TripMeterViewModel(
+                initialLocationPermissionState = LocationPermissionChecker(
+                    context = applicationContext
+                ).getLocationPermissionState(),
                 locationEngine = AndroidLocationEngine(
-                    context = context.applicationContext
+                    context = applicationContext
                 )
             ) as T
         }
