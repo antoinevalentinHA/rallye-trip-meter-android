@@ -9,6 +9,7 @@ import fr.arsenal.rallyetripmeter.android.persistence.SharedPreferencesTripState
 import fr.arsenal.rallyetripmeter.android.service.TripMeterForegroundServiceController
 import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.domain.persistence.toTripState
+import fr.arsenal.rallyetripmeter.runtime.TripRuntimeHolder
 
 /*
  * ARSENAL RALLYE — Trip meter ViewModel factory
@@ -53,6 +54,12 @@ class TripMeterViewModelFactory(
             val initialTripState = tripStateStore.load()?.toTripState()
                 ?: TripState(gpsStatus = locationEngine.getGpsStatus())
 
+            val runtime = TripRuntimeHolder.getRuntime(
+                locationEngine = locationEngine,
+                tripStateStore = tripStateStore,
+                initialState = initialTripState
+            )
+
             val foregroundServiceController = TripMeterForegroundServiceController(
                 context = applicationContext
             )
@@ -64,7 +71,8 @@ class TripMeterViewModelFactory(
                 startForegroundService = foregroundServiceController::start,
                 stopForegroundService = foregroundServiceController::stop,
                 tripStateStore = tripStateStore,
-                initialTripState = initialTripState
+                initialTripState = initialTripState,
+                runtime = runtime
             ) as T
         }
 

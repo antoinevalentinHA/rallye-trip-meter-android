@@ -63,9 +63,8 @@ class TripMeterViewModel(
     ),
     initialTripState: TripState = bootstrapTripState(
         gpsStatus = locationEngine.getGpsStatus()
-    )
-) : ViewModel() {
-    private val runtime = TripRuntime(
+    ),
+    private val runtime: TripRuntime = TripRuntime(
         controller = controller,
         progressEngine = progressEngine,
         locationEngine = locationEngine,
@@ -73,7 +72,7 @@ class TripMeterViewModel(
         periodicSaveThrottle = periodicSaveThrottle,
         initialState = initialTripState
     )
-
+) : ViewModel() {
     private var stateMirror by mutableStateOf(runtime.state)
 
     private var locationPermissionState by mutableStateOf(initialLocationPermissionState)
