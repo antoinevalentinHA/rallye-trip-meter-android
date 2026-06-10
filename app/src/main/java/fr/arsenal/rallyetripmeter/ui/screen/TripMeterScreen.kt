@@ -268,14 +268,6 @@ private fun SessionControls(
             enabled = isStopEnabled,
             modifier = Modifier.weight(1f)
         )
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        TripButton(
-            label = "TEST GPS",
-            onClick = { onEvent(TripMeterUiEvent.SimulateLocationStep) },
-            modifier = Modifier.weight(1f)
-        )
     }
 }
 
