@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -75,7 +73,10 @@ fun TripMeterScreen(
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                OptionsMenu(onEvent = onEvent)
+                OptionsMenu(
+                    isStopEnabled = state.isStopEnabled,
+                    onEvent = onEvent
+                )
 
                 TripValueCard(
                     label = "PARTIEL",
@@ -112,7 +113,6 @@ fun TripMeterScreen(
 
                 SessionControls(
                     sessionActionLabel = state.sessionActionText,
-                    isStopEnabled = state.isStopEnabled,
                     onEvent = onEvent
                 )
             }
@@ -255,6 +255,7 @@ private fun PartialCorrectionControls(
 
 @Composable
 private fun OptionsMenu(
+    isStopEnabled: Boolean,
     onEvent: (TripMeterUiEvent) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -282,8 +283,11 @@ private fun OptionsMenu(
             ) {
                 DropdownMenuItem(
                     text = { Text("Terminer la session") },
-                    onClick = {},
-                    enabled = false
+                    onClick = {
+                        onEvent(TripMeterUiEvent.Stop)
+                        expanded = false
+                    },
+                    enabled = isStopEnabled
                 )
 
                 DropdownMenuItem(
@@ -305,28 +309,13 @@ private fun OptionsMenu(
 @Composable
 private fun SessionControls(
     sessionActionLabel: String,
-    isStopEnabled: Boolean,
     onEvent: (TripMeterUiEvent) -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        TripButton(
-            label = sessionActionLabel,
-            onClick = { onEvent(TripMeterUiEvent.SessionAction) },
-            modifier = Modifier.weight(1f)
-        )
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        TripButton(
-            label = "TERMINER",
-            onClick = { onEvent(TripMeterUiEvent.Stop) },
-            enabled = isStopEnabled,
-            modifier = Modifier.weight(1f)
-        )
-    }
+    TripButton(
+        label = sessionActionLabel,
+        onClick = { onEvent(TripMeterUiEvent.SessionAction) },
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 @Composable
