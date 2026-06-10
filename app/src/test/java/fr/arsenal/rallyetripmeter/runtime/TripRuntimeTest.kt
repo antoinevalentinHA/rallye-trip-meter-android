@@ -12,6 +12,7 @@ import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
 import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
 import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TripRuntimeTest {
@@ -294,6 +295,57 @@ class TripRuntimeTest {
         assertEquals(1, store.savedSnapshots.size)
         assertEquals(3_000.0, store.savedSnapshots.last().totalDistanceMeters, 0.0)
         assertEquals(700.0, store.savedSnapshots.last().partialDistanceMeters, 0.0)
+    }
+
+    @Test
+    fun applyLocationSample_repeatedTicksOnSameFix_doNotDoubleAccumulate() {
+        // Baseline : un tick par fix (cadence simple).
+        val single = TripRuntime(
+            locationEngine = FakeLocationEngine(
+                gpsStatus = GpsStatus.Fixed,
+                samples = listOf(
+                    LocationSample(
+                        point = GeoPoint(latitude = 44.8378, longitude = -0.5792)
+                    ),
+                    LocationSample(
+                        point = GeoPoint(latitude = 44.8380, longitude = -0.5794)
+                    )
+                )
+            )
+        )
+        single.onEvent(TripMeterUiEvent.ApplyLocationSample)
+        single.onEvent(TripMeterUiEvent.ApplyLocationSample)
+        val baseline = single.state.totalDistanceMeters
+        assertTrue(baseline > 0.0)
+
+        // Double tick : chaque fix relu deux fois (pump UI + boucle service partageant
+        // le meme runtime). Le previousLocationSample partage doit paver le trajet une
+        // seule fois -> total identique a la baseline, aucune double accumulation.
+        val doubled = TripRuntime(
+            locationEngine = FakeLocationEngine(
+                gpsStatus = GpsStatus.Fixed,
+                samples = listOf(
+                    LocationSample(
+                        point = GeoPoint(latitude = 44.8378, longitude = -0.5792)
+                    ),
+                    LocationSample(
+                        point = GeoPoint(latitude = 44.8378, longitude = -0.5792)
+                    ),
+                    LocationSample(
+                        point = GeoPoint(latitude = 44.8380, longitude = -0.5794)
+                    ),
+                    LocationSample(
+                        point = GeoPoint(latitude = 44.8380, longitude = -0.5794)
+                    )
+                )
+            )
+        )
+        doubled.onEvent(TripMeterUiEvent.ApplyLocationSample)
+        doubled.onEvent(TripMeterUiEvent.ApplyLocationSample)
+        doubled.onEvent(TripMeterUiEvent.ApplyLocationSample)
+        doubled.onEvent(TripMeterUiEvent.ApplyLocationSample)
+
+        assertEquals(baseline, doubled.state.totalDistanceMeters, 0.0)
     }
 
     private class FakeTripProgressEngine(
