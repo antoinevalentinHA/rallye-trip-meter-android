@@ -81,6 +81,15 @@ class DistanceTripProgressEngine(
         previousSample: LocationSample,
         currentSample: LocationSample
     ): Double {
+        // Vitesse source présente : le rejet stationnaire a déjà écarté les vitesses
+        // < STATIONARY_SPEED_MPS, donc on est en déplacement réel -> plancher minimal
+        // (le plancher accuracy guillotinerait de vrais segments urbains lents à 1 Hz).
+        if (currentSample.speedMetersPerSecond != null) {
+            return NOISE_FLOOR_METERS
+        }
+
+        // Vitesse absente : impossible de distinguer mouvement et dérive -> garde
+        // anti-dérive basé sur l'incertitude GPS (préserve le 0 m à l'arrêt).
         val accuracyFloor = worstAccuracyMeters(previousSample, currentSample) *
             ACCURACY_FLOOR_FACTOR
         return maxOf(NOISE_FLOOR_METERS, accuracyFloor)

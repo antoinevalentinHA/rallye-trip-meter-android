@@ -233,6 +233,63 @@ class DistanceTripProgressEngineTest {
         assertEquals(32.5, result.partialDistanceMeters, 0.0)
     }
 
+    @Test
+    fun applyLocationSample_whenMovingBelowAccuracyFloor_addsDistance() {
+        val state = runningState()
+        val filteringEngine = engineWithDistance(8.0)
+
+        val result = filteringEngine.applyLocationSample(
+            state = state,
+            previousSample = sampleAt(0L, accuracyMeters = 12.0, speedMetersPerSecond = 8.0),
+            currentSample = sampleAt(1_000L, accuracyMeters = 12.0, speedMetersPerSecond = 8.0)
+        )
+
+        assertEquals(108.0, result.totalDistanceMeters, 0.0)
+        assertEquals(28.0, result.partialDistanceMeters, 0.0)
+    }
+
+    @Test
+    fun applyLocationSample_whenDriftBelowAccuracyFloorWithoutSpeed_keepsStateUnchanged() {
+        val state = runningState()
+        val filteringEngine = engineWithDistance(8.0)
+
+        val result = filteringEngine.applyLocationSample(
+            state = state,
+            previousSample = sampleAt(0L, accuracyMeters = 12.0),
+            currentSample = sampleAt(1_000L, accuracyMeters = 12.0)
+        )
+
+        assertEquals(state, result)
+    }
+
+    @Test
+    fun applyLocationSample_whenStationarySpeedDespiteSpeedPresent_keepsStateUnchanged() {
+        val state = runningState()
+        val filteringEngine = engineWithDistance(8.0)
+
+        val result = filteringEngine.applyLocationSample(
+            state = state,
+            previousSample = sampleAt(0L, speedMetersPerSecond = 0.3),
+            currentSample = sampleAt(1_000L, speedMetersPerSecond = 0.3)
+        )
+
+        assertEquals(state, result)
+    }
+
+    @Test
+    fun applyLocationSample_whenImplausibleJumpWhileMoving_keepsStateUnchanged() {
+        val state = runningState()
+        val filteringEngine = engineWithDistance(300.0)
+
+        val result = filteringEngine.applyLocationSample(
+            state = state,
+            previousSample = sampleAt(0L, speedMetersPerSecond = 8.0),
+            currentSample = sampleAt(1_000L, speedMetersPerSecond = 8.0)
+        )
+
+        assertEquals(state, result)
+    }
+
     private fun runningState(): TripState {
         return TripState(
             totalDistanceMeters = 100.0,
