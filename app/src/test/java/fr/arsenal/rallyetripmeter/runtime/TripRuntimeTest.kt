@@ -311,7 +311,8 @@ class TripRuntimeTest {
                         point = GeoPoint(latitude = 44.8380, longitude = -0.5794)
                     )
                 )
-            )
+            ),
+            initialState = TripState(sessionState = TripSessionState.Running)
         )
         single.onEvent(TripMeterUiEvent.ApplyLocationSample)
         single.onEvent(TripMeterUiEvent.ApplyLocationSample)
@@ -338,7 +339,8 @@ class TripRuntimeTest {
                         point = GeoPoint(latitude = 44.8380, longitude = -0.5794)
                     )
                 )
-            )
+            ),
+            initialState = TripState(sessionState = TripSessionState.Running)
         )
         doubled.onEvent(TripMeterUiEvent.ApplyLocationSample)
         doubled.onEvent(TripMeterUiEvent.ApplyLocationSample)
