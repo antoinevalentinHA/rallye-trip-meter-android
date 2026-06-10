@@ -50,6 +50,8 @@ class TripMeterViewModel(
     },
     private val startLocationUpdates: () -> Unit = {},
     private val stopLocationUpdates: () -> Unit = {},
+    private val startForegroundService: () -> Unit = {},
+    private val stopForegroundService: () -> Unit = {},
     private val controller: TripController = ImmutableTripController(),
     private val progressEngine: TripProgressEngine = DistanceTripProgressEngine(
         distanceEngine = HaversineDistanceEngine()
@@ -89,15 +91,43 @@ class TripMeterViewModel(
     }
 
     fun onEvent(event: TripMeterUiEvent) {
+        val previousSessionState = tripState.sessionState
+
         tripState = handleTripMeterUiEvent(
             event = event,
             state = tripState
+        )
+
+        syncForegroundService(
+            previousSessionState = previousSessionState,
+            currentSessionState = tripState.sessionState
         )
 
         if (persistsOnEvent(event)) {
             persistTripState()
         } else if (event == TripMeterUiEvent.ApplyLocationSample) {
             persistPeriodically()
+        }
+    }
+
+    private fun syncForegroundService(
+        previousSessionState: TripSessionState,
+        currentSessionState: TripSessionState
+    ) {
+        if (currentSessionState == previousSessionState) {
+            return
+        }
+
+        when (currentSessionState) {
+            TripSessionState.Running -> {
+                if (locationPermissionState == LocationPermissionState.Granted) {
+                    startForegroundService()
+                }
+            }
+
+            TripSessionState.Stopped -> stopForegroundService()
+
+            TripSessionState.Paused -> Unit
         }
     }
 

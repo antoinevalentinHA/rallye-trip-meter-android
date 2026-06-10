@@ -43,7 +43,7 @@ object TripMeterServiceNotification {
         return Notification.Builder(context, CHANNEL_ID)
             .setContentTitle(CONTENT_TITLE)
             .setContentText(CONTENT_TEXT)
-            .setSmallIcon(R.mipmap.ic_launcher)
+            .setSmallIcon(R.drawable.ic_stat_trip_meter)
             .setContentIntent(openAppIntent(context))
             .setOngoing(true)
             .setOnlyAlertOnce(true)

@@ -454,6 +454,48 @@ class TripMeterViewModelTest {
         assertEquals(TripSessionState.Paused, snapshot.sessionState)
     }
 
+    @Test
+    fun onEvent_sessionBecomesRunning_withPermission_startsForegroundService() {
+        var startCount = 0
+        val viewModel = TripMeterViewModel(
+            initialLocationPermissionState = LocationPermissionState.Granted,
+            startForegroundService = { startCount += 1 }
+        )
+
+        viewModel.onEvent(TripMeterUiEvent.SessionAction)
+
+        assertEquals(1, startCount)
+    }
+
+    @Test
+    fun onEvent_sessionBecomesStopped_stopsForegroundService() {
+        var stopCount = 0
+        val viewModel = TripMeterViewModel(
+            initialLocationPermissionState = LocationPermissionState.Granted,
+            stopForegroundService = { stopCount += 1 },
+            initialTripState = TripState(
+                sessionState = TripSessionState.Running
+            )
+        )
+
+        viewModel.onEvent(TripMeterUiEvent.Stop)
+
+        assertEquals(1, stopCount)
+    }
+
+    @Test
+    fun onEvent_sessionBecomesRunning_withoutPermission_doesNotStartForegroundService() {
+        var startCount = 0
+        val viewModel = TripMeterViewModel(
+            initialLocationPermissionState = LocationPermissionState.Unknown,
+            startForegroundService = { startCount += 1 }
+        )
+
+        viewModel.onEvent(TripMeterUiEvent.SessionAction)
+
+        assertEquals(0, startCount)
+    }
+
     private class FakeTripProgressEngine(
         private val resultState: TripState
     ) : TripProgressEngine {

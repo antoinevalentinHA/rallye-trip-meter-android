@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModelProvider
 import fr.arsenal.rallyetripmeter.android.location.AndroidLocationEngine
 import fr.arsenal.rallyetripmeter.android.permission.LocationPermissionChecker
 import fr.arsenal.rallyetripmeter.android.persistence.SharedPreferencesTripStateStore
+import fr.arsenal.rallyetripmeter.android.service.TripMeterForegroundServiceController
 import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.domain.persistence.toTripState
 
@@ -52,12 +53,18 @@ class TripMeterViewModelFactory(
             val initialTripState = tripStateStore.load()?.toTripState()
                 ?: TripState(gpsStatus = locationEngine.getGpsStatus())
 
+            val foregroundServiceController = TripMeterForegroundServiceController(
+                context = applicationContext
+            )
+
             return TripMeterViewModel(
                 initialLocationPermissionState = locationPermissionChecker.getLocationPermissionState(),
                 readLocationPermissionState = locationPermissionChecker::getLocationPermissionState,
                 locationEngine = locationEngine,
                 startLocationUpdates = locationEngine::start,
                 stopLocationUpdates = locationEngine::stop,
+                startForegroundService = foregroundServiceController::start,
+                stopForegroundService = foregroundServiceController::stop,
                 tripStateStore = tripStateStore,
                 initialTripState = initialTripState
             ) as T
