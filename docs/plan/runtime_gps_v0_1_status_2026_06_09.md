@@ -1,5 +1,7 @@
 # Point d’étape — Runtime GPS v0.1
 
+> **Mise à jour 2026-06-10** : ce point d’étape est daté du 2026-06-09 (HEAD `c7c4c52`). Plusieurs limites listées plus bas (absence de persistance, absence de foreground service) ont depuis été levées. Pour l’état après les chantiers persistance, foreground service, GPS-OWN, correctif anti-dérive et runtime B1–B3, voir [`runtime_gps_accumulation_status_2026_06_10.md`](runtime_gps_accumulation_status_2026_06_10.md).
+
 ## 1. Statut global
 
 - **Date** : 2026-06-09.
