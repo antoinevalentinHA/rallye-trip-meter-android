@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -22,6 +23,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -259,6 +261,7 @@ private fun OptionsMenu(
     onEvent: (TripMeterUiEvent) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var showResetTotalConfirmation by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -291,6 +294,14 @@ private fun OptionsMenu(
                 )
 
                 DropdownMenuItem(
+                    text = { Text("Réinitialiser total") },
+                    onClick = {
+                        expanded = false
+                        showResetTotalConfirmation = true
+                    }
+                )
+
+                DropdownMenuItem(
                     text = { Text("Nouveau parcours") },
                     onClick = {},
                     enabled = false
@@ -303,6 +314,31 @@ private fun OptionsMenu(
                 )
             }
         }
+    }
+
+    if (showResetTotalConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showResetTotalConfirmation = false },
+            title = { Text("Réinitialiser le total ?") },
+            text = { Text("Le total sera remis à zéro. Le partiel sera conservé.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onEvent(TripMeterUiEvent.ResetTotal)
+                        showResetTotalConfirmation = false
+                    }
+                ) {
+                    Text("Réinitialiser")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showResetTotalConfirmation = false }
+                ) {
+                    Text("Annuler")
+                }
+            }
+        )
     }
 }
 
