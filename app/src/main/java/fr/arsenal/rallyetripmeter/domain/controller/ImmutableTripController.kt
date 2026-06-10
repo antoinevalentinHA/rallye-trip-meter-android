@@ -67,6 +67,13 @@ class ImmutableTripController : TripController {
         )
     }
 
+    override fun resetTrip(state: TripState): TripState {
+        return state.copy(
+            totalDistanceMeters = 0.0,
+            partialDistanceMeters = 0.0
+        )
+    }
+
     override fun adjustPartial(
         state: TripState,
         deltaMeters: Double

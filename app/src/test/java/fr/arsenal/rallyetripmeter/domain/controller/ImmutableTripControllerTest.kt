@@ -163,4 +163,64 @@ class ImmutableTripControllerTest {
 
         assertEquals(TripSessionState.Running, result.sessionState)
     }
+
+    @Test
+    fun resetTrip_setsTotalDistanceToZero() {
+        val initialState = TripState(
+            totalDistanceMeters = 1234.0,
+            partialDistanceMeters = 56.0
+        )
+
+        val result = controller.resetTrip(initialState)
+
+        assertEquals(0.0, result.totalDistanceMeters, 0.0)
+    }
+
+    @Test
+    fun resetTrip_setsPartialDistanceToZero() {
+        val initialState = TripState(
+            totalDistanceMeters = 1234.0,
+            partialDistanceMeters = 56.0
+        )
+
+        val result = controller.resetTrip(initialState)
+
+        assertEquals(0.0, result.partialDistanceMeters, 0.0)
+    }
+
+    @Test
+    fun resetTrip_keepsStoppedSession() {
+        val initialState = TripState(
+            totalDistanceMeters = 1234.0,
+            sessionState = TripSessionState.Stopped
+        )
+
+        val result = controller.resetTrip(initialState)
+
+        assertEquals(TripSessionState.Stopped, result.sessionState)
+    }
+
+    @Test
+    fun resetTrip_keepsRunningSession() {
+        val initialState = TripState(
+            totalDistanceMeters = 1234.0,
+            sessionState = TripSessionState.Running
+        )
+
+        val result = controller.resetTrip(initialState)
+
+        assertEquals(TripSessionState.Running, result.sessionState)
+    }
+
+    @Test
+    fun resetTrip_keepsPausedSession() {
+        val initialState = TripState(
+            totalDistanceMeters = 1234.0,
+            sessionState = TripSessionState.Paused
+        )
+
+        val result = controller.resetTrip(initialState)
+
+        assertEquals(TripSessionState.Paused, result.sessionState)
+    }
 }

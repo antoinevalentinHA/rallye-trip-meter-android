@@ -34,6 +34,8 @@ interface TripController {
 
     fun resetTotal(state: TripState): TripState
 
+    fun resetTrip(state: TripState): TripState
+
     fun adjustPartial(
         state: TripState,
         deltaMeters: Double
