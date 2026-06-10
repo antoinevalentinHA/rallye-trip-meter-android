@@ -262,6 +262,7 @@ private fun OptionsMenu(
 ) {
     var expanded by remember { mutableStateOf(false) }
     var showResetTotalConfirmation by remember { mutableStateOf(false) }
+    var showNewRunConfirmation by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -303,8 +304,10 @@ private fun OptionsMenu(
 
                 DropdownMenuItem(
                     text = { Text("Nouveau parcours") },
-                    onClick = {},
-                    enabled = false
+                    onClick = {
+                        expanded = false
+                        showNewRunConfirmation = true
+                    }
                 )
 
                 DropdownMenuItem(
@@ -334,6 +337,31 @@ private fun OptionsMenu(
             dismissButton = {
                 TextButton(
                     onClick = { showResetTotalConfirmation = false }
+                ) {
+                    Text("Annuler")
+                }
+            }
+        )
+    }
+
+    if (showNewRunConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showNewRunConfirmation = false },
+            title = { Text("Démarrer un nouveau parcours ?") },
+            text = { Text("Le total et le partiel seront remis à zéro. La session en cours est conservée.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onEvent(TripMeterUiEvent.NewRun)
+                        showNewRunConfirmation = false
+                    }
+                ) {
+                    Text("Nouveau parcours")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showNewRunConfirmation = false }
                 ) {
                     Text("Annuler")
                 }
