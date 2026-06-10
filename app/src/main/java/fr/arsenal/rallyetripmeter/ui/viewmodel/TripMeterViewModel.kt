@@ -14,6 +14,7 @@ import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
 import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.domain.permission.LocationPermissionState
 import fr.arsenal.rallyetripmeter.domain.persistence.NoOpTripStateStore
+import fr.arsenal.rallyetripmeter.domain.persistence.PeriodicSaveThrottle
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
 import fr.arsenal.rallyetripmeter.domain.persistence.toTripStateSnapshot
 import fr.arsenal.rallyetripmeter.domain.progress.DistanceTripProgressEngine
@@ -55,6 +56,9 @@ class TripMeterViewModel(
     ),
     private val locationEngine: LocationEngine = UnavailableLocationEngine(),
     private val tripStateStore: TripStateStore = NoOpTripStateStore(),
+    private val periodicSaveThrottle: PeriodicSaveThrottle = PeriodicSaveThrottle(
+        nowMillis = System::currentTimeMillis
+    ),
     initialTripState: TripState = bootstrapTripState(
         gpsStatus = locationEngine.getGpsStatus()
     )
@@ -92,6 +96,8 @@ class TripMeterViewModel(
 
         if (persistsOnEvent(event)) {
             persistTripState()
+        } else if (event == TripMeterUiEvent.ApplyLocationSample) {
+            persistPeriodically()
         }
     }
 
@@ -101,6 +107,14 @@ class TripMeterViewModel(
 
     private fun persistTripState() {
         tripStateStore.save(tripState.toTripStateSnapshot())
+    }
+
+    private fun persistPeriodically() {
+        val snapshot = periodicSaveThrottle.pollSnapshotToSave(
+            snapshot = tripState.toTripStateSnapshot()
+        ) ?: return
+
+        tripStateStore.save(snapshot)
     }
 
     private fun persistsOnEvent(event: TripMeterUiEvent): Boolean {
