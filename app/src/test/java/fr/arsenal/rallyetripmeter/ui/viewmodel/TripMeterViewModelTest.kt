@@ -6,6 +6,8 @@ import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
 import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
 import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.domain.permission.LocationPermissionState
+import fr.arsenal.rallyetripmeter.domain.persistence.TripStateSnapshot
+import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
 import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
 import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
 import org.junit.Assert.assertEquals
@@ -350,6 +352,87 @@ class TripMeterViewModelTest {
         assertEquals("2.00 km", viewModel.uiState.totalDistanceText)
     }
 
+    @Test
+    fun onEvent_sessionAction_persistsSnapshot() {
+        val store = FakeTripStateStore()
+        val viewModel = TripMeterViewModel(tripStateStore = store)
+
+        viewModel.onEvent(TripMeterUiEvent.SessionAction)
+
+        assertEquals(1, store.savedSnapshots.size)
+        assertEquals(TripSessionState.Running, store.savedSnapshots.last().sessionState)
+    }
+
+    @Test
+    fun onEvent_stop_persistsSnapshot() {
+        val store = FakeTripStateStore()
+        val viewModel = TripMeterViewModel(
+            tripStateStore = store,
+            initialTripState = TripState(
+                sessionState = TripSessionState.Running,
+                totalDistanceMeters = 100.0,
+                partialDistanceMeters = 20.0
+            )
+        )
+
+        viewModel.onEvent(TripMeterUiEvent.Stop)
+
+        assertEquals(1, store.savedSnapshots.size)
+        assertEquals(TripSessionState.Stopped, store.savedSnapshots.last().sessionState)
+    }
+
+    @Test
+    fun onEvent_resetPartial_persistsSnapshot() {
+        val store = FakeTripStateStore()
+        val viewModel = TripMeterViewModel(
+            tripStateStore = store,
+            initialTripState = TripState(
+                sessionState = TripSessionState.Running,
+                totalDistanceMeters = 100.0,
+                partialDistanceMeters = 20.0
+            )
+        )
+
+        viewModel.onEvent(TripMeterUiEvent.ResetPartial)
+
+        assertEquals(1, store.savedSnapshots.size)
+        assertEquals(0.0, store.savedSnapshots.last().partialDistanceMeters, 0.0)
+    }
+
+    @Test
+    fun onEvent_adjustPartial_persistsDurableFieldsOnly() {
+        val store = FakeTripStateStore()
+        val viewModel = TripMeterViewModel(
+            tripStateStore = store,
+            initialTripState = TripState(
+                sessionState = TripSessionState.Running,
+                totalDistanceMeters = 100.0,
+                partialDistanceMeters = 20.0
+            )
+        )
+
+        viewModel.onEvent(TripMeterUiEvent.AdjustPartialPlus10)
+
+        val snapshot = store.savedSnapshots.last()
+        assertEquals(1, store.savedSnapshots.size)
+        assertEquals(100.0, snapshot.totalDistanceMeters, 0.0)
+        assertEquals(30.0, snapshot.partialDistanceMeters, 0.0)
+        assertEquals(TripSessionState.Running, snapshot.sessionState)
+    }
+
+    @Test
+    fun onEvent_applyLocationSample_doesNotPersist() {
+        val store = FakeTripStateStore()
+        val viewModel = TripMeterViewModel(
+            tripStateStore = store,
+            locationEngine = FakeLocationEngine(gpsStatus = GpsStatus.Fixed)
+        )
+
+        viewModel.onEvent(TripMeterUiEvent.ApplyLocationSample)
+
+        assertEquals(0, store.savedSnapshots.size)
+    }
+
     private class FakeTripProgressEngine(
         private val resultState: TripState
     ) : TripProgressEngine {
@@ -381,6 +464,18 @@ class TripMeterViewModelTest {
             index += 1
 
             return sample
+        }
+    }
+
+    private class FakeTripStateStore : TripStateStore {
+        val savedSnapshots = mutableListOf<TripStateSnapshot>()
+
+        override fun save(snapshot: TripStateSnapshot) {
+            savedSnapshots.add(snapshot)
+        }
+
+        override fun load(): TripStateSnapshot? {
+            return savedSnapshots.lastOrNull()
         }
     }
 }

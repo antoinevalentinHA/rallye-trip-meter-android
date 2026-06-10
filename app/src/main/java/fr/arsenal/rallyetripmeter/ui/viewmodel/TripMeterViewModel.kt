@@ -13,6 +13,9 @@ import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
 import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
 import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.domain.permission.LocationPermissionState
+import fr.arsenal.rallyetripmeter.domain.persistence.NoOpTripStateStore
+import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
+import fr.arsenal.rallyetripmeter.domain.persistence.toTripStateSnapshot
 import fr.arsenal.rallyetripmeter.domain.progress.DistanceTripProgressEngine
 import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
 import fr.arsenal.rallyetripmeter.ui.mapper.toTripDisplayState
@@ -33,7 +36,7 @@ import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
  * - Aucun GPS Android réel directement manipulé.
  * - Aucun Android Location exposé au domaine ou à l'UI.
  * - Aucune demande de permission runtime.
- * - Aucune persistance.
+ * - Persistance déléguée à un TripStateStore injecté (no-op par défaut).
  * - Aucun effet de bord externe.
  *
  * Statut :
@@ -51,6 +54,7 @@ class TripMeterViewModel(
         distanceEngine = HaversineDistanceEngine()
     ),
     private val locationEngine: LocationEngine = UnavailableLocationEngine(),
+    private val tripStateStore: TripStateStore = NoOpTripStateStore(),
     initialTripState: TripState = bootstrapTripState(
         gpsStatus = locationEngine.getGpsStatus()
     )
@@ -85,6 +89,31 @@ class TripMeterViewModel(
             event = event,
             state = tripState
         )
+
+        if (persistsOnEvent(event)) {
+            persistTripState()
+        }
+    }
+
+    private fun persistTripState() {
+        tripStateStore.save(tripState.toTripStateSnapshot())
+    }
+
+    private fun persistsOnEvent(event: TripMeterUiEvent): Boolean {
+        return when (event) {
+            TripMeterUiEvent.SessionAction,
+            TripMeterUiEvent.Stop,
+            TripMeterUiEvent.ResetPartial,
+            TripMeterUiEvent.AdjustPartialPlus10,
+            TripMeterUiEvent.AdjustPartialMinus10,
+            TripMeterUiEvent.AdjustPartialPlus100,
+            TripMeterUiEvent.AdjustPartialMinus100 -> true
+
+            TripMeterUiEvent.Options,
+            TripMeterUiEvent.RefreshLocationPermission,
+            TripMeterUiEvent.ApplyLocationSample,
+            TripMeterUiEvent.SimulateLocationStep -> false
+        }
     }
 
     private fun handleTripMeterUiEvent(
