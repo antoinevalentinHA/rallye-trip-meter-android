@@ -5,6 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import fr.arsenal.rallyetripmeter.android.location.AndroidLocationEngine
 import fr.arsenal.rallyetripmeter.android.permission.LocationPermissionChecker
+import fr.arsenal.rallyetripmeter.android.persistence.SharedPreferencesTripStateStore
+import fr.arsenal.rallyetripmeter.domain.model.TripState
+import fr.arsenal.rallyetripmeter.domain.persistence.toTripState
 
 /*
  * ARSENAL RALLYE — Trip meter ViewModel factory
@@ -13,6 +16,7 @@ import fr.arsenal.rallyetripmeter.android.permission.LocationPermissionChecker
  * - Crée le TripMeterViewModel avec ses dépendances Android réelles.
  * - Injecte AndroidLocationEngine à partir d'un Context applicatif.
  * - Injecte l'état initial réel des permissions de localisation.
+ * - Crée le TripStateStore SharedPreferences et restaure l'état persisté.
  *
  * Contraintes :
  * - Aucun démarrage GPS.
@@ -41,12 +45,21 @@ class TripMeterViewModelFactory(
                 context = applicationContext
             )
 
+            val tripStateStore = SharedPreferencesTripStateStore(
+                context = applicationContext
+            )
+
+            val initialTripState = tripStateStore.load()?.toTripState()
+                ?: TripState(gpsStatus = locationEngine.getGpsStatus())
+
             return TripMeterViewModel(
                 initialLocationPermissionState = locationPermissionChecker.getLocationPermissionState(),
                 readLocationPermissionState = locationPermissionChecker::getLocationPermissionState,
                 locationEngine = locationEngine,
                 startLocationUpdates = locationEngine::start,
-                stopLocationUpdates = locationEngine::stop
+                stopLocationUpdates = locationEngine::stop,
+                tripStateStore = tripStateStore,
+                initialTripState = initialTripState
             ) as T
         }
 

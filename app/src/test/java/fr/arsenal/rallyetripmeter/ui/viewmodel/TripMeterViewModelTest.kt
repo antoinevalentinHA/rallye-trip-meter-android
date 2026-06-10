@@ -433,6 +433,27 @@ class TripMeterViewModelTest {
         assertEquals(0, store.savedSnapshots.size)
     }
 
+    @Test
+    fun persistCurrentState_savesSnapshot() {
+        val store = FakeTripStateStore()
+        val viewModel = TripMeterViewModel(
+            tripStateStore = store,
+            initialTripState = TripState(
+                sessionState = TripSessionState.Paused,
+                totalDistanceMeters = 4_200.0,
+                partialDistanceMeters = 350.0
+            )
+        )
+
+        viewModel.persistCurrentState()
+
+        val snapshot = store.savedSnapshots.last()
+        assertEquals(1, store.savedSnapshots.size)
+        assertEquals(4_200.0, snapshot.totalDistanceMeters, 0.0)
+        assertEquals(350.0, snapshot.partialDistanceMeters, 0.0)
+        assertEquals(TripSessionState.Paused, snapshot.sessionState)
+    }
+
     private class FakeTripProgressEngine(
         private val resultState: TripState
     ) : TripProgressEngine {

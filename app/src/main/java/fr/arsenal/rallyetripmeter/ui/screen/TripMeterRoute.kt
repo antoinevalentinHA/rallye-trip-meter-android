@@ -75,7 +75,10 @@ fun TripMeterRoute() {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_START -> viewModel.onStartLocation()
-                Lifecycle.Event.ON_STOP -> viewModel.onStopLocation()
+                Lifecycle.Event.ON_STOP -> {
+                    viewModel.onStopLocation()
+                    viewModel.persistCurrentState()
+                }
                 else -> Unit
             }
         }

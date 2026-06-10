@@ -95,6 +95,10 @@ class TripMeterViewModel(
         }
     }
 
+    fun persistCurrentState() {
+        persistTripState()
+    }
+
     private fun persistTripState() {
         tripStateStore.save(tripState.toTripStateSnapshot())
     }
