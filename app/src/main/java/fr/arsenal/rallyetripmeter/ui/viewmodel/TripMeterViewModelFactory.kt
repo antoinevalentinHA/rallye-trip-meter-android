@@ -61,8 +61,6 @@ class TripMeterViewModelFactory(
                 initialLocationPermissionState = locationPermissionChecker.getLocationPermissionState(),
                 readLocationPermissionState = locationPermissionChecker::getLocationPermissionState,
                 locationEngine = locationEngine,
-                startLocationUpdates = locationEngine::start,
-                stopLocationUpdates = locationEngine::stop,
                 startForegroundService = foregroundServiceController::start,
                 stopForegroundService = foregroundServiceController::stop,
                 tripStateStore = tripStateStore,
