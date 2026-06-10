@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import fr.arsenal.rallyetripmeter.android.location.LocationEngineHolder
 
 /*
  * ARSENAL RALLYE — Trip meter foreground service
@@ -14,9 +15,9 @@ import android.os.IBinder
  *
  * Statut :
  * - Démarre / arrête réellement le premier plan (startForeground / stopForeground).
- * - N'acquiert PAS encore le GPS (aucun requestLocationUpdates) : pas de double acquisition.
- * - Ne modifie ni l'état du tripmeter ni la persistance.
- * - Acquisition GPS, propriété unique de l'acquisition et accumulation : paliers ultérieurs.
+ * - Démarre / arrête l'acquisition GPS via le LocationEngineHolder partagé (instance unique).
+ * - Ne modifie ni l'état du tripmeter ni la persistance ; n'accumule pas.
+ * - La Route / le ViewModel pilotent encore le même moteur en parallèle (retrait en GPS-OWN-4).
  */
 class TripMeterForegroundService : Service() {
     override fun onStartCommand(
@@ -41,10 +42,13 @@ class TripMeterForegroundService : Service() {
             )
         }
 
+        LocationEngineHolder.getEngine(applicationContext).start()
+
         return START_NOT_STICKY
     }
 
     override fun onDestroy() {
+        LocationEngineHolder.getEngine(applicationContext).stop()
         stopForeground(STOP_FOREGROUND_REMOVE)
         super.onDestroy()
     }
