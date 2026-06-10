@@ -62,7 +62,7 @@ Le `TripState` n’est plus possédé par le ViewModel mais par un `TripRuntime`
 1. **Valider B3 sur route, écran éteint en roulant** : vérifier que la distance progresse hors premier plan, sans double comptage au retour au premier plan.
 2. **Documenter cette validation** : nouveau rapport de validation device daté, sur le pattern existant (`*_validation_2026_*.md`).
 3. **Test route réel du filtre anti-dérive** : puis seulement, ajuster les seuils si nécessaire.
-4. **B4 — nettoyer / neutraliser le pump UI** : faire du service l’unique moteur d’accumulation, avec resynchronisation du miroir VM à la reprise.
+4. **B4 — nettoyer / neutraliser le pump UI** : faire du service l’unique moteur d’accumulation, avec resynchronisation du miroir VM à la reprise. Plan détaillé : [`runtime_gps_b4_pump_neutralization_plan_2026_06_10.md`](runtime_gps_b4_pump_neutralization_plan_2026_06_10.md).
 5. **Calibration terrain** : fixer un coefficient une fois la distance brute jugée fiable en conditions réelles.
 6. **UI finale**.
 
