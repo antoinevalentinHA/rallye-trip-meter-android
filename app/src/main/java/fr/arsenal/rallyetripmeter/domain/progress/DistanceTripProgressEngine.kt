@@ -23,7 +23,9 @@ import fr.arsenal.rallyetripmeter.domain.model.TripState
  * - Ne fait rien sans échantillon précédent.
  * - Ne fait rien si la session n'est pas Running.
  * - Délègue le calcul métrique au DistanceEngine injecté.
- * - Filtrage MVP : ignore le bruit GPS et les sauts implausibles.
+ * - Ignore un échantillon dont la vitesse source indique une quasi-immobilité.
+ * - Ignore un segment plus court que l'incertitude GPS (plancher lié a l'accuracy).
+ * - Ignore les sauts implausibles (vitesse calculée trop élevée).
  * - Applique un coefficient de calibration global a la distance retenue.
  */
 class DistanceTripProgressEngine(
@@ -43,14 +45,18 @@ class DistanceTripProgressEngine(
             return state
         }
 
+        if (isStationarySpeed(currentSample)) {
+            return state
+        }
+
         val distanceMeters = distanceEngine.computeDistanceMeters(
             previous = previousSample.point,
             current = currentSample.point
         )
 
-        // Filtrage MVP : ignore le bruit GPS et les sauts implausibles.
-        // Hors perimetre : modele REFERENCE_ONLY / watchdog / discontinuite.
-        if (distanceMeters < NOISE_FLOOR_METERS) {
+        // Filtrage : immobilite (vitesse source), bruit/derive (plancher lie a
+        // l'accuracy), et sauts implausibles. Hors perimetre : REFERENCE_ONLY / watchdog.
+        if (distanceMeters < movementFloorMeters(previousSample, currentSample)) {
             return state
         }
 
@@ -64,6 +70,29 @@ class DistanceTripProgressEngine(
             totalDistanceMeters = state.totalDistanceMeters + correctedDistanceMeters,
             partialDistanceMeters = state.partialDistanceMeters + correctedDistanceMeters
         )
+    }
+
+    private fun isStationarySpeed(sample: LocationSample): Boolean {
+        val speed = sample.speedMetersPerSecond ?: return false
+        return speed < STATIONARY_SPEED_MPS
+    }
+
+    private fun movementFloorMeters(
+        previousSample: LocationSample,
+        currentSample: LocationSample
+    ): Double {
+        val accuracyFloor = worstAccuracyMeters(previousSample, currentSample) *
+            ACCURACY_FLOOR_FACTOR
+        return maxOf(NOISE_FLOOR_METERS, accuracyFloor)
+    }
+
+    private fun worstAccuracyMeters(
+        previousSample: LocationSample,
+        currentSample: LocationSample
+    ): Double {
+        val previousAccuracy = previousSample.accuracyMeters ?: 0.0
+        val currentAccuracy = currentSample.accuracyMeters ?: 0.0
+        return maxOf(previousAccuracy, currentAccuracy)
     }
 
     private fun isImplausibleJump(
@@ -86,6 +115,8 @@ class DistanceTripProgressEngine(
 
     private companion object {
         const val NOISE_FLOOR_METERS = 2.0
+        const val ACCURACY_FLOOR_FACTOR = 1.0
+        const val STATIONARY_SPEED_MPS = 0.5
         const val MAX_PLAUSIBLE_SPEED_KMH = 200.0
         const val MILLIS_PER_SECOND = 1000.0
         const val METERS_PER_SECOND_TO_KMH = 3.6

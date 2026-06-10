@@ -176,6 +176,63 @@ class DistanceTripProgressEngineTest {
         assertEquals(50.0, result.partialDistanceMeters, 0.0)
     }
 
+    @Test
+    fun applyLocationSample_whenSegmentBelowAccuracyFloor_keepsStateUnchanged() {
+        val state = runningState()
+        val filteringEngine = engineWithDistance(8.0)
+
+        val result = filteringEngine.applyLocationSample(
+            state = state,
+            previousSample = sampleAt(0L, accuracyMeters = 10.0),
+            currentSample = sampleAt(1_000L, accuracyMeters = 10.0)
+        )
+
+        assertEquals(state, result)
+    }
+
+    @Test
+    fun applyLocationSample_whenAccuracyTooPoor_keepsStateUnchanged() {
+        val state = runningState()
+        val filteringEngine = engineWithDistance(12.0)
+
+        val result = filteringEngine.applyLocationSample(
+            state = state,
+            previousSample = sampleAt(0L, accuracyMeters = 30.0),
+            currentSample = sampleAt(1_000L, accuracyMeters = 30.0)
+        )
+
+        assertEquals(state, result)
+    }
+
+    @Test
+    fun applyLocationSample_whenReportedSpeedNearZero_keepsStateUnchanged() {
+        val state = runningState()
+        val filteringEngine = engineWithDistance(12.0)
+
+        val result = filteringEngine.applyLocationSample(
+            state = state,
+            previousSample = sampleAt(0L, speedMetersPerSecond = 0.2),
+            currentSample = sampleAt(1_000L, speedMetersPerSecond = 0.2)
+        )
+
+        assertEquals(state, result)
+    }
+
+    @Test
+    fun applyLocationSample_whenRealMovementWithGoodAccuracy_addsDistance() {
+        val state = runningState()
+        val filteringEngine = engineWithDistance(12.5)
+
+        val result = filteringEngine.applyLocationSample(
+            state = state,
+            previousSample = sampleAt(0L, accuracyMeters = 5.0, speedMetersPerSecond = 8.0),
+            currentSample = sampleAt(1_000L, accuracyMeters = 5.0, speedMetersPerSecond = 8.0)
+        )
+
+        assertEquals(112.5, result.totalDistanceMeters, 0.0)
+        assertEquals(32.5, result.partialDistanceMeters, 0.0)
+    }
+
     private fun runningState(): TripState {
         return TripState(
             totalDistanceMeters = 100.0,
@@ -190,13 +247,19 @@ class DistanceTripProgressEngineTest {
         )
     }
 
-    private fun sampleAt(timestampMillis: Long): LocationSample {
+    private fun sampleAt(
+        timestampMillis: Long,
+        accuracyMeters: Double? = null,
+        speedMetersPerSecond: Double? = null
+    ): LocationSample {
         return LocationSample(
             point = GeoPoint(
                 latitude = 44.8378,
                 longitude = -0.5792,
                 timestampMillis = timestampMillis
-            )
+            ),
+            accuracyMeters = accuracyMeters,
+            speedMetersPerSecond = speedMetersPerSecond
         )
     }
 
