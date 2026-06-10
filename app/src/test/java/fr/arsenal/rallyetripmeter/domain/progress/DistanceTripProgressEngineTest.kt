@@ -158,6 +158,24 @@ class DistanceTripProgressEngineTest {
         assertEquals(520.0, result.partialDistanceMeters, 0.0)
     }
 
+    @Test
+    fun applyLocationSample_appliesCalibrationFactorToAccumulatedDistance() {
+        val state = runningState()
+        val calibratedEngine = DistanceTripProgressEngine(
+            distanceEngine = FakeDistanceEngine(distanceMeters = 20.0),
+            calibrationFactor = 1.5
+        )
+
+        val result = calibratedEngine.applyLocationSample(
+            state = state,
+            previousSample = sampleAt(0L),
+            currentSample = sampleAt(1_000L)
+        )
+
+        assertEquals(130.0, result.totalDistanceMeters, 0.0)
+        assertEquals(50.0, result.partialDistanceMeters, 0.0)
+    }
+
     private fun runningState(): TripState {
         return TripState(
             totalDistanceMeters = 100.0,

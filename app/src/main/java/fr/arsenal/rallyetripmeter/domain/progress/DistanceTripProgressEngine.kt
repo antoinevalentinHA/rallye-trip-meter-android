@@ -24,9 +24,11 @@ import fr.arsenal.rallyetripmeter.domain.model.TripState
  * - Ne fait rien si la session n'est pas Running.
  * - Délègue le calcul métrique au DistanceEngine injecté.
  * - Filtrage MVP : ignore le bruit GPS et les sauts implausibles.
+ * - Applique un coefficient de calibration global a la distance retenue.
  */
 class DistanceTripProgressEngine(
-    private val distanceEngine: DistanceEngine
+    private val distanceEngine: DistanceEngine,
+    private val calibrationFactor: Double = 1.0
 ) : TripProgressEngine {
     override fun applyLocationSample(
         state: TripState,
@@ -56,9 +58,11 @@ class DistanceTripProgressEngine(
             return state
         }
 
+        val correctedDistanceMeters = distanceMeters * calibrationFactor
+
         return state.copy(
-            totalDistanceMeters = state.totalDistanceMeters + distanceMeters,
-            partialDistanceMeters = state.partialDistanceMeters + distanceMeters
+            totalDistanceMeters = state.totalDistanceMeters + correctedDistanceMeters,
+            partialDistanceMeters = state.partialDistanceMeters + correctedDistanceMeters
         )
     }
 
