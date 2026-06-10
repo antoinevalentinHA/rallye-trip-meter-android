@@ -497,6 +497,37 @@ class TripMeterViewModelTest {
     }
 
     @Test
+    fun onEvent_sessionBecomesPaused_stopsForegroundService() {
+        var stopCount = 0
+        val viewModel = TripMeterViewModel(
+            stopForegroundService = { stopCount += 1 },
+            initialTripState = TripState(
+                sessionState = TripSessionState.Running
+            )
+        )
+
+        viewModel.onEvent(TripMeterUiEvent.SessionAction)
+
+        assertEquals(1, stopCount)
+    }
+
+    @Test
+    fun onEvent_sessionResumesToRunning_startsForegroundService() {
+        var startCount = 0
+        val viewModel = TripMeterViewModel(
+            initialLocationPermissionState = LocationPermissionState.Granted,
+            startForegroundService = { startCount += 1 },
+            initialTripState = TripState(
+                sessionState = TripSessionState.Paused
+            )
+        )
+
+        viewModel.onEvent(TripMeterUiEvent.SessionAction)
+
+        assertEquals(1, startCount)
+    }
+
+    @Test
     fun onEvent_resetTotal_persistsSnapshot() {
         val store = FakeTripStateStore()
         val viewModel = TripMeterViewModel(

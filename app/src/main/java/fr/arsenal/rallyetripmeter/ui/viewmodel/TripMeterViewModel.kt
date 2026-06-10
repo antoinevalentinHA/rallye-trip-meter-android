@@ -127,7 +127,7 @@ class TripMeterViewModel(
 
             TripSessionState.Stopped -> stopForegroundService()
 
-            TripSessionState.Paused -> Unit
+            TripSessionState.Paused -> stopForegroundService()
         }
     }
 
