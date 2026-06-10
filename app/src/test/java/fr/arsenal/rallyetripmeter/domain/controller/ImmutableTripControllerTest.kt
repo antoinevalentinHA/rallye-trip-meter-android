@@ -126,4 +126,41 @@ class ImmutableTripControllerTest {
 
         assertEquals(0.0, result.partialDistanceMeters, 0.0)
     }
+
+    @Test
+    fun resetTotal_setsTotalDistanceToZero() {
+        val initialState = TripState(
+            totalDistanceMeters = 1234.0,
+            partialDistanceMeters = 56.0,
+            sessionState = TripSessionState.Running
+        )
+
+        val result = controller.resetTotal(initialState)
+
+        assertEquals(0.0, result.totalDistanceMeters, 0.0)
+    }
+
+    @Test
+    fun resetTotal_keepsPartialDistance() {
+        val initialState = TripState(
+            totalDistanceMeters = 1234.0,
+            partialDistanceMeters = 56.0
+        )
+
+        val result = controller.resetTotal(initialState)
+
+        assertEquals(56.0, result.partialDistanceMeters, 0.0)
+    }
+
+    @Test
+    fun resetTotal_keepsSessionState() {
+        val initialState = TripState(
+            totalDistanceMeters = 1234.0,
+            sessionState = TripSessionState.Running
+        )
+
+        val result = controller.resetTotal(initialState)
+
+        assertEquals(TripSessionState.Running, result.sessionState)
+    }
 }

@@ -151,6 +151,7 @@ class TripMeterViewModel(
         return when (event) {
             TripMeterUiEvent.SessionAction,
             TripMeterUiEvent.Stop,
+            TripMeterUiEvent.ResetTotal,
             TripMeterUiEvent.ResetPartial,
             TripMeterUiEvent.AdjustPartialPlus10,
             TripMeterUiEvent.AdjustPartialMinus10,
@@ -200,6 +201,8 @@ class TripMeterViewModel(
             }
 
             TripMeterUiEvent.Stop -> controller.stop(state)
+
+            TripMeterUiEvent.ResetTotal -> controller.resetTotal(state)
 
             TripMeterUiEvent.Options -> state
 

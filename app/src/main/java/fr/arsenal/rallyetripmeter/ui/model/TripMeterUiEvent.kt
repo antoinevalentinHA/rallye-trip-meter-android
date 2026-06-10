@@ -31,6 +31,8 @@ sealed interface TripMeterUiEvent {
 
     data object Stop : TripMeterUiEvent
 
+    data object ResetTotal : TripMeterUiEvent
+
     data object Options : TripMeterUiEvent
 
     data object RefreshLocationPermission : TripMeterUiEvent
