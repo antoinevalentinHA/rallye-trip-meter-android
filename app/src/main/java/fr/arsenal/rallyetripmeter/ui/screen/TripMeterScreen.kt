@@ -263,7 +263,7 @@ private fun SessionControls(
         Spacer(modifier = Modifier.width(12.dp))
 
         TripButton(
-            label = "STOP",
+            label = "TERMINER",
             onClick = { onEvent(TripMeterUiEvent.Stop) },
             enabled = isStopEnabled,
             modifier = Modifier.weight(1f)
