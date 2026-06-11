@@ -121,6 +121,7 @@ Verdict B4 device : PASS global / FAIL (préciser le(s) scénario(s))
 ## 9 bis. Essais consignés
 
 - **2026-06-11 (premier essai, trajet route)** : **PASS sur le scénario critique** (S1, S3, S4, S5, S8) ; S2 non couvert, **S6 (pause/reprise) non testé**, **S7 (terminer) non documenté**. Écart ≈ −1,7 % (voiture 8,20 km / appli 8,06 km). Rapport complet : [`b4_device_validation_2026_06_11.md`](b4_device_validation_2026_06_11.md).
+- **2026-06-11 (second essai, trajet route)** : **S6 (pause/reprise) PASS** (distance figée en pause, reprise correcte) et **S7 (terminer) PASS** (session terminée, notification retirée). Écart ≈ −1,9 % (voiture 7,80 km / appli 7,65 km). → avec le premier essai, **couverture device complète sur un appareil**. Rapport complet : [`b4_device_validation_complete_2026_06_11.md`](b4_device_validation_complete_2026_06_11.md).
 
 ## 10. Rappels
 

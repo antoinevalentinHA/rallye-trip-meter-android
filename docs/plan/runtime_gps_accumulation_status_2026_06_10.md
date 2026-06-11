@@ -1,5 +1,7 @@
 # Point d’étape — Accumulation hors lifecycle UI (post-B5)
 
+> **Mise à jour 2026-06-11 (B4 validé device complet — un appareil)** : un **second trajet route** couvre les scénarios manquants — **S6 pause/reprise PASS** (distance figée en pause, reprise correcte) et **S7 terminer PASS** (session terminée, notification foreground retirée). Avec le scénario critique déjà PASS, **B4 est validé device complet sur un appareil**. Second trajet : voiture **7,80 km** / appli **7,65 km**, écart **−0,15 km** (≈ **−1,9 %**). Le sous-comptage est **cohérent autour de −1,8 %** sur les deux trajets, mais **insuffisant pour calibrer**. **Réserves** : **un seul appareil**, **calibration non validée**, filtre anti-dérive à confirmer sur davantage de trajets, **compteur voiture ≠ vérité absolue**. Rapport : [`b4_device_validation_complete_2026_06_11.md`](b4_device_validation_complete_2026_06_11.md).
+
 > **Mise à jour 2026-06-11 (flux permissions Android)** : flux de permissions Android consigné — demande **notifications** (`POST_NOTIFICATIONS`, Android 13+) au lancement (`28cbe72`), et demande **position** désormais déclenchée à l'appui sur **START** si absente/refusée (plus de demande automatique fragile à l'entrée de la Route ; `4414fcc` puis `40a53a8`). **Validé device** (notifications demandées ; START sans permission → demande ; accord → session ; refus → pas de démarrage silencieux). Ces correctifs **ne touchent pas** GPS / service / accumulation / filtre / calibration. Détail : [`android_permission_flow_2026_06_11.md`](android_permission_flow_2026_06_11.md).
 
 > **Mise à jour 2026-06-11 (validation device B4)** : **PASS device sur le scénario critique** de B4 (écran éteint → retour app → resynchronisation UI ; notification foreground visible ; distance finale cohérente). Trajet route : voiture **8,20 km** / appli **8,06 km**, écart **−0,14 km** (≈ **−1,7 %**). **Réserves** : **pause/reprise non testée**, **terminer non documenté**, un seul appareil. Rapport : [`b4_device_validation_2026_06_11.md`](b4_device_validation_2026_06_11.md). Calibration toujours bloquée.
@@ -50,7 +52,7 @@ Depuis, le pump UI a été **neutralisé** comme source d’accumulation (**B4**
 | B2 — holder runtime process-wide (`153db0a`) | Implémenté, CI verte |
 | B3 — accumulation depuis le foreground service (`cc088e3`, correctif test `28f421a`) | Implémenté, CI verte, **accumulation écran éteint observée sur 1 trajet réel** (écran éteint + pause/reprise ; voir §5) |
 | Correctif filtre — plancher selon disponibilité de la vitesse (`8530fa8`) | Implémenté, CI verte, **vérifié sur route** (écart ≈ 1,35 % ; voir §5) |
-| B4 — neutralisation du pump UI comme source d’accumulation (`d7d4a9f`) | Implémenté, CI verte, **validé device sur le scénario critique** (2026-06-11 : écran éteint / retour / resynchro / notification / distance cohérente) ; **pause/reprise non testée**, **terminer non documenté** (cf. rapport et §6) |
+| B4 — neutralisation du pump UI comme source d’accumulation (`d7d4a9f`) | Implémenté, CI verte, **validé device complet sur un appareil** (2026-06-11, deux trajets : scénario critique écran éteint / retour / resynchro / notification + **S6 pause/reprise** + **S7 terminer**) ; **un seul appareil**, calibration non validée (cf. rapports et §6) |
 | B5 — modèle d’événement runtime pur / découplage runtime–UI (`e7b858b`) | Implémenté, CI verte ; refactor pur (mapping 1:1 garanti par le compilateur), **sans validation device requise** |
 | Mapping UI→runtime — test direct des 13 variantes (`125a112`) | Implémenté, CI verte (test-only) |
 | Retrait des événements UI-only du modèle runtime (`dc910c5`) | Implémenté, CI verte ; comportement préservé (`Options` / `RefreshLocationPermission` traités côté ViewModel) |
@@ -69,7 +71,7 @@ Depuis, le pump UI a été **neutralisé** comme source d’accumulation (**B4**
 
 ## 6. Limites connues
 
-- **B4 — validation device partielle** : le scénario critique (accumulation écran éteint, retour app, resynchronisation UI, notification, distance cohérente) est **PASS sur un appareil / un trajet** (2026-06-11, [`b4_device_validation_2026_06_11.md`](b4_device_validation_2026_06_11.md)). **Non couvert** : **pause/reprise**, **terminer**, autres appareils.
+- **B4 — validé device complet sur un appareil** : scénario critique (écran éteint, retour app, resynchro UI, notification, distance cohérente) + **S6 pause/reprise** + **S7 terminer**, sur **deux trajets** (2026-06-11 : [`b4_device_validation_2026_06_11.md`](b4_device_validation_2026_06_11.md) et [`b4_device_validation_complete_2026_06_11.md`](b4_device_validation_complete_2026_06_11.md)). **Non couvert** : **autres appareils** ; sous-comptage cohérent (≈ −1,8 %) mais **insuffisant pour calibrer**.
 - **`START_NOT_STICKY`** : si le système tue le process, le service n’est pas redémarré automatiquement (pas de `ACCESS_BACKGROUND_LOCATION`).
 - **Robustesse écran éteint dépendante de l’OEM** : selon les optimisations batterie du constructeur, le foreground service peut être throttlé ; observé fonctionnel sur l’appareil de test, à confirmer sur d’autres.
 - **UI finale / polish** : à faire.
@@ -78,7 +80,7 @@ Depuis, le pump UI a été **neutralisé** comme source d’accumulation (**B4**
 
 ## 7. Prochaines étapes recommandées
 
-1. **Compléter la validation device de B4** : le scénario critique est **PASS** (2026-06-11, [`b4_device_validation_2026_06_11.md`](b4_device_validation_2026_06_11.md)). **Reste à couvrir** : **pause/reprise (S6)**, **terminer (S7)**, et idéalement un **second appareil**. Protocole : [`b4_device_validation_protocol_2026_06_11.md`](b4_device_validation_protocol_2026_06_11.md).
+1. **B4 validé device complet sur un appareil** (scénario critique + **S6** + **S7**, deux trajets 2026-06-11 : [`b4_device_validation_2026_06_11.md`](b4_device_validation_2026_06_11.md), [`b4_device_validation_complete_2026_06_11.md`](b4_device_validation_complete_2026_06_11.md)). **Reste à couvrir** : un **second appareil**. Protocole : [`b4_device_validation_protocol_2026_06_11.md`](b4_device_validation_protocol_2026_06_11.md).
 2. **Confirmer le correctif anti-dérive sur d’autres trajets** : le trajet du 2026-06-10 donne ≈ 1,35 % (sous-comptage 6,3 % non reproduit) ; surveiller aussi le bureau (≈ 0,02 km / 5 min).
 3. **Étendre la validation B3 écran éteint** (autres trajets, autres appareils). Rapport du 2026-06-10 : [`road_validation_2026_06_10.md`](road_validation_2026_06_10.md).
 4. **Calibration terrain** : seulement après plusieurs trajets de référence cohérents (pas sur une mesure unique).
@@ -87,5 +89,5 @@ Depuis, le pump UI a été **neutralisé** comme source d’accumulation (**B4**
 ## 8. Rappels
 
 - Document **non normatif** ; les contrats `docs/contrats/` restent la référence.
-- **B4 et B5 appliqués, CI verte.** B4 est **validé device sur le scénario critique** (2026-06-11), mais **pause/reprise et terminer ne sont pas couverts** par ce trajet, et la validation reste limitée à **un appareil** : ne pas la présenter comme une validation device complète.
+- **B4 et B5 appliqués, CI verte.** B4 est **validé device complet sur un appareil** (scénario critique + S6 pause/reprise + S7 terminer, deux trajets 2026-06-11) ; la validation reste limitée à **un appareil** et **sans calibration** : ne pas la présenter comme multi-appareils ni comme une précision certifiée.
 - Cet état **ne décrit pas une application finalisée**. L’accumulation écran éteint a été **observée et validée sur un trajet réel** (écran éteint + pause/reprise, distance cohérente), **à confirmer** sur d’autres trajets et appareils ; le correctif anti-dérive est **efficace sur ce trajet** (≈ 1,35 %), une confirmation supplémentaire reste utile. Une mesure unique ne constitue pas une validation définitive.
