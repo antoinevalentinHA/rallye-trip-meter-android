@@ -123,4 +123,15 @@ class TripDisplayMapperTest {
 
         assertEquals("±4 m", display.gpsAccuracyText)
     }
+
+    @Test
+    fun toTripDisplayState_whenAccuracyPresent_gpsStatusTextExcludesAccuracy() {
+        val display = TripState(
+            gpsStatus = GpsStatus.Fixed,
+            accuracyMeters = 209.0
+        ).toTripDisplayState()
+
+        assertEquals(UiGpsStatus.Ok.label, display.gpsStatusText)
+        assertEquals("±209 m", display.gpsAccuracyText)
+    }
 }

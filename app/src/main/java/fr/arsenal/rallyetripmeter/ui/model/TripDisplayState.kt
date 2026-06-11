@@ -10,13 +10,7 @@ data class TripDisplayState(
     val locationPermissionStatus: UiLocationPermissionStatus = UiLocationPermissionStatus.Unknown
 ) {
     val gpsStatusText: String
-        get() {
-            return if (gpsAccuracyText == null) {
-                gpsStatus.label
-            } else {
-                "${gpsStatus.label} $gpsAccuracyText"
-            }
-        }
+        get() = gpsStatus.label
 
     val sessionStatusText: String
         get() = sessionStatus.label
