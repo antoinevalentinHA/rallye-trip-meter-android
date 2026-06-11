@@ -67,9 +67,13 @@ l'arrêt. Sans session, le délégué est no-op.
 - Toute IOException neutralise silencieusement le sink : l'observabilité ne
   fait jamais échouer une session.
 
-## Consommation prévue (P2)
+## Consommation (P2 — réalisée)
 
-Le harness de replay JVM lira ces fichiers via `TickLogJsonl.parseMeta` /
-`parseEntry` pour reconstituer les séquences d'échantillons et rejouer le
-pipeline de décision. Protocole de capture terrain : voir plan P2 (canapé
-15 min, fenêtre/voiture garée, marche lente, urbain, routier).
+Le harness de replay JVM (P2.a, `app/src/test/.../replay/`) lit ces fichiers
+via `TickLogJsonl.parseMeta` / `parseEntry`, produit le rapport chiffré et
+ré-exécute la séquence dans le pipeline réel (fidélité prouvée à la décimale).
+Premier log terrain rejoué et diagnostiqué : voir
+`p2b_diagnostic_routes_fuite_gps_2026_06_11.md` (route A confirmée, 100 % de
+la distance fantôme via vitesses parasites ≥ 0,5 m/s). Protocole de capture
+des prochains logs : déposer `real_*.jsonl` dans
+`app/src/test/resources/replay/` (auto-découverte par `RealLogReplayTest`).
