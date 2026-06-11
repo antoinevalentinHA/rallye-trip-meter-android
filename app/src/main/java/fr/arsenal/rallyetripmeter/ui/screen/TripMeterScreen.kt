@@ -79,6 +79,7 @@ fun TripMeterScreen(
             ) {
                 OptionsMenu(
                     isStopEnabled = state.isStopEnabled,
+                    calibrationText = state.calibrationText,
                     onEvent = onEvent
                 )
 
@@ -282,12 +283,14 @@ private fun PartialCorrectionControls(
 @Composable
 private fun OptionsMenu(
     isStopEnabled: Boolean,
+    calibrationText: String,
     onEvent: (TripMeterUiEvent) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     var showResetTotalConfirmation by remember { mutableStateOf(false) }
     var showStopConfirmation by remember { mutableStateOf(false) }
     var showNewRunConfirmation by remember { mutableStateOf(false) }
+    var showCalibrationDialog by remember { mutableStateOf(false) }
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -337,11 +340,67 @@ private fun OptionsMenu(
 
                 DropdownMenuItem(
                     text = { Text("Calibration") },
-                    onClick = {},
-                    enabled = false
+                    onClick = {
+                        expanded = false
+                        showCalibrationDialog = true
+                    }
                 )
             }
         }
+    }
+
+    if (showCalibrationDialog) {
+        AlertDialog(
+            onDismissRequest = { showCalibrationDialog = false },
+            title = { Text("Calibration") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text("Coefficient : $calibrationText")
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        TextButton(
+                            onClick = { onEvent(TripMeterUiEvent.AdjustCalibrationMinus10) },
+                            modifier = Modifier.weight(1f)
+                        ) { Text("−0.010") }
+                        TextButton(
+                            onClick = { onEvent(TripMeterUiEvent.AdjustCalibrationMinus1) },
+                            modifier = Modifier.weight(1f)
+                        ) { Text("−0.001") }
+                        TextButton(
+                            onClick = { onEvent(TripMeterUiEvent.AdjustCalibrationPlus1) },
+                            modifier = Modifier.weight(1f)
+                        ) { Text("+0.001") }
+                        TextButton(
+                            onClick = { onEvent(TripMeterUiEvent.AdjustCalibrationPlus10) },
+                            modifier = Modifier.weight(1f)
+                        ) { Text("+0.010") }
+                    }
+
+                    Text(
+                        text = "coefficient = distance de référence ÷ distance mesurée",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { onEvent(TripMeterUiEvent.ResetCalibration) }
+                ) {
+                    Text("Réinitialiser")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showCalibrationDialog = false }
+                ) {
+                    Text("Fermer")
+                }
+            }
+        )
     }
 
     if (showStopConfirmation) {

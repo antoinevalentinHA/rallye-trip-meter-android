@@ -35,6 +35,16 @@ sealed interface TripMeterUiEvent {
 
     data object NewRun : TripMeterUiEvent
 
+    data object AdjustCalibrationMinus10 : TripMeterUiEvent
+
+    data object AdjustCalibrationMinus1 : TripMeterUiEvent
+
+    data object AdjustCalibrationPlus1 : TripMeterUiEvent
+
+    data object AdjustCalibrationPlus10 : TripMeterUiEvent
+
+    data object ResetCalibration : TripMeterUiEvent
+
     data object Options : TripMeterUiEvent
 
     data object RefreshLocationPermission : TripMeterUiEvent

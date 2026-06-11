@@ -4,6 +4,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import fr.arsenal.rallyetripmeter.domain.calibration.CalibrationCoefficient
 import fr.arsenal.rallyetripmeter.domain.controller.ImmutableTripController
 import fr.arsenal.rallyetripmeter.domain.controller.TripController
 import fr.arsenal.rallyetripmeter.domain.distance.HaversineDistanceEngine
@@ -13,6 +14,8 @@ import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
 import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
 import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.domain.permission.LocationPermissionState
+import fr.arsenal.rallyetripmeter.domain.persistence.CalibrationStore
+import fr.arsenal.rallyetripmeter.domain.persistence.InMemoryCalibrationStore
 import fr.arsenal.rallyetripmeter.domain.persistence.NoOpTripStateStore
 import fr.arsenal.rallyetripmeter.domain.persistence.PeriodicSaveThrottle
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
@@ -59,6 +62,7 @@ class TripMeterViewModel(
     ),
     private val locationEngine: LocationEngine = UnavailableLocationEngine(),
     private val tripStateStore: TripStateStore = NoOpTripStateStore(),
+    private val calibrationStore: CalibrationStore = InMemoryCalibrationStore(),
     private val periodicSaveThrottle: PeriodicSaveThrottle = PeriodicSaveThrottle(
         nowMillis = System::currentTimeMillis
     ),
@@ -78,9 +82,11 @@ class TripMeterViewModel(
 
     private var locationPermissionState by mutableStateOf(initialLocationPermissionState)
 
+    private var calibration by mutableStateOf(calibrationStore.load())
+
     val uiState: TripDisplayState
         get() = stateMirror
-            .toTripDisplayState()
+            .toTripDisplayState(calibration)
             .copy(
                 locationPermissionStatus = locationPermissionState.toUiLocationPermissionStatus()
             )
@@ -106,6 +112,8 @@ class TripMeterViewModel(
             locationPermissionState = readLocationPermissionState()
         }
 
+        handleCalibrationEvent(event)
+
         val runtimeEvent = event.toTripRuntimeEvent() ?: return
 
         val previousSessionState = runtime.state.sessionState
@@ -118,6 +126,32 @@ class TripMeterViewModel(
             previousSessionState = previousSessionState,
             currentSessionState = runtime.state.sessionState
         )
+    }
+
+    private fun handleCalibrationEvent(event: TripMeterUiEvent) {
+        when (event) {
+            TripMeterUiEvent.AdjustCalibrationMinus10 ->
+                updateCalibration(calibration.adjustedBy(-CalibrationCoefficient.STEP_LARGE))
+
+            TripMeterUiEvent.AdjustCalibrationMinus1 ->
+                updateCalibration(calibration.adjustedBy(-CalibrationCoefficient.STEP_SMALL))
+
+            TripMeterUiEvent.AdjustCalibrationPlus1 ->
+                updateCalibration(calibration.adjustedBy(CalibrationCoefficient.STEP_SMALL))
+
+            TripMeterUiEvent.AdjustCalibrationPlus10 ->
+                updateCalibration(calibration.adjustedBy(CalibrationCoefficient.STEP_LARGE))
+
+            TripMeterUiEvent.ResetCalibration ->
+                updateCalibration(calibration.reset())
+
+            else -> Unit
+        }
+    }
+
+    private fun updateCalibration(updated: CalibrationCoefficient) {
+        calibration = updated
+        calibrationStore.save(updated)
     }
 
     private fun syncForegroundService(
@@ -180,6 +214,11 @@ internal fun TripMeterUiEvent.toTripRuntimeEvent(): TripRuntimeEvent? {
         TripMeterUiEvent.Stop -> TripRuntimeEvent.Stop
         TripMeterUiEvent.ResetTotal -> TripRuntimeEvent.ResetTotal
         TripMeterUiEvent.NewRun -> TripRuntimeEvent.NewRun
+        TripMeterUiEvent.AdjustCalibrationMinus10 -> null
+        TripMeterUiEvent.AdjustCalibrationMinus1 -> null
+        TripMeterUiEvent.AdjustCalibrationPlus1 -> null
+        TripMeterUiEvent.AdjustCalibrationPlus10 -> null
+        TripMeterUiEvent.ResetCalibration -> null
         TripMeterUiEvent.Options -> null
         TripMeterUiEvent.RefreshLocationPermission -> null
         TripMeterUiEvent.ApplyLocationSample -> TripRuntimeEvent.ApplyLocationSample

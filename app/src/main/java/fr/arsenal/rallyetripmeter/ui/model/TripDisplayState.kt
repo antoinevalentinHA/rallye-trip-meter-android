@@ -7,7 +7,8 @@ data class TripDisplayState(
     val gpsStatus: UiGpsStatus,
     val gpsAccuracyText: String?,
     val sessionStatus: UiSessionStatus,
-    val locationPermissionStatus: UiLocationPermissionStatus = UiLocationPermissionStatus.Unknown
+    val locationPermissionStatus: UiLocationPermissionStatus = UiLocationPermissionStatus.Unknown,
+    val calibrationText: String = "1.000"
 ) {
     val gpsStatusText: String
         get() = gpsStatus.label
