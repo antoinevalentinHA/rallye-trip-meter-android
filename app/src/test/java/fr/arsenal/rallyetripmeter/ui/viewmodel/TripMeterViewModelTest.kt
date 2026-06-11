@@ -9,7 +9,9 @@ import fr.arsenal.rallyetripmeter.domain.permission.LocationPermissionState
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateSnapshot
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
 import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
+import fr.arsenal.rallyetripmeter.runtime.TripRuntime
 import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
+import fr.arsenal.rallyetripmeter.ui.model.UiSessionStatus
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -567,6 +569,45 @@ class TripMeterViewModelTest {
         assertEquals(0.0, snapshot.totalDistanceMeters, 0.0)
         assertEquals(0.0, snapshot.partialDistanceMeters, 0.0)
         assertEquals(TripSessionState.Running, snapshot.sessionState)
+    }
+
+    @Test
+    fun syncUiFromRuntime_reflectsRuntimeStateChange() {
+        val runtime = TripRuntime(
+            initialState = TripState(sessionState = TripSessionState.Stopped)
+        )
+        val viewModel = TripMeterViewModel(runtime = runtime)
+
+        // Le runtime évolue hors onEvent : le miroir UI est encore obsolète.
+        runtime.onEvent(TripMeterUiEvent.SessionAction)
+        assertEquals(UiSessionStatus.Stopped, viewModel.uiState.sessionStatus)
+
+        // Le tick de refresh resynchronise le miroir depuis le runtime.
+        viewModel.syncUiFromRuntime()
+        assertEquals(UiSessionStatus.Active, viewModel.uiState.sessionStatus)
+    }
+
+    @Test
+    fun syncUiFromRuntime_isReadOnly_doesNotPersistOrTouchForegroundService() {
+        var startCount = 0
+        var stopCount = 0
+        val store = FakeTripStateStore()
+        val runtime = TripRuntime(
+            tripStateStore = store,
+            initialState = TripState(sessionState = TripSessionState.Running)
+        )
+        val viewModel = TripMeterViewModel(
+            startForegroundService = { startCount += 1 },
+            stopForegroundService = { stopCount += 1 },
+            runtime = runtime
+        )
+
+        viewModel.syncUiFromRuntime()
+        viewModel.syncUiFromRuntime()
+
+        assertEquals(0, startCount)
+        assertEquals(0, stopCount)
+        assertEquals(0, store.savedSnapshots.size)
     }
 
     private class FakeTripProgressEngine(

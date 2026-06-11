@@ -96,6 +96,10 @@ class TripMeterViewModel(
         stopLocationUpdates()
     }
 
+    fun syncUiFromRuntime() {
+        stateMirror = runtime.state
+    }
+
     fun onEvent(event: TripMeterUiEvent) {
         if (event == TripMeterUiEvent.RefreshLocationPermission) {
             locationPermissionState = readLocationPermissionState()

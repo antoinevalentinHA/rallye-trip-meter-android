@@ -97,7 +97,7 @@ fun TripMeterRoute() {
     ) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             while (true) {
-                viewModel.onEvent(TripMeterUiEvent.ApplyLocationSample)
+                viewModel.syncUiFromRuntime()
                 delay(LOCATION_PUMP_INTERVAL_MS)
             }
         }
