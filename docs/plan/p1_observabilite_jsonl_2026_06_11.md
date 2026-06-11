@@ -29,10 +29,18 @@ l'arrêt. Sans session, le délégué est no-op.
 
 ## Fichiers de log
 
-- **Emplacement :** `<stockage externe de l'app>/gpslogs/`
+- **Emplacement d'écriture :** `<stockage externe de l'app>/gpslogs/`
   (chemin typique : `/storage/emulated/0/Android/data/fr.arsenal.rallyetripmeter/files/gpslogs/`),
-  repli sur le stockage interne si l'externe est indisponible. Lisible via
-  l'app Fichiers ou Termux, sans adb ; supprimé à la désinstallation.
+  repli sur le stockage interne si l'externe est indisponible ; supprimé à la
+  désinstallation. Attention : depuis Android 11 (strictement depuis 13),
+  `Android/data` est inaccessible aux gestionnaires de fichiers et à Termux —
+  seul adb y accède directement.
+- **Export automatique (P1.d-bis) :** à l'arrêt du service, le fichier de
+  session est copié vers `Downloads/gpslogs/` via MediaStore (Android 10+,
+  aucune permission). Accessible depuis tout gestionnaire de fichiers et
+  depuis Termux (`~/storage/downloads/gpslogs/`). Sur Android 9, pas d'export :
+  le répertoire applicatif y est encore librement accessible. Les copies
+  s'accumulent dans Downloads ; le nettoyage est manuel.
 - **Nommage :** `gpslog_yyyyMMdd_HHmmss.jsonl` (heure locale de démarrage de la
   session de service), suffixe `_n` en cas de collision.
 - **Cycle de vie :** un fichier par session de foreground service. Flush

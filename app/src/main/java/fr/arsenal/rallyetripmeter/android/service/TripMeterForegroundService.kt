@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import fr.arsenal.rallyetripmeter.android.diag.TickLogExporter
 import fr.arsenal.rallyetripmeter.android.diag.TickLogSessionFactory
 import fr.arsenal.rallyetripmeter.android.diag.TickLogSinkHolder
 import fr.arsenal.rallyetripmeter.android.location.LocationEngineHolder
@@ -88,7 +89,10 @@ class TripMeterForegroundService : Service() {
     override fun onDestroy() {
         sampleHandler.removeCallbacks(sampleTick)
         runtime = null
-        TickLogSinkHolder.clearSessionSink()?.close()
+        TickLogSinkHolder.clearSessionSink()?.let { sessionSink ->
+            sessionSink.close()
+            TickLogExporter.exportToDownloads(applicationContext, sessionSink.file)
+        }
         LocationEngineHolder.getEngine(applicationContext).stop()
         stopForeground(STOP_FOREGROUND_REMOVE)
         super.onDestroy()

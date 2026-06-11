@@ -31,7 +31,7 @@ import java.io.IOException
  * - Après close (ou après défaillance), toute écriture est ignorée sans erreur.
  */
 class FileTickLogSink(
-    file: File
+    val file: File
 ) : TickLogSink, Closeable {
     @Volatile
     private var writer: BufferedWriter? = try {
