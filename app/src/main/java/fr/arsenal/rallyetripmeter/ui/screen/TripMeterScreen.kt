@@ -259,13 +259,6 @@ private fun PartialCorrectionControls(
         )
 
         TripButton(
-            label = "RAZ\nPARTIEL",
-            onClick = { onEvent(TripMeterUiEvent.ResetPartial) },
-            enabled = enabled,
-            modifier = Modifier.weight(1.6f)
-        )
-
-        TripButton(
             label = "+10",
             onClick = { onEvent(TripMeterUiEvent.AdjustPartialPlus10) },
             enabled = enabled,
