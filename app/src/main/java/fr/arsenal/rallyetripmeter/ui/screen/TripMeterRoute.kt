@@ -15,6 +15,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
+import fr.arsenal.rallyetripmeter.ui.model.UiSessionStatus
 import fr.arsenal.rallyetripmeter.ui.viewmodel.TripMeterViewModel
 import fr.arsenal.rallyetripmeter.ui.viewmodel.TripMeterViewModelFactory
 import kotlinx.coroutines.delay
@@ -30,7 +31,7 @@ import kotlinx.coroutines.delay
  *
  * Contraintes :
  * - Aucun requestLocationUpdates direct (délégué au ViewModel).
- * - Demande la permission de localisation seulement si elle est absente.
+ * - Demande la permission de localisation à l'appui sur START, si elle est absente.
  * - Aucune logique métier locale.
  *
  * Statut :
@@ -56,22 +57,12 @@ fun TripMeterRoute() {
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) {
+    ) { granted ->
+        // Résultat de la demande déclenchée par START : on rafraîchit l'état de
+        // permission, et si accordée on honore le START demandé par l'utilisateur.
         viewModel.onStartLocation()
-    }
-
-    LaunchedEffect(viewModel) {
-        val locationGranted = applicationContext.checkSelfPermission(
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        if (locationGranted) {
-            // Déjà accordée : pas de popup, on démarre directement la localisation.
-            viewModel.onStartLocation()
-        } else {
-            // Absente : demande explicite. Si refusée (même définitivement),
-            // l'app reste stable et l'état GPS affiché reflète la permission.
-            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        if (granted) {
+            viewModel.onEvent(TripMeterUiEvent.SessionAction)
         }
     }
 
@@ -114,8 +105,24 @@ fun TripMeterRoute() {
         }
     }
 
+    val handleEvent: (TripMeterUiEvent) -> Unit = { event ->
+        val requestLocationFirst = event == TripMeterUiEvent.SessionAction &&
+            viewModel.uiState.sessionStatus == UiSessionStatus.Stopped &&
+            applicationContext.checkSelfPermission(
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+
+        if (requestLocationFirst) {
+            // START sans permission : on demande la position au moment utile
+            // (pas de course avec la popup notifications au chargement de l'écran).
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        } else {
+            viewModel.onEvent(event)
+        }
+    }
+
     TripMeterScreen(
         state = viewModel.uiState,
-        onEvent = viewModel::onEvent
+        onEvent = handleEvent
     )
 }
