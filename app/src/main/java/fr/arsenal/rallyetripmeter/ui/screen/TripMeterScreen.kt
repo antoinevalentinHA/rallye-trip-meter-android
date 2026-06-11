@@ -1,6 +1,7 @@
 package fr.arsenal.rallyetripmeter.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -83,7 +84,12 @@ fun TripMeterScreen(
                 TripValueCard(
                     label = "PARTIEL",
                     value = state.partialDistanceText,
-                    emphasis = TripValueEmphasis.Primary
+                    emphasis = TripValueEmphasis.Primary,
+                    onClick = if (state.arePartialControlsEnabled) {
+                        { onEvent(TripMeterUiEvent.ResetPartial) }
+                    } else {
+                        null
+                    }
                 )
 
                 TripValueCard(
@@ -127,7 +133,8 @@ fun TripMeterScreen(
 private fun TripValueCard(
     label: String,
     value: String,
-    emphasis: TripValueEmphasis
+    emphasis: TripValueEmphasis,
+    onClick: (() -> Unit)? = null
 ) {
     val valueStyle = when (emphasis) {
         TripValueEmphasis.Primary -> MaterialTheme.typography.displayLarge
@@ -145,6 +152,13 @@ private fun TripValueCard(
         modifier = Modifier
             .fillMaxWidth()
             .height(cardHeight)
+            .then(
+                if (onClick != null) {
+                    Modifier.clickable { onClick() }
+                } else {
+                    Modifier
+                }
+            )
             .background(
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 shape = RoundedCornerShape(18.dp)
