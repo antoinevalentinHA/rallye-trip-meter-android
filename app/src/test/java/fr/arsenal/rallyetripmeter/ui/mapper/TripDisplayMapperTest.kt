@@ -7,7 +7,9 @@ import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.ui.model.UiGpsStatus
 import fr.arsenal.rallyetripmeter.ui.model.UiSessionStatus
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class TripDisplayMapperTest {
@@ -166,5 +168,19 @@ class TripDisplayMapperTest {
         assertEquals(neutral.speedText, calibrated.speedText)
         assertEquals(neutral.gpsAccuracyText, calibrated.gpsAccuracyText)
         assertEquals(neutral.gpsStatusText, calibrated.gpsStatusText)
+    }
+
+    @Test
+    fun toTripDisplayState_withNeutralCalibration_isNotActive() {
+        val display = TripState().toTripDisplayState()
+        assertEquals("1.000", display.calibrationText)
+        assertFalse(display.isCalibrationActive)
+    }
+
+    @Test
+    fun toTripDisplayState_withActiveCalibration_exposesTextAndFlag() {
+        val display = TripState().toTripDisplayState(CalibrationCoefficient.of(1020))
+        assertEquals("1.020", display.calibrationText)
+        assertTrue(display.isCalibrationActive)
     }
 }

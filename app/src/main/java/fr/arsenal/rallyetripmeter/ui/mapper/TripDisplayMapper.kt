@@ -36,7 +36,8 @@ fun TripState.toTripDisplayState(
         gpsStatus = gpsStatus.toUiGpsStatus(),
         gpsAccuracyText = accuracyMeters.toAccuracyText(),
         sessionStatus = sessionState.toUiSessionStatus(),
-        calibrationText = calibrationCoefficient.format()
+        calibrationText = calibrationCoefficient.format(),
+        isCalibrationActive = calibrationCoefficient.isActive()
     )
 }
 

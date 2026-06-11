@@ -80,6 +80,7 @@ fun TripMeterScreen(
                 OptionsMenu(
                     isStopEnabled = state.isStopEnabled,
                     calibrationText = state.calibrationText,
+                    isCalibrationActive = state.isCalibrationActive,
                     onEvent = onEvent
                 )
 
@@ -284,6 +285,7 @@ private fun PartialCorrectionControls(
 private fun OptionsMenu(
     isStopEnabled: Boolean,
     calibrationText: String,
+    isCalibrationActive: Boolean,
     onEvent: (TripMeterUiEvent) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -294,8 +296,18 @@ private fun OptionsMenu(
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
     ) {
+        if (isCalibrationActive) {
+            Text(
+                text = "CAL $calibrationText",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        }
+
         Box {
             IconButton(
                 onClick = {
