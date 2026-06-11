@@ -106,9 +106,11 @@ class TripMeterViewModel(
             locationPermissionState = readLocationPermissionState()
         }
 
+        val runtimeEvent = event.toTripRuntimeEvent() ?: return
+
         val previousSessionState = runtime.state.sessionState
 
-        runtime.onEvent(event.toTripRuntimeEvent())
+        runtime.onEvent(runtimeEvent)
 
         stateMirror = runtime.state
 
@@ -167,7 +169,7 @@ class TripMeterViewModel(
     }
 }
 
-internal fun TripMeterUiEvent.toTripRuntimeEvent(): TripRuntimeEvent {
+internal fun TripMeterUiEvent.toTripRuntimeEvent(): TripRuntimeEvent? {
     return when (this) {
         TripMeterUiEvent.AdjustPartialMinus100 -> TripRuntimeEvent.AdjustPartialMinus100
         TripMeterUiEvent.AdjustPartialMinus10 -> TripRuntimeEvent.AdjustPartialMinus10
@@ -178,8 +180,8 @@ internal fun TripMeterUiEvent.toTripRuntimeEvent(): TripRuntimeEvent {
         TripMeterUiEvent.Stop -> TripRuntimeEvent.Stop
         TripMeterUiEvent.ResetTotal -> TripRuntimeEvent.ResetTotal
         TripMeterUiEvent.NewRun -> TripRuntimeEvent.NewRun
-        TripMeterUiEvent.Options -> TripRuntimeEvent.Options
-        TripMeterUiEvent.RefreshLocationPermission -> TripRuntimeEvent.RefreshLocationPermission
+        TripMeterUiEvent.Options -> null
+        TripMeterUiEvent.RefreshLocationPermission -> null
         TripMeterUiEvent.ApplyLocationSample -> TripRuntimeEvent.ApplyLocationSample
         TripMeterUiEvent.SimulateLocationStep -> TripRuntimeEvent.SimulateLocationStep
     }

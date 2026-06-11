@@ -3,6 +3,7 @@ package fr.arsenal.rallyetripmeter.ui.viewmodel
 import fr.arsenal.rallyetripmeter.runtime.TripRuntimeEvent
 import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class TripMeterUiEventMappingTest {
@@ -45,14 +46,8 @@ class TripMeterUiEventMappingTest {
             TripRuntimeEvent.NewRun,
             TripMeterUiEvent.NewRun.toTripRuntimeEvent()
         )
-        assertEquals(
-            TripRuntimeEvent.Options,
-            TripMeterUiEvent.Options.toTripRuntimeEvent()
-        )
-        assertEquals(
-            TripRuntimeEvent.RefreshLocationPermission,
-            TripMeterUiEvent.RefreshLocationPermission.toTripRuntimeEvent()
-        )
+        assertNull(TripMeterUiEvent.Options.toTripRuntimeEvent())
+        assertNull(TripMeterUiEvent.RefreshLocationPermission.toTripRuntimeEvent())
         assertEquals(
             TripRuntimeEvent.ApplyLocationSample,
             TripMeterUiEvent.ApplyLocationSample.toTripRuntimeEvent()

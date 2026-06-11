@@ -30,10 +30,6 @@ sealed interface TripRuntimeEvent {
 
     data object NewRun : TripRuntimeEvent
 
-    data object Options : TripRuntimeEvent
-
-    data object RefreshLocationPermission : TripRuntimeEvent
-
     data object ApplyLocationSample : TripRuntimeEvent
 
     data object SimulateLocationStep : TripRuntimeEvent

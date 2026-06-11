@@ -95,8 +95,6 @@ class TripRuntime(
             TripRuntimeEvent.AdjustPartialPlus100,
             TripRuntimeEvent.AdjustPartialMinus100 -> true
 
-            TripRuntimeEvent.Options,
-            TripRuntimeEvent.RefreshLocationPermission,
             TripRuntimeEvent.ApplyLocationSample,
             TripRuntimeEvent.SimulateLocationStep -> false
         }
@@ -142,10 +140,6 @@ class TripRuntime(
             TripRuntimeEvent.ResetTotal -> controller.resetTotal(state)
 
             TripRuntimeEvent.NewRun -> controller.resetTrip(state)
-
-            TripRuntimeEvent.Options -> state
-
-            TripRuntimeEvent.RefreshLocationPermission -> state
 
             TripRuntimeEvent.ApplyLocationSample -> applyLocationEngineSample(state)
 
