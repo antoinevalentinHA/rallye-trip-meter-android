@@ -1,6 +1,7 @@
 package fr.arsenal.rallyetripmeter.ui.screen
 
 import android.Manifest
+import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
@@ -28,9 +29,8 @@ import kotlinx.coroutines.delay
  * - Relie le lifecycle de la route aux handles de localisation du ViewModel.
  *
  * Contraintes :
- * - Aucun requestLocationUpdates.
- * - Aucune demande de permission runtime.
- * - Aucune popup système.
+ * - Aucun requestLocationUpdates direct (délégué au ViewModel).
+ * - Demande la permission de localisation seulement si elle est absente.
  * - Aucune logique métier locale.
  *
  * Statut :
@@ -61,7 +61,18 @@ fun TripMeterRoute() {
     }
 
     LaunchedEffect(viewModel) {
-        locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        val locationGranted = applicationContext.checkSelfPermission(
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (locationGranted) {
+            // Déjà accordée : pas de popup, on démarre directement la localisation.
+            viewModel.onStartLocation()
+        } else {
+            // Absente : demande explicite. Si refusée (même définitivement),
+            // l'app reste stable et l'état GPS affiché reflète la permission.
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
     }
 
     LaunchedEffect(viewModel) {
