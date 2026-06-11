@@ -1,5 +1,6 @@
 package fr.arsenal.rallyetripmeter.ui.viewmodel
 
+import fr.arsenal.rallyetripmeter.domain.diag.SampleVerdict
 import fr.arsenal.rallyetripmeter.domain.geo.LocationSample
 import fr.arsenal.rallyetripmeter.domain.location.LocationEngine
 import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
@@ -9,6 +10,7 @@ import fr.arsenal.rallyetripmeter.domain.permission.LocationPermissionState
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateSnapshot
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
 import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
+import fr.arsenal.rallyetripmeter.domain.progress.TripProgressResult
 import fr.arsenal.rallyetripmeter.runtime.TripRuntime
 import fr.arsenal.rallyetripmeter.runtime.TripRuntimeEvent
 import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
@@ -612,14 +614,30 @@ class TripMeterViewModelTest {
     }
 
     private class FakeTripProgressEngine(
-        private val resultState: TripState
+        private val resultState: TripState,
+        private val verdict: SampleVerdict = SampleVerdict.ACCEPTED_SEGMENT
     ) : TripProgressEngine {
         override fun applyLocationSample(
             state: TripState,
             previousSample: LocationSample?,
             currentSample: LocationSample
         ): TripState {
-            return resultState
+            return applyLocationSampleWithVerdict(
+                state = state,
+                previousSample = previousSample,
+                currentSample = currentSample
+            ).state
+        }
+
+        override fun applyLocationSampleWithVerdict(
+            state: TripState,
+            previousSample: LocationSample?,
+            currentSample: LocationSample
+        ): TripProgressResult {
+            return TripProgressResult(
+                state = resultState,
+                verdict = verdict
+            )
         }
     }
 

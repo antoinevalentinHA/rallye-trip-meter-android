@@ -22,6 +22,8 @@ import fr.arsenal.rallyetripmeter.domain.model.TripState
  * - Reçoit l'échantillon précédent si disponible.
  * - Reçoit l'échantillon courant.
  * - Retourne un nouvel état TripState.
+ * - La variante observable (P1.c) retourne en plus le verdict de la branche
+ *   réellement prise ; les deux points d'entrée produisent le même état.
  */
 interface TripProgressEngine {
     fun applyLocationSample(
@@ -29,4 +31,10 @@ interface TripProgressEngine {
         previousSample: LocationSample?,
         currentSample: LocationSample
     ): TripState
+
+    fun applyLocationSampleWithVerdict(
+        state: TripState,
+        previousSample: LocationSample?,
+        currentSample: LocationSample
+    ): TripProgressResult
 }

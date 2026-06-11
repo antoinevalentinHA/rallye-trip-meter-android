@@ -52,7 +52,7 @@ class DistanceTripProgressEngine(
      * historique — mêmes gardes, même ordre, mêmes calculs — avec en plus le
      * verdict miroir de la branche réellement prise. Aucune nouvelle décision.
      */
-    fun applyLocationSampleWithVerdict(
+    override fun applyLocationSampleWithVerdict(
         state: TripState,
         previousSample: LocationSample?,
         currentSample: LocationSample

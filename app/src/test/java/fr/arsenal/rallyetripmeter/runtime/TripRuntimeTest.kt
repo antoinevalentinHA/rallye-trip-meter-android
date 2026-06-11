@@ -1,5 +1,8 @@
 package fr.arsenal.rallyetripmeter.runtime
 
+import fr.arsenal.rallyetripmeter.domain.diag.SampleVerdict
+import fr.arsenal.rallyetripmeter.domain.diag.TickLogEntry
+import fr.arsenal.rallyetripmeter.domain.diag.TickLogSink
 import fr.arsenal.rallyetripmeter.domain.geo.GeoPoint
 import fr.arsenal.rallyetripmeter.domain.geo.LocationSample
 import fr.arsenal.rallyetripmeter.domain.location.LocationEngine
@@ -10,6 +13,7 @@ import fr.arsenal.rallyetripmeter.domain.persistence.PeriodicSaveThrottle
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateSnapshot
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
 import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
+import fr.arsenal.rallyetripmeter.domain.progress.TripProgressResult
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -349,15 +353,241 @@ class TripRuntimeTest {
         assertEquals(baseline, doubled.state.totalDistanceMeters, 0.0)
     }
 
+    // ------------------------------------------------------------------
+    // Observabilité P1.c : une TickLogEntry par tick ApplyLocationSample
+    // ------------------------------------------------------------------
+
+    @Test
+    fun applyLocationSample_withoutSample_logsIgnoredNoSample_andKeepsDistances() {
+        val sink = RecordingTickLogSink()
+        val runtime = TripRuntime(
+            locationEngine = FakeLocationEngine(
+                gpsStatus = GpsStatus.Searching,
+                samples = emptyList()
+            ),
+            tickLogSink = sink,
+            nowMillis = { 42L },
+            initialState = TripState(
+                sessionState = TripSessionState.Running,
+                totalDistanceMeters = 500.0,
+                partialDistanceMeters = 50.0
+            )
+        )
+
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
+
+        assertEquals(500.0, runtime.state.totalDistanceMeters, 0.0)
+        assertEquals(50.0, runtime.state.partialDistanceMeters, 0.0)
+        assertEquals(1, sink.entries.size)
+        val entry = sink.entries.single()
+        assertEquals(SampleVerdict.IGNORED_NO_SAMPLE, entry.verdict)
+        assertEquals(42L, entry.tickElapsedMillis)
+        assertEquals(null, entry.latitude)
+        assertEquals(null, entry.sampleIsNew)
+        assertEquals(0.0, entry.deltaTotalMeters, 0.0)
+        assertEquals(500.0, entry.totalMeters, 0.0)
+        assertEquals(GpsStatus.Searching, entry.gpsStatus)
+        assertEquals(TripSessionState.Running, entry.sessionState)
+    }
+
+    @Test
+    fun applyLocationSample_onSameFixReread_logsIgnoredDuplicate_andKeepsDistances() {
+        val sink = RecordingTickLogSink()
+        val fix = LocationSample(
+            point = GeoPoint(latitude = 44.8378, longitude = -0.5792)
+        )
+        val runtime = TripRuntime(
+            locationEngine = FakeLocationEngine(
+                gpsStatus = GpsStatus.Fixed,
+                samples = listOf(fix, fix)
+            ),
+            tickLogSink = sink,
+            initialState = TripState(sessionState = TripSessionState.Running)
+        )
+
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
+
+        assertEquals(0.0, runtime.state.totalDistanceMeters, 0.0)
+        assertEquals(2, sink.entries.size)
+        assertEquals(SampleVerdict.IGNORED_NO_ANCHOR, sink.entries[0].verdict)
+        assertEquals(SampleVerdict.IGNORED_DUPLICATE, sink.entries[1].verdict)
+        assertEquals(false, sink.entries[1].sampleIsNew)
+        assertEquals(0.0, sink.entries[1].deltaTotalMeters, 0.0)
+    }
+
+    @Test
+    fun applyLocationSample_firstSample_logsIgnoredNoAnchor() {
+        val sink = RecordingTickLogSink()
+        val runtime = TripRuntime(
+            locationEngine = FakeLocationEngine(
+                gpsStatus = GpsStatus.Fixed,
+                samples = listOf(
+                    LocationSample(
+                        point = GeoPoint(latitude = 44.8378, longitude = -0.5792),
+                        accuracyMeters = 4.0,
+                        speedMetersPerSecond = 12.0
+                    )
+                )
+            ),
+            tickLogSink = sink,
+            initialState = TripState(sessionState = TripSessionState.Running)
+        )
+
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
+
+        assertEquals(1, sink.entries.size)
+        val entry = sink.entries.single()
+        assertEquals(SampleVerdict.IGNORED_NO_ANCHOR, entry.verdict)
+        assertEquals(true, entry.sampleIsNew)
+        assertEquals(44.8378, entry.latitude!!, 0.0)
+        assertEquals(4.0, entry.accuracyMeters!!, 0.0)
+        assertEquals(12.0, entry.speedMetersPerSecond!!, 0.0)
+        assertEquals(null, entry.previousTimestampMillis)
+    }
+
+    @Test
+    fun applyLocationSample_acceptedByEngine_logsEngineVerdictAndDelta() {
+        val sink = RecordingTickLogSink()
+        val runtime = TripRuntime(
+            locationEngine = FakeLocationEngine(
+                gpsStatus = GpsStatus.Fixed,
+                samples = listOf(
+                    LocationSample(
+                        point = GeoPoint(latitude = 44.8378, longitude = -0.5792)
+                    ),
+                    LocationSample(
+                        point = GeoPoint(latitude = 44.8380, longitude = -0.5794)
+                    )
+                )
+            ),
+            tickLogSink = sink,
+            initialState = TripState(sessionState = TripSessionState.Running)
+        )
+
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
+
+        assertTrue(runtime.state.totalDistanceMeters > 0.0)
+        assertEquals(2, sink.entries.size)
+        val accepted = sink.entries[1]
+        assertEquals(SampleVerdict.ACCEPTED_SEGMENT, accepted.verdict)
+        assertEquals(true, accepted.sampleIsNew)
+        assertEquals(
+            runtime.state.totalDistanceMeters,
+            accepted.deltaTotalMeters,
+            0.0
+        )
+        assertEquals(
+            runtime.state.totalDistanceMeters,
+            accepted.totalMeters,
+            0.0
+        )
+    }
+
+    @Test
+    fun applyLocationSample_rejectedByEngine_logsEngineVerdict_andKeepsDistances() {
+        val sink = RecordingTickLogSink()
+        val runtime = TripRuntime(
+            locationEngine = FakeLocationEngine(
+                gpsStatus = GpsStatus.Fixed,
+                samples = listOf(
+                    LocationSample(
+                        point = GeoPoint(latitude = 44.8378, longitude = -0.5792),
+                        speedMetersPerSecond = 0.2
+                    ),
+                    LocationSample(
+                        point = GeoPoint(latitude = 44.8380, longitude = -0.5794),
+                        speedMetersPerSecond = 0.2
+                    )
+                )
+            ),
+            tickLogSink = sink,
+            initialState = TripState(sessionState = TripSessionState.Running)
+        )
+
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
+
+        assertEquals(0.0, runtime.state.totalDistanceMeters, 0.0)
+        assertEquals(2, sink.entries.size)
+        val rejected = sink.entries[1]
+        assertEquals(SampleVerdict.REJECTED_STATIONARY, rejected.verdict)
+        assertEquals(0.0, rejected.deltaTotalMeters, 0.0)
+        assertEquals(0.0, rejected.totalMeters, 0.0)
+    }
+
+    @Test
+    fun applyLocationSample_emitsExactlyOneEntryPerTick() {
+        val sink = RecordingTickLogSink()
+        val runtime = TripRuntime(
+            locationEngine = FakeLocationEngine(
+                gpsStatus = GpsStatus.Fixed,
+                samples = listOf(
+                    null,
+                    LocationSample(
+                        point = GeoPoint(latitude = 44.8378, longitude = -0.5792)
+                    ),
+                    LocationSample(
+                        point = GeoPoint(latitude = 44.8380, longitude = -0.5794)
+                    )
+                )
+            ),
+            tickLogSink = sink,
+            initialState = TripState(sessionState = TripSessionState.Running)
+        )
+
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
+
+        assertEquals(3, sink.entries.size)
+        assertEquals(SampleVerdict.IGNORED_NO_SAMPLE, sink.entries[0].verdict)
+        assertEquals(SampleVerdict.IGNORED_NO_ANCHOR, sink.entries[1].verdict)
+        assertEquals(SampleVerdict.ACCEPTED_SEGMENT, sink.entries[2].verdict)
+    }
+
+    private class RecordingTickLogSink : TickLogSink {
+        val entries = mutableListOf<TickLogEntry>()
+
+        override fun logMeta(meta: fr.arsenal.rallyetripmeter.domain.diag.TickLogMeta) {
+            // Hors périmètre des ticks.
+        }
+
+        override fun log(entry: TickLogEntry) {
+            entries.add(entry)
+        }
+
+        override fun flush() {
+            // No-op.
+        }
+    }
+
     private class FakeTripProgressEngine(
-        private val resultState: TripState
+        private val resultState: TripState,
+        private val verdict: SampleVerdict = SampleVerdict.ACCEPTED_SEGMENT
     ) : TripProgressEngine {
         override fun applyLocationSample(
             state: TripState,
             previousSample: LocationSample?,
             currentSample: LocationSample
         ): TripState {
-            return resultState
+            return applyLocationSampleWithVerdict(
+                state = state,
+                previousSample = previousSample,
+                currentSample = currentSample
+            ).state
+        }
+
+        override fun applyLocationSampleWithVerdict(
+            state: TripState,
+            previousSample: LocationSample?,
+            currentSample: LocationSample
+        ): TripProgressResult {
+            return TripProgressResult(
+                state = resultState,
+                verdict = verdict
+            )
         }
     }
 
