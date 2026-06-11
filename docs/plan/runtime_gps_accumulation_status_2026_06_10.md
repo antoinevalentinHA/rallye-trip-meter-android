@@ -1,6 +1,6 @@
 # Point d’étape — Accumulation hors lifecycle UI (post-B3)
 
-> **Mise à jour 2026-06-10 (soir)** : première sortie route effectuée. Accumulation écran éteint observée fonctionnelle (à confirmer) ; régression du filtre anti-dérive identifiée puis corrigée (`fix(gps): avoid accuracy floor while moving`, HEAD `8530fa8`). Détails en §5. Calibration toujours bloquée.
+> **Mise à jour 2026-06-10** : trajet réel corrigé effectué après le correctif anti-dérive — voiture **17,80 km** / appli **17,56 km**, écart **0,24 km** (≈ **1,35 %**), **écran éteint** avec **pause/reprise** et distance cohérente. B3 écran éteint et correctif anti-dérive **validés sur ce trajet** (à confirmer sur d’autres). Calibration toujours bloquée. Voir §5 et [`road_validation_2026_06_10.md`](road_validation_2026_06_10.md).
 
 ## 1. Statut
 
@@ -14,7 +14,7 @@
 
 Depuis le point d’étape du 2026-06-09, le runtime GPS a franchi plusieurs chantiers structurants : persistance minimale de l’état, foreground service propriétaire du GPS (chantier GPS-OWN), correctif anti-dérive stationnaire, puis extraction et montée en puissance d’un runtime autoritaire (paliers B1 → B3).
 
-Le `TripState` n’est plus possédé par le ViewModel mais par un `TripRuntime` autoritaire (B1), promu en instance unique à l’échelle du process (B2). À partir de B3, le foreground service consomme périodiquement les samples GPS et alimente ce runtime partagé : l’accumulation de distance n’est donc plus pilotée par le seul pump UI. C’est le premier palier qui ouvre la voie à l’accumulation **écran éteint / arrière-plan** — dont la **validation route reste à réaliser**.
+Le `TripState` n’est plus possédé par le ViewModel mais par un `TripRuntime` autoritaire (B1), promu en instance unique à l’échelle du process (B2). À partir de B3, le foreground service consomme périodiquement les samples GPS et alimente ce runtime partagé : l’accumulation de distance n’est donc plus pilotée par le seul pump UI. C’est le premier palier qui ouvre la voie à l’accumulation **écran éteint / arrière-plan** — désormais **observée sur un trajet réel** (cf. §5).
 
 ## 3. État architectural après B3 (implémenté, CI verte)
 
@@ -32,42 +32,43 @@ Le `TripState` n’est plus possédé par le ViewModel mais par un `TripRuntime`
 | Foreground service + notification (`51b039c`, `32e7ea8`, `26837d5`) | Implémenté, CI verte, **validé device** (notification) |
 | GPS-OWN-1 — holder moteur GPS (`0632589`) | Implémenté, CI verte |
 | GPS-OWN-2 — service démarre l’acquisition (`135e097`) | Implémenté, CI verte |
-| Correctif anti-dérive stationnaire (`3dd0cdd`) | Implémenté, CI verte, **validé bureau** (0 m fantôme) ; **test route à faire** |
+| Correctif anti-dérive stationnaire (`3dd0cdd`) | Implémenté, CI verte, **validé bureau** (0 m fantôme) ; **test route fait** (voir §5) |
 | GPS-OWN-4 — service seul pilote du GPS (`8c3b16c`) | Implémenté, CI verte |
 | GPS-OWN-3 — GPS coupé en `Paused` (`46c5b6d`) | Implémenté, CI verte |
 | B1 — extraction du runtime autoritaire (`f67e0da`) | Implémenté, CI verte |
 | B2 — holder runtime process-wide (`153db0a`) | Implémenté, CI verte |
-| B3 — accumulation depuis le foreground service (`cc088e3`, correctif test `28f421a`) | Implémenté, CI verte, **validation route écran éteint à faire** |
+| B3 — accumulation depuis le foreground service (`cc088e3`, correctif test `28f421a`) | Implémenté, CI verte, **accumulation écran éteint observée sur 1 trajet réel** (écran éteint + pause/reprise ; voir §5) |
+| Correctif filtre — plancher selon disponibilité de la vitesse (`8530fa8`) | Implémenté, CI verte, **vérifié sur route** (écart ≈ 1,35 % ; voir §5) |
 
 ## 4. Validations réalisées
 
 - **CI verte** (`testDebugUnitTest` + `assembleDebug`) sur le HEAD courant.
-- **Validé device** : notification du foreground service ; persistance minimale (fermeture/réouverture) ; anti-dérive en **conditions bureau avec le filtre initial** (téléphone immobile, aucun mètre fantôme observé ; à re-tester après le correctif, cf. §5).
+- **Validé device** : notification du foreground service ; persistance minimale (fermeture/réouverture) ; anti-dérive en **conditions bureau avec le filtre initial** (téléphone immobile, aucun mètre fantôme observé ; re-test post-correctif en §5).
 - **Validé device antérieurement** (cf. `runtime_gps_v0_1_status_2026_06_09.md`) : permission in-app, GPS réel, distance réelle accumulée en roulant, écran maintenu en session active.
 
-## 5. Validation route du 2026-06-10 (première sortie)
+## 5. Validation route (2026-06-10)
 
-- **B3 — accumulation écran éteint en roulant** : **première sortie effectuée**. L’accumulation hors premier plan a été observée comme fonctionnelle. À confirmer sur un second trajet et à formaliser dans un rapport de validation device dédié.
-- **Filtre anti-dérive — test route réalisé** : **régression identifiée puis corrigée**. Sous-comptage ≈ 6,3 % (≈ 510 m sur 8,1 km) contre ≈ 1,2 % avant filtre. Cause : le plancher de mouvement basé sur `accuracyMeters` était appliqué inconditionnellement et écartait de vrais segments urbains lents (≈ 5–11 m à 1 Hz) passant sous l’incertitude GPS (≈ 8–15 m). **Correctif appliqué** : `fix(gps): avoid accuracy floor while moving` (HEAD `8530fa8`) — plancher régime-dépendant (vitesse présente → plancher de bruit seul ; vitesse absente → garde anti-dérive accuracy conservé). **Re-validation en attente** : re-test bureau (doit rester 0 m) **et** nouvelle sortie route (écart attendu ≈ 1,2 %).
-- **Calibration réelle** : **toujours différée**. Ne pas appliquer de coefficient tant que la distance corrigée n’est pas jugée fiable sur un trajet de référence : un coefficient appliqué maintenant masquerait le comportement réel du filtre corrigé.
+- **B3 — accumulation écran éteint en roulant** : **observée fonctionnelle sur un trajet réel**. Validation terrain nettement renforcée par le trajet corrigé du 2026-06-10 (**écran éteint**, **pause** au milieu puis **reprise**, **distance finale cohérente**). Confirmation sur d’autres trajets / appareils encore utile. Rapport : [`road_validation_2026_06_10.md`](road_validation_2026_06_10.md).
+- **Filtre anti-dérive — corrigé et vérifié sur route**. La régression de sous-comptage (≈ 6,3 %, ≈ 510 m / 8,1 km) a été corrigée par `fix(gps): avoid accuracy floor while moving` (HEAD `8530fa8`) — plancher régime-dépendant (vitesse présente → plancher de bruit seul ; vitesse absente → garde anti-dérive accuracy conservé). **Re-test bureau post-correctif** : ≈ 0,02 km / 5 min (nette amélioration, à surveiller). **Trajet réel corrigé** : voiture **17,80 km** / appli **17,56 km** → écart **0,24 km** (≈ **1,35 %**) ; le sous-comptage de 6,3 % **n’est plus observé**. Confirmation sur un autre trajet encore utile.
+- **Calibration réelle** : **toujours différée**. L’écart théorique serait un coefficient ≈ 1,014, mais une mesure unique ne fait pas une vérité générale : attendre **plusieurs trajets de référence** avant tout coefficient.
 
 ## 6. Limites connues
 
 - **Pump UI encore présent** : au premier plan, le pump UI **et** la boucle service tournent. Le runtime étant unique (un seul `previousLocationSample`) et les ticks sérialisés sur le main thread, le trajet est pavé **une seule fois** → pas de double comptage ni de course. Le nettoyage / la neutralisation du pump est l’objet du **palier B4** (souhaitable).
 - **`TripMeterUiEvent` traversant** : le service et le runtime échangent encore via `TripMeterUiEvent` ; un type `RuntimeEvent` pur reste différé.
 - **`START_NOT_STICKY`** : si le système tue le process, le service n’est pas redémarré automatiquement (pas de `ACCESS_BACKGROUND_LOCATION`).
-- **Robustesse écran éteint dépendante de l’OEM** : selon les optimisations batterie du constructeur, le foreground service peut être throttlé ; à observer en validation route.
+- **Robustesse écran éteint dépendante de l’OEM** : selon les optimisations batterie du constructeur, le foreground service peut être throttlé ; observé fonctionnel sur l’appareil de test, à confirmer sur d’autres.
 - **UI finale / polish** : à faire.
 
 ## 7. Prochaines étapes recommandées
 
-1. **Re-valider le correctif anti-dérive** : re-test bureau (doit rester 0 m) puis sortie route (écart attendu ≈ 1,2 %).
-2. **Confirmer et documenter B3 écran éteint** : second trajet + rapport de validation device daté (pattern `*_validation_2026_*.md`).
-3. **B4 — neutraliser le pump UI** (après 1 et 2) : faire du service l’unique moteur d’accumulation, avec resynchronisation du miroir VM à la reprise. Plan détaillé : [`runtime_gps_b4_pump_neutralization_plan_2026_06_10.md`](runtime_gps_b4_pump_neutralization_plan_2026_06_10.md).
-4. **Calibration terrain** : seulement une fois la distance corrigée jugée fiable sur un trajet de référence.
+1. **Confirmer le correctif anti-dérive sur d’autres trajets** : le trajet du 2026-06-10 donne ≈ 1,35 % (sous-comptage 6,3 % non reproduit) ; surveiller aussi le bureau (≈ 0,02 km / 5 min).
+2. **Étendre la validation B3 écran éteint** (autres trajets, autres appareils). Rapport du 2026-06-10 : [`road_validation_2026_06_10.md`](road_validation_2026_06_10.md).
+3. **B4 — neutraliser le pump UI** : faire du service l’unique moteur d’accumulation, avec resynchronisation du miroir VM à la reprise. Reste souhaitable, désormais conforté par un résultat terrain solide du service comme moteur d’accumulation. Plan détaillé : [`runtime_gps_b4_pump_neutralization_plan_2026_06_10.md`](runtime_gps_b4_pump_neutralization_plan_2026_06_10.md).
+4. **Calibration terrain** : seulement après plusieurs trajets de référence cohérents (pas sur une mesure unique).
 5. **UI finale**.
 
 ## 8. Rappels
 
 - Document **non normatif** ; les contrats `docs/contrats/` restent la référence.
-- Cet état **ne décrit pas une application finalisée** ; en particulier, l’accumulation écran éteint a été **observée** mais n’a pas encore fait l’objet d’une **validation formelle documentée**, et le correctif anti-dérive **reste à re-valider** sur route.
+- Cet état **ne décrit pas une application finalisée**. L’accumulation écran éteint a été **observée et validée sur un trajet réel** (écran éteint + pause/reprise, distance cohérente), **à confirmer** sur d’autres trajets et appareils ; le correctif anti-dérive est **efficace sur ce trajet** (≈ 1,35 %), une confirmation supplémentaire reste utile. Une mesure unique ne constitue pas une validation définitive.
