@@ -1,5 +1,6 @@
 package fr.arsenal.rallyetripmeter.ui.mapper
 
+import fr.arsenal.rallyetripmeter.domain.calibration.CalibrationCoefficient
 import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
 import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
 import fr.arsenal.rallyetripmeter.domain.model.TripState
@@ -22,10 +23,15 @@ import kotlin.math.roundToInt
  * - Aucun calcul de distance.
  * - Aucun état Android.
  */
-fun TripState.toTripDisplayState(): TripDisplayState {
+fun TripState.toTripDisplayState(
+    calibrationCoefficient: CalibrationCoefficient = CalibrationCoefficient.default()
+): TripDisplayState {
+    // Calibration manuelle appliquée à l'affichage des distances uniquement (partiel + total).
+    // Distances brutes (TripState) intactes ; 1.000 = identité.
+    val coefficient = calibrationCoefficient.toDouble()
     return TripDisplayState(
-        partialDistanceText = partialDistanceMeters.toKilometerText(),
-        totalDistanceText = totalDistanceMeters.toKilometerText(),
+        partialDistanceText = (partialDistanceMeters * coefficient).toKilometerText(),
+        totalDistanceText = (totalDistanceMeters * coefficient).toKilometerText(),
         speedText = speedMetersPerSecond.toSpeedText(),
         gpsStatus = gpsStatus.toUiGpsStatus(),
         gpsAccuracyText = accuracyMeters.toAccuracyText(),

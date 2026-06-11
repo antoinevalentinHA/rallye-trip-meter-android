@@ -1,5 +1,6 @@
 package fr.arsenal.rallyetripmeter.ui.mapper
 
+import fr.arsenal.rallyetripmeter.domain.calibration.CalibrationCoefficient
 import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
 import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
 import fr.arsenal.rallyetripmeter.domain.model.TripState
@@ -133,5 +134,37 @@ class TripDisplayMapperTest {
 
         assertEquals(UiGpsStatus.Ok.label, display.gpsStatusText)
         assertEquals("±209 m", display.gpsAccuracyText)
+    }
+
+    @Test
+    fun toTripDisplayState_withDefaultCalibration_leavesDistancesUnchanged() {
+        val state = TripState(totalDistanceMeters = 8000.0, partialDistanceMeters = 5000.0)
+        val display = state.toTripDisplayState(CalibrationCoefficient.default())
+        assertEquals("8.00 km", display.totalDistanceText)
+        assertEquals("5.00 km", display.partialDistanceText)
+    }
+
+    @Test
+    fun toTripDisplayState_withCalibration_scalesPartialAndTotal() {
+        val state = TripState(totalDistanceMeters = 8000.0, partialDistanceMeters = 8000.0)
+        val display = state.toTripDisplayState(CalibrationCoefficient.of(1020))
+        assertEquals("8.16 km", display.partialDistanceText)
+        assertEquals("8.16 km", display.totalDistanceText)
+    }
+
+    @Test
+    fun toTripDisplayState_withCalibration_doesNotAffectSpeedOrGps() {
+        val state = TripState(
+            totalDistanceMeters = 8000.0,
+            partialDistanceMeters = 8000.0,
+            speedMetersPerSecond = 21.0,
+            accuracyMeters = 4.0,
+            gpsStatus = GpsStatus.Fixed
+        )
+        val calibrated = state.toTripDisplayState(CalibrationCoefficient.of(1020))
+        val neutral = state.toTripDisplayState()
+        assertEquals(neutral.speedText, calibrated.speedText)
+        assertEquals(neutral.gpsAccuracyText, calibrated.gpsAccuracyText)
+        assertEquals(neutral.gpsStatusText, calibrated.gpsStatusText)
     }
 }
