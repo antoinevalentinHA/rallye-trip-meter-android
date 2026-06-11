@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
 import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
@@ -248,28 +249,32 @@ private fun PartialCorrectionControls(
             label = "−100",
             onClick = { onEvent(TripMeterUiEvent.AdjustPartialMinus100) },
             enabled = enabled,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            height = 80.dp
         )
 
         TripButton(
             label = "−10",
             onClick = { onEvent(TripMeterUiEvent.AdjustPartialMinus10) },
             enabled = enabled,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            height = 80.dp
         )
 
         TripButton(
             label = "+10",
             onClick = { onEvent(TripMeterUiEvent.AdjustPartialPlus10) },
             enabled = enabled,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            height = 80.dp
         )
 
         TripButton(
             label = "+100",
             onClick = { onEvent(TripMeterUiEvent.AdjustPartialPlus100) },
             enabled = enabled,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            height = 80.dp
         )
     }
 }
@@ -432,12 +437,13 @@ private fun TripButton(
     label: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    height: Dp = 72.dp
 ) {
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.height(72.dp),
+        modifier = modifier.height(height),
         shape = RoundedCornerShape(14.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
