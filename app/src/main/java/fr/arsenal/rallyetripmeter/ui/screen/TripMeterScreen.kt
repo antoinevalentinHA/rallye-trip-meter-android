@@ -100,6 +100,7 @@ fun TripMeterScreen(
 
                 StatusBar(
                     gpsStatus = state.gpsStatusText,
+                    gpsAccuracy = state.gpsAccuracyText,
                     sessionStatus = state.sessionStatusText,
                     locationPermissionStatus = state.locationPermissionStatusText
                 )
@@ -172,6 +173,7 @@ private fun TripValueCard(
 @Composable
 private fun StatusBar(
     gpsStatus: String,
+    gpsAccuracy: String?,
     sessionStatus: String,
     locationPermissionStatus: String
 ) {
@@ -186,12 +188,22 @@ private fun StatusBar(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            text = gpsStatus,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Column {
+            Text(
+                text = gpsStatus,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            if (gpsAccuracy != null) {
+                Text(
+                    text = gpsAccuracy,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
 
         Text(
             text = locationPermissionStatus,
