@@ -274,6 +274,7 @@ private fun OptionsMenu(
 ) {
     var expanded by remember { mutableStateOf(false) }
     var showResetTotalConfirmation by remember { mutableStateOf(false) }
+    var showStopConfirmation by remember { mutableStateOf(false) }
     var showNewRunConfirmation by remember { mutableStateOf(false) }
 
     Row(
@@ -300,8 +301,8 @@ private fun OptionsMenu(
                 DropdownMenuItem(
                     text = { Text("Terminer la session") },
                     onClick = {
-                        onEvent(TripMeterUiEvent.Stop)
                         expanded = false
+                        showStopConfirmation = true
                     },
                     enabled = isStopEnabled
                 )
@@ -329,6 +330,31 @@ private fun OptionsMenu(
                 )
             }
         }
+    }
+
+    if (showStopConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showStopConfirmation = false },
+            title = { Text("Terminer la session ?") },
+            text = { Text("La session sera arrêtée et la notification retirée. La distance sera figée.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onEvent(TripMeterUiEvent.Stop)
+                        showStopConfirmation = false
+                    }
+                ) {
+                    Text("Terminer")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showStopConfirmation = false }
+                ) {
+                    Text("Annuler")
+                }
+            }
+        )
     }
 
     if (showResetTotalConfirmation) {
