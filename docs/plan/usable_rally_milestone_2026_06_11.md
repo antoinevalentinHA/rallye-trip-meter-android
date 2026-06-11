@@ -34,12 +34,16 @@
 - **Filtre anti-dérive** inchangé, à confirmer sur d'autres trajets.
 - **Robustesse OEM non exhaustive** (optimisations batterie constructeur) ; `START_NOT_STICKY` (pas de redémarrage auto si le process est tué).
 - **UI non finalisée** (pas de polish complet).
+- **Mode paysage non optimisé** : l'orientation n'est pas verrouillée, mais le layout est pensé portrait ; l'affichage en paysage n'est pas adapté (à trancher : verrouiller en portrait, ou layout paysage dédié).
 
 ## 5. Hors périmètre (inchangé)
 
 - Calibration active / coefficient ; modification du moteur GPS, du filtre, du foreground service lifecycle, de l'accumulation.
 - Refonte d'architecture ; second propriétaire du `TripState` ; `ACCESS_BACKGROUND_LOCATION`.
-- Validation multi-appareils ; publication Play Store.
+- Validation multi-appareils.
+- **Publication Play Store** : build release signé, fiche store, et — du fait de la localisation + foreground service location — **politique de confidentialité** et **déclaration d'usage de la localisation** ; non réalisé.
+- **Android Auto** : nécessiterait la **Car App Library** (`CarAppService` + templates imposés) et la **revue anti-distraction** de Google ; chantier séparé non engagé (l'UI Compose actuelle ne s'y exécute pas telle quelle).
+- **Mode paysage dédié** (layout deux colonnes) non réalisé.
 
 ## 6. Ce qui ne doit pas être affirmé
 
