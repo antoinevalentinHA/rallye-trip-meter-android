@@ -72,7 +72,7 @@ fun TripMeterScreen(
                 .padding(WindowInsets.statusBars.asPaddingValues())
                 .padding(WindowInsets.navigationBars.asPaddingValues())
                 .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
