@@ -19,6 +19,7 @@ import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
 import fr.arsenal.rallyetripmeter.domain.progress.DistanceTripProgressEngine
 import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
 import fr.arsenal.rallyetripmeter.runtime.TripRuntime
+import fr.arsenal.rallyetripmeter.runtime.TripRuntimeEvent
 import fr.arsenal.rallyetripmeter.ui.mapper.toTripDisplayState
 import fr.arsenal.rallyetripmeter.ui.mapper.toUiLocationPermissionStatus
 import fr.arsenal.rallyetripmeter.ui.model.TripDisplayState
@@ -107,7 +108,7 @@ class TripMeterViewModel(
 
         val previousSessionState = runtime.state.sessionState
 
-        runtime.onEvent(event)
+        runtime.onEvent(event.toTripRuntimeEvent())
 
         stateMirror = runtime.state
 
@@ -163,5 +164,23 @@ class TripMeterViewModel(
                 sessionState = TripSessionState.Stopped
             )
         }
+    }
+}
+
+internal fun TripMeterUiEvent.toTripRuntimeEvent(): TripRuntimeEvent {
+    return when (this) {
+        TripMeterUiEvent.AdjustPartialMinus100 -> TripRuntimeEvent.AdjustPartialMinus100
+        TripMeterUiEvent.AdjustPartialMinus10 -> TripRuntimeEvent.AdjustPartialMinus10
+        TripMeterUiEvent.ResetPartial -> TripRuntimeEvent.ResetPartial
+        TripMeterUiEvent.AdjustPartialPlus10 -> TripRuntimeEvent.AdjustPartialPlus10
+        TripMeterUiEvent.AdjustPartialPlus100 -> TripRuntimeEvent.AdjustPartialPlus100
+        TripMeterUiEvent.SessionAction -> TripRuntimeEvent.SessionAction
+        TripMeterUiEvent.Stop -> TripRuntimeEvent.Stop
+        TripMeterUiEvent.ResetTotal -> TripRuntimeEvent.ResetTotal
+        TripMeterUiEvent.NewRun -> TripRuntimeEvent.NewRun
+        TripMeterUiEvent.Options -> TripRuntimeEvent.Options
+        TripMeterUiEvent.RefreshLocationPermission -> TripRuntimeEvent.RefreshLocationPermission
+        TripMeterUiEvent.ApplyLocationSample -> TripRuntimeEvent.ApplyLocationSample
+        TripMeterUiEvent.SimulateLocationStep -> TripRuntimeEvent.SimulateLocationStep
     }
 }

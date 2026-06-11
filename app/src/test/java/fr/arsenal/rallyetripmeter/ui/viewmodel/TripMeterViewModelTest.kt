@@ -10,6 +10,7 @@ import fr.arsenal.rallyetripmeter.domain.persistence.TripStateSnapshot
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
 import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
 import fr.arsenal.rallyetripmeter.runtime.TripRuntime
+import fr.arsenal.rallyetripmeter.runtime.TripRuntimeEvent
 import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
 import fr.arsenal.rallyetripmeter.ui.model.UiSessionStatus
 import org.junit.Assert.assertEquals
@@ -579,7 +580,7 @@ class TripMeterViewModelTest {
         val viewModel = TripMeterViewModel(runtime = runtime)
 
         // Le runtime évolue hors onEvent : le miroir UI est encore obsolète.
-        runtime.onEvent(TripMeterUiEvent.SessionAction)
+        runtime.onEvent(TripRuntimeEvent.SessionAction)
         assertEquals(UiSessionStatus.Stopped, viewModel.uiState.sessionStatus)
 
         // Le tick de refresh resynchronise le miroir depuis le runtime.

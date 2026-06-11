@@ -13,7 +13,7 @@ import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.domain.persistence.toTripState
 import fr.arsenal.rallyetripmeter.runtime.TripRuntime
 import fr.arsenal.rallyetripmeter.runtime.TripRuntimeHolder
-import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
+import fr.arsenal.rallyetripmeter.runtime.TripRuntimeEvent
 
 /*
  * ARSENAL RALLYE — Trip meter foreground service
@@ -41,7 +41,7 @@ class TripMeterForegroundService : Service() {
 
     private val sampleTick = object : Runnable {
         override fun run() {
-            runtime?.onEvent(TripMeterUiEvent.ApplyLocationSample)
+            runtime?.onEvent(TripRuntimeEvent.ApplyLocationSample)
             sampleHandler.postDelayed(this, SAMPLE_INTERVAL_MS)
         }
     }

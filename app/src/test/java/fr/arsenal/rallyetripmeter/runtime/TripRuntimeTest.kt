@@ -10,7 +10,6 @@ import fr.arsenal.rallyetripmeter.domain.persistence.PeriodicSaveThrottle
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateSnapshot
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
 import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
-import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -22,7 +21,7 @@ class TripRuntimeTest {
             initialState = TripState(sessionState = TripSessionState.Stopped)
         )
 
-        runtime.onEvent(TripMeterUiEvent.SessionAction)
+        runtime.onEvent(TripRuntimeEvent.SessionAction)
 
         assertEquals(TripSessionState.Running, runtime.state.sessionState)
     }
@@ -33,7 +32,7 @@ class TripRuntimeTest {
             initialState = TripState(sessionState = TripSessionState.Running)
         )
 
-        runtime.onEvent(TripMeterUiEvent.SessionAction)
+        runtime.onEvent(TripRuntimeEvent.SessionAction)
 
         assertEquals(TripSessionState.Paused, runtime.state.sessionState)
     }
@@ -44,7 +43,7 @@ class TripRuntimeTest {
             initialState = TripState(sessionState = TripSessionState.Paused)
         )
 
-        runtime.onEvent(TripMeterUiEvent.SessionAction)
+        runtime.onEvent(TripRuntimeEvent.SessionAction)
 
         assertEquals(TripSessionState.Running, runtime.state.sessionState)
     }
@@ -59,7 +58,7 @@ class TripRuntimeTest {
             )
         )
 
-        runtime.onEvent(TripMeterUiEvent.Stop)
+        runtime.onEvent(TripRuntimeEvent.Stop)
 
         assertEquals(TripSessionState.Stopped, runtime.state.sessionState)
         assertEquals(3_000.0, runtime.state.totalDistanceMeters, 0.0)
@@ -75,7 +74,7 @@ class TripRuntimeTest {
             )
         )
 
-        runtime.onEvent(TripMeterUiEvent.ResetPartial)
+        runtime.onEvent(TripRuntimeEvent.ResetPartial)
 
         assertEquals(3_000.0, runtime.state.totalDistanceMeters, 0.0)
         assertEquals(0.0, runtime.state.partialDistanceMeters, 0.0)
@@ -90,7 +89,7 @@ class TripRuntimeTest {
             )
         )
 
-        runtime.onEvent(TripMeterUiEvent.ResetTotal)
+        runtime.onEvent(TripRuntimeEvent.ResetTotal)
 
         assertEquals(0.0, runtime.state.totalDistanceMeters, 0.0)
         assertEquals(700.0, runtime.state.partialDistanceMeters, 0.0)
@@ -106,7 +105,7 @@ class TripRuntimeTest {
             )
         )
 
-        runtime.onEvent(TripMeterUiEvent.NewRun)
+        runtime.onEvent(TripRuntimeEvent.NewRun)
 
         assertEquals(0.0, runtime.state.totalDistanceMeters, 0.0)
         assertEquals(0.0, runtime.state.partialDistanceMeters, 0.0)
@@ -119,7 +118,7 @@ class TripRuntimeTest {
             initialState = TripState(partialDistanceMeters = 700.0)
         )
 
-        runtime.onEvent(TripMeterUiEvent.AdjustPartialPlus10)
+        runtime.onEvent(TripRuntimeEvent.AdjustPartialPlus10)
 
         assertEquals(710.0, runtime.state.partialDistanceMeters, 0.0)
     }
@@ -130,7 +129,7 @@ class TripRuntimeTest {
             initialState = TripState(partialDistanceMeters = 700.0)
         )
 
-        runtime.onEvent(TripMeterUiEvent.AdjustPartialMinus10)
+        runtime.onEvent(TripRuntimeEvent.AdjustPartialMinus10)
 
         assertEquals(690.0, runtime.state.partialDistanceMeters, 0.0)
     }
@@ -154,7 +153,7 @@ class TripRuntimeTest {
             )
         )
 
-        runtime.onEvent(TripMeterUiEvent.ApplyLocationSample)
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
 
         assertEquals(0.0, runtime.state.totalDistanceMeters, 0.0)
         assertEquals(0.0, runtime.state.partialDistanceMeters, 0.0)
@@ -183,10 +182,10 @@ class TripRuntimeTest {
             )
         )
 
-        runtime.onEvent(TripMeterUiEvent.ApplyLocationSample)
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
         assertEquals(0.0, runtime.state.totalDistanceMeters, 0.0)
 
-        runtime.onEvent(TripMeterUiEvent.ApplyLocationSample)
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
         assertEquals(3_000.0, runtime.state.totalDistanceMeters, 0.0)
         assertEquals(700.0, runtime.state.partialDistanceMeters, 0.0)
     }
@@ -206,7 +205,7 @@ class TripRuntimeTest {
             )
         )
 
-        runtime.onEvent(TripMeterUiEvent.ApplyLocationSample)
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
 
         assertEquals(GpsStatus.Fixed, runtime.state.gpsStatus)
         assertEquals(4.0, runtime.state.accuracyMeters!!, 0.0)
@@ -225,7 +224,7 @@ class TripRuntimeTest {
             )
         )
 
-        runtime.onEvent(TripMeterUiEvent.Stop)
+        runtime.onEvent(TripRuntimeEvent.Stop)
 
         assertEquals(1, store.savedSnapshots.size)
         assertEquals(TripSessionState.Stopped, store.savedSnapshots.last().sessionState)
@@ -265,16 +264,16 @@ class TripRuntimeTest {
         )
 
         // Premier sample (sans précédent) : première sauvegarde throttle autorisée.
-        runtime.onEvent(TripMeterUiEvent.ApplyLocationSample)
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
         assertEquals(1, store.savedSnapshots.size)
 
         // Deuxième sample dans le même intervalle : throttle bloque.
-        runtime.onEvent(TripMeterUiEvent.ApplyLocationSample)
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
         assertEquals(1, store.savedSnapshots.size)
 
         // Au-delà de l'intervalle, avec snapshot modifié : nouvelle sauvegarde.
         now = 20_000L
-        runtime.onEvent(TripMeterUiEvent.ApplyLocationSample)
+        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
         assertEquals(2, store.savedSnapshots.size)
     }
 
@@ -314,8 +313,8 @@ class TripRuntimeTest {
             ),
             initialState = TripState(sessionState = TripSessionState.Running)
         )
-        single.onEvent(TripMeterUiEvent.ApplyLocationSample)
-        single.onEvent(TripMeterUiEvent.ApplyLocationSample)
+        single.onEvent(TripRuntimeEvent.ApplyLocationSample)
+        single.onEvent(TripRuntimeEvent.ApplyLocationSample)
         val baseline = single.state.totalDistanceMeters
         assertTrue(baseline > 0.0)
 
@@ -342,10 +341,10 @@ class TripRuntimeTest {
             ),
             initialState = TripState(sessionState = TripSessionState.Running)
         )
-        doubled.onEvent(TripMeterUiEvent.ApplyLocationSample)
-        doubled.onEvent(TripMeterUiEvent.ApplyLocationSample)
-        doubled.onEvent(TripMeterUiEvent.ApplyLocationSample)
-        doubled.onEvent(TripMeterUiEvent.ApplyLocationSample)
+        doubled.onEvent(TripRuntimeEvent.ApplyLocationSample)
+        doubled.onEvent(TripRuntimeEvent.ApplyLocationSample)
+        doubled.onEvent(TripRuntimeEvent.ApplyLocationSample)
+        doubled.onEvent(TripRuntimeEvent.ApplyLocationSample)
 
         assertEquals(baseline, doubled.state.totalDistanceMeters, 0.0)
     }

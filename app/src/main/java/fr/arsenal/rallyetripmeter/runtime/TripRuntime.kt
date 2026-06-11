@@ -15,7 +15,6 @@ import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
 import fr.arsenal.rallyetripmeter.domain.persistence.toTripStateSnapshot
 import fr.arsenal.rallyetripmeter.domain.progress.DistanceTripProgressEngine
 import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
-import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
 
 /*
  * ARSENAL RALLYE — Trip runtime
@@ -36,7 +35,7 @@ import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
  *
  * Statut :
  * - B1 : runtime encore possédé par le ViewModel (per-VM, non process-wide),
- *   accepte encore TripMeterUiEvent.
+ *   accepte un TripRuntimeEvent pur (traduit par le ViewModel).
  */
 class TripRuntime(
     private val controller: TripController = ImmutableTripController(),
@@ -55,15 +54,15 @@ class TripRuntime(
 
     private var previousLocationSample: LocationSample? = null
 
-    fun onEvent(event: TripMeterUiEvent) {
-        state = handleTripMeterUiEvent(
+    fun onEvent(event: TripRuntimeEvent) {
+        state = handleTripRuntimeEvent(
             event = event,
             state = state
         )
 
         if (persistsOnEvent(event)) {
             persistTripState()
-        } else if (event == TripMeterUiEvent.ApplyLocationSample) {
+        } else if (event == TripRuntimeEvent.ApplyLocationSample) {
             persistPeriodically()
         }
     }
@@ -84,53 +83,53 @@ class TripRuntime(
         tripStateStore.save(snapshot)
     }
 
-    private fun persistsOnEvent(event: TripMeterUiEvent): Boolean {
+    private fun persistsOnEvent(event: TripRuntimeEvent): Boolean {
         return when (event) {
-            TripMeterUiEvent.SessionAction,
-            TripMeterUiEvent.Stop,
-            TripMeterUiEvent.ResetTotal,
-            TripMeterUiEvent.NewRun,
-            TripMeterUiEvent.ResetPartial,
-            TripMeterUiEvent.AdjustPartialPlus10,
-            TripMeterUiEvent.AdjustPartialMinus10,
-            TripMeterUiEvent.AdjustPartialPlus100,
-            TripMeterUiEvent.AdjustPartialMinus100 -> true
+            TripRuntimeEvent.SessionAction,
+            TripRuntimeEvent.Stop,
+            TripRuntimeEvent.ResetTotal,
+            TripRuntimeEvent.NewRun,
+            TripRuntimeEvent.ResetPartial,
+            TripRuntimeEvent.AdjustPartialPlus10,
+            TripRuntimeEvent.AdjustPartialMinus10,
+            TripRuntimeEvent.AdjustPartialPlus100,
+            TripRuntimeEvent.AdjustPartialMinus100 -> true
 
-            TripMeterUiEvent.Options,
-            TripMeterUiEvent.RefreshLocationPermission,
-            TripMeterUiEvent.ApplyLocationSample,
-            TripMeterUiEvent.SimulateLocationStep -> false
+            TripRuntimeEvent.Options,
+            TripRuntimeEvent.RefreshLocationPermission,
+            TripRuntimeEvent.ApplyLocationSample,
+            TripRuntimeEvent.SimulateLocationStep -> false
         }
     }
 
-    private fun handleTripMeterUiEvent(
-        event: TripMeterUiEvent,
+    private fun handleTripRuntimeEvent(
+        event: TripRuntimeEvent,
         state: TripState
     ): TripState {
         return when (event) {
-            TripMeterUiEvent.AdjustPartialMinus100 -> controller.adjustPartial(
+            TripRuntimeEvent.AdjustPartialMinus100 -> controller.adjustPartial(
                 state = state,
                 deltaMeters = -100.0
             )
 
-            TripMeterUiEvent.AdjustPartialMinus10 -> controller.adjustPartial(
+            TripRuntimeEvent.AdjustPartialMinus10 -> controller.adjustPartial(
                 state = state,
                 deltaMeters = -10.0
             )
 
-            TripMeterUiEvent.ResetPartial -> controller.resetPartial(state)
+            TripRuntimeEvent.ResetPartial -> controller.resetPartial(state)
 
-            TripMeterUiEvent.AdjustPartialPlus10 -> controller.adjustPartial(
+            TripRuntimeEvent.AdjustPartialPlus10 -> controller.adjustPartial(
                 state = state,
                 deltaMeters = 10.0
             )
 
-            TripMeterUiEvent.AdjustPartialPlus100 -> controller.adjustPartial(
+            TripRuntimeEvent.AdjustPartialPlus100 -> controller.adjustPartial(
                 state = state,
                 deltaMeters = 100.0
             )
 
-            TripMeterUiEvent.SessionAction -> {
+            TripRuntimeEvent.SessionAction -> {
                 when (state.sessionState) {
                     TripSessionState.Running -> controller.pause(state)
                     TripSessionState.Paused -> controller.resume(state)
@@ -138,19 +137,19 @@ class TripRuntime(
                 }
             }
 
-            TripMeterUiEvent.Stop -> controller.stop(state)
+            TripRuntimeEvent.Stop -> controller.stop(state)
 
-            TripMeterUiEvent.ResetTotal -> controller.resetTotal(state)
+            TripRuntimeEvent.ResetTotal -> controller.resetTotal(state)
 
-            TripMeterUiEvent.NewRun -> controller.resetTrip(state)
+            TripRuntimeEvent.NewRun -> controller.resetTrip(state)
 
-            TripMeterUiEvent.Options -> state
+            TripRuntimeEvent.Options -> state
 
-            TripMeterUiEvent.RefreshLocationPermission -> state
+            TripRuntimeEvent.RefreshLocationPermission -> state
 
-            TripMeterUiEvent.ApplyLocationSample -> applyLocationEngineSample(state)
+            TripRuntimeEvent.ApplyLocationSample -> applyLocationEngineSample(state)
 
-            TripMeterUiEvent.SimulateLocationStep -> progressEngine.applyLocationSample(
+            TripRuntimeEvent.SimulateLocationStep -> progressEngine.applyLocationSample(
                 state = state,
                 previousSample = simulatedPreviousLocationSample(),
                 currentSample = simulatedCurrentLocationSample()
