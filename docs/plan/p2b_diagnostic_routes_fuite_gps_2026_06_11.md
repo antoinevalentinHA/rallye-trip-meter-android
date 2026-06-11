@@ -98,7 +98,7 @@ deltas ~2,2 m).** Route B : non observée sur cet appareil dans ces conditions.
 Mise en garde de magnitude, à lire honnêtement : 4,43 m / 15 min est **sous**
 le seuil M1 (≤ 10 m) — ce log, seul, ne reproduit pas l'épisode initial de
 ~130 m / 0,10 km UI, qui appartient à une session antérieure non journalisée.
-Le mécanisme est prouvé ; sa pire magnitude ne l'est pas encore. Extrapolation
+Le mécanisme est prouvé ; sa pire magnitude ne l'est pas encore *(levé le soir même : voir addendum §8)*. Extrapolation
 raisonnée (étiquetée comme telle) : la fuite est le produit
 `P(vitesse parasite) × P(pas de jitter > 2 m)`. Ici le jitter était faible
 (95 % des pas < 2 m). Dans des conditions de multipath plus dures (intérieur
@@ -112,7 +112,7 @@ illustre cette sensibilité.
 
 - **Un seul log terrain**, un seul appareil (Pixel 10 Pro Fold), une seule
   condition intérieure. Le comportement Doppler varie fortement par chipset.
-- L'épisode ~130 m n'est pas dans le corpus : la pire magnitude reste à
+- L'épisode ~130 m n'est pas dans le corpus *(levé : voir addendum §8)* : la pire magnitude reste à
   capturer (refaire le canapé dans les conditions d'origine, + fenêtre /
   voiture garée moteur tournant).
 - Route B non observée ≠ route B inexistante : un appareil rapportant moins
@@ -150,3 +150,66 @@ illustre cette sensibilité.
    constante avant P5 ; jamais de correction par coefficient (I10).
 4. Chaque future sortie terrain produit un `real_*.jsonl` versé au corpus
    (auto-découvert par `RealLogReplayTest`).
+
+## 8. Addendum (2026-06-11, soir) — second log terrain : magnitude démontrée
+
+**Corpus :** `app/src/test/resources/replay/real_canape_20260611_2351.jsonl`
+(même appareil, session démarrée à 23:51, 52 ticks / 63 s de fixes).
+
+### 8.1 Résultats
+
+```
+ticks: 52
+ACCEPTED_SEGMENT: 13   REJECTED_STATIONARY: 12   REJECTED_NOISE: 18
+IGNORED_DUPLICATE: 9   IGNORED_NO_ANCHOR: 0      IGNORED_NO_SAMPLE: 0
+distance_totale_accumulee_m: 45.03 (en 63 s d'immobilité)
+distance_moyenne_par_segment_m: 3.46 (max observé : 8.22)
+accuracy_m: min=17.35 max=60.71 moyenne=38.93
+vitesse_mps: min=0.00 max=3.12 moyenne=1.25 — 40/52 ticks >= 0,5 m/s
+accepted_segments_with_speed_ge_0_5: 13   (13/13)
+distance_from_segments_with_speed_ge_0_5_m: 45.03   (100 %)
+```
+
+Fidélité de ré-exécution : total rejoué = total enregistré à la décimale
+(45.031114671315514 m) ; divergence de verdicts d'exactement un tick,
+expliquée en §8.3.
+
+### 8.2 Lecture — la mise en garde de magnitude du §4 est levée
+
+**45 m en 63 s d'immobilité, 13/13 segments route A.** Le burst est concentré
+dans les ~40 premières secondes de session : phase de stabilisation du fix,
+multipath sévère — accuracies ~39 m en moyenne, vitesses parasites jusqu'à
+3,12 m/s (11 km/h, téléphone immobile), jitter dépassant largement le plancher
+fixe (segments jusqu'à 8,22 m). C'est exactement le produit
+`P(vitesse parasite) × P(pas de jitter > 2 m)` décrit au §4, avec les deux
+facteurs au maximum : l'épisode initial ~130 m correspond à ce régime maintenu
+plus longtemps. La route A est confirmée dans les deux régimes observés
+(faible : 2/2 et 4,43 m ; sévère : 13/13 et 45 m) — 100 % de la distance
+fantôme dans les deux cas.
+
+### 8.3 Découverte secondaire — contamination d'ancre inter-sessions (I6/I7)
+
+Le premier tick du log porte déjà une ancre (`prev_ts_ms` renseigné) et un
+échantillon **antérieur au démarrage de la session** : le cache de
+localisation et `previousLocationSample` du runtime process-wide survivent à
+l'arrêt du service précédent. Conséquences :
+
+- Un point périmé d'une session morte sert d'ancre à la session suivante —
+  cas « ancre périmée » de l'audit, désormais observé sur le terrain.
+  Alimente les invariants I6 (fraîcheur) et I7 (transitions bornées) pour P4.
+  Rien à corriger avant P3/P4 : ici le segment a été rejeté (REJECTED_NOISE)
+  et les totaux sont intacts.
+- La comparaison enregistré-vs-rejoué diverge d'un tick sur ce log
+  (`verdicts_identiques: false`) : le replay démarre avec un runtime neuf
+  (premier tick `IGNORED_NO_ANCHOR`) là où la session réelle avait hérité
+  d'une ancre (`REJECTED_NOISE`). Limitation connue et documentée du harness
+  (état de process non journalisé), sans impact sur la preuve P3 : le
+  bit-à-bit de neutralité compare **replay-contre-replay** (ancien code vs
+  nouveau code sur le même log), pas enregistré-contre-rejoué.
+
+### 8.4 Goldens additionnels pour P3
+
+`real_canape_20260611_2351.jsonl` → total rejoué `45.031114671315514` m ;
+en replay (runtime neuf) : ACCEPTED 13, REJECTED_STATIONARY 12,
+REJECTED_NOISE 17, IGNORED_NO_ANCHOR 1, IGNORED_DUPLICATE 9. Même règle que
+§7 : P3 doit reproduire ces valeurs à l'identique.

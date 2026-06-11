@@ -23,8 +23,9 @@ sans relire l'historique de conversation.
   `TripRuntime.applyLocationEngineSample`, mise à jour avant verdict) est
   **toujours présent, volontairement**.
 - **Corpus de replay :** `app/src/test/resources/replay/` —
-  `real_canape_20260611.jsonl` (terrain réel, Pixel 10 Pro Fold, 921 ticks) et
-  `sample_canape_synthetique.jsonl` (fixture générée par le pipeline réel,
+  `real_canape_20260611.jsonl` (terrain réel, Pixel 10 Pro Fold, 921 ticks),
+  `real_canape_20260611_2351.jsonl` (terrain réel, épisode sévère, 52 ticks)
+  et `sample_canape_synthetique.jsonl` (fixture générée par le pipeline réel,
   seed 42, 900 ticks).
 - **Tests :** ~72 tests JVM verts (codec, moteur+verdicts, runtime+logging,
   sink fichier, holder, harness, log réel auto-découvert).
@@ -48,17 +49,23 @@ sans relire l'historique de conversation.
 - **Le harness est fiable** : la ré-exécution du log réel dans le pipeline
   réel reproduit le total à la décimale (4.433407848695635 m) et les comptages
   de verdicts à l'identique. C'est l'instrument de preuve de P3.
+- **La pire magnitude est démontrée** (second log, addendum P2.b §8) :
+  45,03 m en 63 s d'immobilité, 13/13 segments route A, régime de
+  stabilisation de fix (accuracy ~39 m, vitesses parasites jusqu'à 3,12 m/s).
+  L'épisode initial ~130 m est expliqué : ce régime maintenu plus longtemps.
+- **Contamination d'ancre inter-sessions observée** : le cache de
+  localisation et l'ancre du runtime process-wide survivent à l'arrêt du
+  service ; un point périmé d'une session morte sert d'ancre à la suivante
+  (alimente I6/I7 pour P4 ; sans correction avant P3).
 - **Le pipeline d'observabilité fonctionne en conditions réelles** : 1 verdict
   par tick, méta correcte, artefacts (14 IGNORED_NO_SAMPLE au démarrage,
   6 IGNORED_DUPLICATE) cohérents avec la conception.
 
 ## 3. Ce qui reste à démontrer
 
-- **La pire magnitude de la fuite.** Le log capturé donne 4,43 m / 15 min —
-  sous le seuil M1 (≤ 10 m). L'épisode initial ~130 m / 0,10 km UI appartient
-  à une session non journalisée et n'est pas reproduit. Le mécanisme est
-  prouvé, pas sa sévérité maximale. À capturer : canapé dans les conditions
-  d'origine, fenêtre, voiture garée moteur tournant.
+- ~~La pire magnitude de la fuite~~ — **démontrée le soir même** (second log :
+  45 m / 63 s, addendum P2.b §8). Restent utiles : fenêtre, voiture garée
+  moteur tournant (diversité de conditions, pas preuve de magnitude).
 - **La route B sur d'autres conditions/appareils** (vitesse moins souvent
   rapportée, accuracies plus optimistes). Non observée ≠ inexistante.
 - **Le comportement en mouvement** : aucun log de marche lente, urbain ou
@@ -107,7 +114,9 @@ Transférer la **propriété de l'ancre** de `TripRuntime` vers le filtre, via u
 1. **Replay bit-à-bit du corpus** : `real_canape_20260611.jsonl` →
    total exactement `4.433407848695635` m ; comptages :
    ACCEPTED 2, REJECTED_STATIONARY 857, REJECTED_NOISE 41, NO_ANCHOR 1,
-   DUPLICATE 6, NO_SAMPLE 14. `sample_canape_synthetique.jsonl` →
+   DUPLICATE 6, NO_SAMPLE 14. `real_canape_20260611_2351.jsonl` → total rejoué
+   `45.031114671315514` m (verdicts en replay : voir addendum P2.b §8.4).
+   `sample_canape_synthetique.jsonl` →
    29 ACCEPTED, 310 / 560, ~65,25 m. Séquence de verdicts identique ligne à
    ligne, pas seulement les totaux.
 2. Suite de tests complète verte ; assertions de distance des tests existants
