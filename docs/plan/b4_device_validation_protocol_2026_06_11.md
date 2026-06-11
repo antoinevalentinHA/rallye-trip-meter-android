@@ -118,6 +118,10 @@ Verdict B4 device : PASS global / FAIL (préciser le(s) scénario(s))
 - **Si PASS global** : produire un rapport de validation device daté (pattern `*_validation_2026_*.md`) et basculer, dans le status, B4 de « validation device EN ATTENTE » à « **validé device sur cet appareil** » (rester prudent : un appareil ≠ tous appareils).
 - **Si FAIL** : ouvrir un correctif **ciblé** (UI/refresh) ; ne pas toucher au service, à l'accumulation, au filtre ni à la calibration.
 
+## 9 bis. Essais consignés
+
+- **2026-06-11 (premier essai, trajet route)** : **PASS sur le scénario critique** (S1, S3, S4, S5, S8) ; S2 non couvert, **S6 (pause/reprise) non testé**, **S7 (terminer) non documenté**. Écart ≈ −1,7 % (voiture 8,20 km / appli 8,06 km). Rapport complet : [`b4_device_validation_2026_06_11.md`](b4_device_validation_2026_06_11.md).
+
 ## 10. Rappels
 
 - Document **non normatif** ; les contrats `docs/contrats/` restent la référence.
