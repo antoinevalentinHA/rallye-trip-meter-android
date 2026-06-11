@@ -7,6 +7,8 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import fr.arsenal.rallyetripmeter.android.diag.TickLogSessionFactory
+import fr.arsenal.rallyetripmeter.android.diag.TickLogSinkHolder
 import fr.arsenal.rallyetripmeter.android.location.LocationEngineHolder
 import fr.arsenal.rallyetripmeter.android.persistence.SharedPreferencesTripStateStore
 import fr.arsenal.rallyetripmeter.domain.model.TripState
@@ -70,6 +72,12 @@ class TripMeterForegroundService : Service() {
 
         LocationEngineHolder.getEngine(applicationContext).start()
 
+        if (!TickLogSinkHolder.hasSessionSink()) {
+            TickLogSessionFactory.createSessionSink(applicationContext)?.let { sink ->
+                TickLogSinkHolder.installSessionSink(sink)
+            }
+        }
+
         runtime = resolveRuntime()
         sampleHandler.removeCallbacks(sampleTick)
         sampleHandler.post(sampleTick)
@@ -80,6 +88,7 @@ class TripMeterForegroundService : Service() {
     override fun onDestroy() {
         sampleHandler.removeCallbacks(sampleTick)
         runtime = null
+        TickLogSinkHolder.clearSessionSink()?.close()
         LocationEngineHolder.getEngine(applicationContext).stop()
         stopForeground(STOP_FOREGROUND_REMOVE)
         super.onDestroy()
@@ -99,7 +108,8 @@ class TripMeterForegroundService : Service() {
         return TripRuntimeHolder.getRuntime(
             locationEngine = locationEngine,
             tripStateStore = tripStateStore,
-            initialState = initialState
+            initialState = initialState,
+            tickLogSink = TickLogSinkHolder.getSink()
         )
     }
 

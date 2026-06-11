@@ -3,6 +3,7 @@ package fr.arsenal.rallyetripmeter.ui.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import fr.arsenal.rallyetripmeter.android.diag.TickLogSinkHolder
 import fr.arsenal.rallyetripmeter.android.location.LocationEngineHolder
 import fr.arsenal.rallyetripmeter.android.permission.LocationPermissionChecker
 import fr.arsenal.rallyetripmeter.android.persistence.SharedPreferencesCalibrationStore
@@ -62,7 +63,8 @@ class TripMeterViewModelFactory(
             val runtime = TripRuntimeHolder.getRuntime(
                 locationEngine = locationEngine,
                 tripStateStore = tripStateStore,
-                initialState = initialTripState
+                initialState = initialTripState,
+                tickLogSink = TickLogSinkHolder.getSink()
             )
 
             val foregroundServiceController = TripMeterForegroundServiceController(

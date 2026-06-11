@@ -1,5 +1,7 @@
 package fr.arsenal.rallyetripmeter.runtime
 
+import fr.arsenal.rallyetripmeter.domain.diag.NoOpTickLogSink
+import fr.arsenal.rallyetripmeter.domain.diag.TickLogSink
 import fr.arsenal.rallyetripmeter.domain.location.LocationEngine
 import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
@@ -16,6 +18,9 @@ import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
  * - Une seule instance par process.
  * - Pur Kotlin : aucun Android, aucune coroutine.
  * - Aucune logique métier ici (déléguée au TripRuntime).
+ * - Le tickLogSink n'est consommé qu'à la première construction : les coutures
+ *   doivent passer un sink stable (délégateur process-wide), jamais un sink
+ *   de session éphémère.
  * - La première construction restaure l'état initial ; les appels suivants
  *   réutilisent l'instance vivante et ignorent tout nouvel initialState,
  *   afin de ne PAS réinitialiser le runtime à chaque recréation du ViewModel.
@@ -31,7 +36,8 @@ object TripRuntimeHolder {
     fun getRuntime(
         locationEngine: LocationEngine,
         tripStateStore: TripStateStore,
-        initialState: TripState
+        initialState: TripState,
+        tickLogSink: TickLogSink = NoOpTickLogSink()
     ): TripRuntime {
         val existing = runtime
         if (existing != null) {
@@ -46,6 +52,7 @@ object TripRuntimeHolder {
                 val created = TripRuntime(
                     locationEngine = locationEngine,
                     tripStateStore = tripStateStore,
+                    tickLogSink = tickLogSink,
                     initialState = initialState
                 )
                 runtime = created
