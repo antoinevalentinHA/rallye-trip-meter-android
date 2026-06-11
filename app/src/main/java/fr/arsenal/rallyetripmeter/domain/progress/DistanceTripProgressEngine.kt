@@ -1,5 +1,6 @@
 package fr.arsenal.rallyetripmeter.domain.progress
 
+import fr.arsenal.rallyetripmeter.domain.diag.SampleVerdict
 import fr.arsenal.rallyetripmeter.domain.distance.DistanceEngine
 import fr.arsenal.rallyetripmeter.domain.geo.LocationSample
 import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
@@ -27,6 +28,8 @@ import fr.arsenal.rallyetripmeter.domain.model.TripState
  * - Ignore un segment plus court que l'incertitude GPS (plancher lié a l'accuracy).
  * - Ignore les sauts implausibles (vitesse calculée trop élevée).
  * - Applique un coefficient de calibration global a la distance retenue.
+ * - Expose un verdict d'observabilite miroir de la branche prise (P1.b),
+ *   sans aucune nouvelle decision.
  */
 class DistanceTripProgressEngine(
     private val distanceEngine: DistanceEngine,
@@ -37,16 +40,33 @@ class DistanceTripProgressEngine(
         previousSample: LocationSample?,
         currentSample: LocationSample
     ): TripState {
+        return applyLocationSampleWithVerdict(
+            state = state,
+            previousSample = previousSample,
+            currentSample = currentSample
+        ).state
+    }
+
+    /*
+     * Variante observable (P1.b) : strictement la même logique que le contrat
+     * historique — mêmes gardes, même ordre, mêmes calculs — avec en plus le
+     * verdict miroir de la branche réellement prise. Aucune nouvelle décision.
+     */
+    fun applyLocationSampleWithVerdict(
+        state: TripState,
+        previousSample: LocationSample?,
+        currentSample: LocationSample
+    ): TripProgressResult {
         if (previousSample == null) {
-            return state
+            return TripProgressResult(state, SampleVerdict.IGNORED_NO_ANCHOR)
         }
 
         if (state.sessionState != TripSessionState.Running) {
-            return state
+            return TripProgressResult(state, SampleVerdict.IGNORED_NOT_RUNNING)
         }
 
         if (isStationarySpeed(currentSample)) {
-            return state
+            return TripProgressResult(state, SampleVerdict.REJECTED_STATIONARY)
         }
 
         val distanceMeters = distanceEngine.computeDistanceMeters(
@@ -57,18 +77,21 @@ class DistanceTripProgressEngine(
         // Filtrage : immobilite (vitesse source), bruit/derive (plancher lie a
         // l'accuracy), et sauts implausibles. Hors perimetre : REFERENCE_ONLY / watchdog.
         if (distanceMeters < movementFloorMeters(previousSample, currentSample)) {
-            return state
+            return TripProgressResult(state, SampleVerdict.REJECTED_NOISE)
         }
 
         if (isImplausibleJump(previousSample, currentSample, distanceMeters)) {
-            return state
+            return TripProgressResult(state, SampleVerdict.REJECTED_IMPLAUSIBLE_JUMP)
         }
 
         val correctedDistanceMeters = distanceMeters * calibrationFactor
 
-        return state.copy(
-            totalDistanceMeters = state.totalDistanceMeters + correctedDistanceMeters,
-            partialDistanceMeters = state.partialDistanceMeters + correctedDistanceMeters
+        return TripProgressResult(
+            state = state.copy(
+                totalDistanceMeters = state.totalDistanceMeters + correctedDistanceMeters,
+                partialDistanceMeters = state.partialDistanceMeters + correctedDistanceMeters
+            ),
+            verdict = SampleVerdict.ACCEPTED_SEGMENT
         )
     }
 

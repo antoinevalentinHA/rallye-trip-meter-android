@@ -1,5 +1,6 @@
 package fr.arsenal.rallyetripmeter.domain.progress
 
+import fr.arsenal.rallyetripmeter.domain.diag.SampleVerdict
 import fr.arsenal.rallyetripmeter.domain.distance.DistanceEngine
 import fr.arsenal.rallyetripmeter.domain.geo.GeoPoint
 import fr.arsenal.rallyetripmeter.domain.geo.LocationSample
@@ -25,13 +26,14 @@ class DistanceTripProgressEngineTest {
             sessionState = TripSessionState.Running
         )
 
-        val result = engine.applyLocationSample(
+        val (result, verdict) = engine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = null,
             currentSample = currentSample()
         )
 
         assertEquals(state, result)
+        assertEquals(SampleVerdict.IGNORED_NO_ANCHOR, verdict)
     }
 
     @Test
@@ -42,13 +44,14 @@ class DistanceTripProgressEngineTest {
             sessionState = TripSessionState.Stopped
         )
 
-        val result = engine.applyLocationSample(
+        val (result, verdict) = engine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = previousSample(),
             currentSample = currentSample()
         )
 
         assertEquals(state, result)
+        assertEquals(SampleVerdict.IGNORED_NOT_RUNNING, verdict)
     }
 
     @Test
@@ -59,13 +62,14 @@ class DistanceTripProgressEngineTest {
             sessionState = TripSessionState.Paused
         )
 
-        val result = engine.applyLocationSample(
+        val (result, verdict) = engine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = previousSample(),
             currentSample = currentSample()
         )
 
         assertEquals(state, result)
+        assertEquals(SampleVerdict.IGNORED_NOT_RUNNING, verdict)
     }
 
     @Test
@@ -76,7 +80,7 @@ class DistanceTripProgressEngineTest {
             sessionState = TripSessionState.Running
         )
 
-        val result = engine.applyLocationSample(
+        val (result, verdict) = engine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = previousSample(),
             currentSample = currentSample()
@@ -84,6 +88,7 @@ class DistanceTripProgressEngineTest {
 
         assertEquals(112.5, result.totalDistanceMeters, 0.0)
         assertEquals(32.5, result.partialDistanceMeters, 0.0)
+        assertEquals(SampleVerdict.ACCEPTED_SEGMENT, verdict)
     }
 
     @Test
@@ -91,13 +96,14 @@ class DistanceTripProgressEngineTest {
         val state = runningState()
         val filteringEngine = engineWithDistance(1.5)
 
-        val result = filteringEngine.applyLocationSample(
+        val (result, verdict) = filteringEngine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = sampleAt(0L),
             currentSample = sampleAt(1_000L)
         )
 
         assertEquals(state, result)
+        assertEquals(SampleVerdict.REJECTED_NOISE, verdict)
     }
 
     @Test
@@ -105,13 +111,14 @@ class DistanceTripProgressEngineTest {
         val state = runningState()
         val filteringEngine = engineWithDistance(20.0)
 
-        val result = filteringEngine.applyLocationSample(
+        val (result, verdict) = filteringEngine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = sampleAt(1_000L),
             currentSample = sampleAt(1_000L)
         )
 
         assertEquals(state, result)
+        assertEquals(SampleVerdict.REJECTED_IMPLAUSIBLE_JUMP, verdict)
     }
 
     @Test
@@ -119,13 +126,14 @@ class DistanceTripProgressEngineTest {
         val state = runningState()
         val filteringEngine = engineWithDistance(100.0)
 
-        val result = filteringEngine.applyLocationSample(
+        val (result, verdict) = filteringEngine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = sampleAt(0L),
             currentSample = sampleAt(1_000L)
         )
 
         assertEquals(state, result)
+        assertEquals(SampleVerdict.REJECTED_IMPLAUSIBLE_JUMP, verdict)
     }
 
     @Test
@@ -133,7 +141,7 @@ class DistanceTripProgressEngineTest {
         val state = runningState()
         val filteringEngine = engineWithDistance(12.5)
 
-        val result = filteringEngine.applyLocationSample(
+        val (result, verdict) = filteringEngine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = sampleAt(0L),
             currentSample = sampleAt(1_000L)
@@ -141,6 +149,7 @@ class DistanceTripProgressEngineTest {
 
         assertEquals(112.5, result.totalDistanceMeters, 0.0)
         assertEquals(32.5, result.partialDistanceMeters, 0.0)
+        assertEquals(SampleVerdict.ACCEPTED_SEGMENT, verdict)
     }
 
     @Test
@@ -148,7 +157,7 @@ class DistanceTripProgressEngineTest {
         val state = runningState()
         val filteringEngine = engineWithDistance(500.0)
 
-        val result = filteringEngine.applyLocationSample(
+        val (result, verdict) = filteringEngine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = previousSample(),
             currentSample = currentSample()
@@ -156,6 +165,7 @@ class DistanceTripProgressEngineTest {
 
         assertEquals(600.0, result.totalDistanceMeters, 0.0)
         assertEquals(520.0, result.partialDistanceMeters, 0.0)
+        assertEquals(SampleVerdict.ACCEPTED_SEGMENT, verdict)
     }
 
     @Test
@@ -166,7 +176,7 @@ class DistanceTripProgressEngineTest {
             calibrationFactor = 1.5
         )
 
-        val result = calibratedEngine.applyLocationSample(
+        val (result, verdict) = calibratedEngine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = sampleAt(0L),
             currentSample = sampleAt(1_000L)
@@ -174,6 +184,7 @@ class DistanceTripProgressEngineTest {
 
         assertEquals(130.0, result.totalDistanceMeters, 0.0)
         assertEquals(50.0, result.partialDistanceMeters, 0.0)
+        assertEquals(SampleVerdict.ACCEPTED_SEGMENT, verdict)
     }
 
     @Test
@@ -181,13 +192,14 @@ class DistanceTripProgressEngineTest {
         val state = runningState()
         val filteringEngine = engineWithDistance(8.0)
 
-        val result = filteringEngine.applyLocationSample(
+        val (result, verdict) = filteringEngine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = sampleAt(0L, accuracyMeters = 10.0),
             currentSample = sampleAt(1_000L, accuracyMeters = 10.0)
         )
 
         assertEquals(state, result)
+        assertEquals(SampleVerdict.REJECTED_NOISE, verdict)
     }
 
     @Test
@@ -195,13 +207,14 @@ class DistanceTripProgressEngineTest {
         val state = runningState()
         val filteringEngine = engineWithDistance(12.0)
 
-        val result = filteringEngine.applyLocationSample(
+        val (result, verdict) = filteringEngine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = sampleAt(0L, accuracyMeters = 30.0),
             currentSample = sampleAt(1_000L, accuracyMeters = 30.0)
         )
 
         assertEquals(state, result)
+        assertEquals(SampleVerdict.REJECTED_NOISE, verdict)
     }
 
     @Test
@@ -209,13 +222,14 @@ class DistanceTripProgressEngineTest {
         val state = runningState()
         val filteringEngine = engineWithDistance(12.0)
 
-        val result = filteringEngine.applyLocationSample(
+        val (result, verdict) = filteringEngine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = sampleAt(0L, speedMetersPerSecond = 0.2),
             currentSample = sampleAt(1_000L, speedMetersPerSecond = 0.2)
         )
 
         assertEquals(state, result)
+        assertEquals(SampleVerdict.REJECTED_STATIONARY, verdict)
     }
 
     @Test
@@ -223,7 +237,7 @@ class DistanceTripProgressEngineTest {
         val state = runningState()
         val filteringEngine = engineWithDistance(12.5)
 
-        val result = filteringEngine.applyLocationSample(
+        val (result, verdict) = filteringEngine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = sampleAt(0L, accuracyMeters = 5.0, speedMetersPerSecond = 8.0),
             currentSample = sampleAt(1_000L, accuracyMeters = 5.0, speedMetersPerSecond = 8.0)
@@ -231,6 +245,7 @@ class DistanceTripProgressEngineTest {
 
         assertEquals(112.5, result.totalDistanceMeters, 0.0)
         assertEquals(32.5, result.partialDistanceMeters, 0.0)
+        assertEquals(SampleVerdict.ACCEPTED_SEGMENT, verdict)
     }
 
     @Test
@@ -238,7 +253,7 @@ class DistanceTripProgressEngineTest {
         val state = runningState()
         val filteringEngine = engineWithDistance(8.0)
 
-        val result = filteringEngine.applyLocationSample(
+        val (result, verdict) = filteringEngine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = sampleAt(0L, accuracyMeters = 12.0, speedMetersPerSecond = 8.0),
             currentSample = sampleAt(1_000L, accuracyMeters = 12.0, speedMetersPerSecond = 8.0)
@@ -246,6 +261,7 @@ class DistanceTripProgressEngineTest {
 
         assertEquals(108.0, result.totalDistanceMeters, 0.0)
         assertEquals(28.0, result.partialDistanceMeters, 0.0)
+        assertEquals(SampleVerdict.ACCEPTED_SEGMENT, verdict)
     }
 
     @Test
@@ -253,13 +269,14 @@ class DistanceTripProgressEngineTest {
         val state = runningState()
         val filteringEngine = engineWithDistance(8.0)
 
-        val result = filteringEngine.applyLocationSample(
+        val (result, verdict) = filteringEngine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = sampleAt(0L, accuracyMeters = 12.0),
             currentSample = sampleAt(1_000L, accuracyMeters = 12.0)
         )
 
         assertEquals(state, result)
+        assertEquals(SampleVerdict.REJECTED_NOISE, verdict)
     }
 
     @Test
@@ -267,13 +284,14 @@ class DistanceTripProgressEngineTest {
         val state = runningState()
         val filteringEngine = engineWithDistance(8.0)
 
-        val result = filteringEngine.applyLocationSample(
+        val (result, verdict) = filteringEngine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = sampleAt(0L, speedMetersPerSecond = 0.3),
             currentSample = sampleAt(1_000L, speedMetersPerSecond = 0.3)
         )
 
         assertEquals(state, result)
+        assertEquals(SampleVerdict.REJECTED_STATIONARY, verdict)
     }
 
     @Test
@@ -281,13 +299,47 @@ class DistanceTripProgressEngineTest {
         val state = runningState()
         val filteringEngine = engineWithDistance(300.0)
 
-        val result = filteringEngine.applyLocationSample(
+        val (result, verdict) = filteringEngine.applyLocationSampleWithVerdict(
             state = state,
             previousSample = sampleAt(0L, speedMetersPerSecond = 8.0),
             currentSample = sampleAt(1_000L, speedMetersPerSecond = 8.0)
         )
 
         assertEquals(state, result)
+        assertEquals(SampleVerdict.REJECTED_IMPLAUSIBLE_JUMP, verdict)
+    }
+
+    @Test
+    fun applyLocationSample_returnsSameStateAsVerdictVariant() {
+        val state = runningState()
+        val acceptingEngine = engineWithDistance(12.5)
+        val rejectingEngine = engineWithDistance(1.5)
+
+        assertEquals(
+            acceptingEngine.applyLocationSampleWithVerdict(
+                state = state,
+                previousSample = sampleAt(0L),
+                currentSample = sampleAt(1_000L)
+            ).state,
+            acceptingEngine.applyLocationSample(
+                state = state,
+                previousSample = sampleAt(0L),
+                currentSample = sampleAt(1_000L)
+            )
+        )
+
+        assertEquals(
+            rejectingEngine.applyLocationSampleWithVerdict(
+                state = state,
+                previousSample = sampleAt(0L),
+                currentSample = sampleAt(1_000L)
+            ).state,
+            rejectingEngine.applyLocationSample(
+                state = state,
+                previousSample = sampleAt(0L),
+                currentSample = sampleAt(1_000L)
+            )
+        )
     }
 
     private fun runningState(): TripState {
