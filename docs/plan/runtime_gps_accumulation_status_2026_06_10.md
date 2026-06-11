@@ -1,5 +1,7 @@
 # Point d’étape — Accumulation hors lifecycle UI (post-B5)
 
+> **Mise à jour 2026-06-11 (suite)** : modèle d’événement runtime **purifié** — retrait des événements UI-only `Options` / `RefreshLocationPermission` (`dc910c5`) ; le runtime ne contient plus que des événements à sens métier et reste **sans dépendance `ui.*` / `android.*`**. Mapping `TripMeterUiEvent → TripRuntimeEvent` couvert par un test direct (`125a112`). **Protocole de validation device de B4 prêt** (à exécuter) : [`b4_device_validation_protocol_2026_06_11.md`](b4_device_validation_protocol_2026_06_11.md). B4 reste **device-pending**.
+
 > **Mise à jour 2026-06-11** : paliers **B4** (neutralisation du pump UI comme source d’accumulation — `d7d4a9f`) et **B5** (modèle d’événement runtime pur `TripRuntimeEvent`, runtime découplé de l’UI — `e7b858b`) **appliqués, CI verte**. **B4 n’est pas encore validé device** ; sa validation device est la **prochaine étape prioritaire** (cf. §7). B5 est un refactor pur (aucune validation device requise).
 
 > **Mise à jour 2026-06-10** : trajet réel corrigé effectué après le correctif anti-dérive — voiture **17,80 km** / appli **17,56 km**, écart **0,24 km** (≈ **1,35 %**), **écran éteint** avec **pause/reprise** et distance cohérente. B3 écran éteint et correctif anti-dérive **validés sur ce trajet** (à confirmer sur d’autres). Calibration toujours bloquée. Voir §5 et [`road_validation_2026_06_10.md`](road_validation_2026_06_10.md).
@@ -29,7 +31,7 @@ Depuis, le pump UI a été **neutralisé** comme source d’accumulation (**B4**
 - **Service consommateur des samples** (B3) : tant que le service tourne, une boucle postée sur le **main Looper** appelle `runtime.onEvent(ApplyLocationSample)` à ~1 s.
 - **Persistance via le runtime** : le service **n’écrit jamais** directement dans le store ; la sauvegarde (throttle) est faite par le runtime.
 - **UI = miroir resynchronisé** (B4) : le pump `repeatOnLifecycle(STARTED)` **ne pilote plus l’accumulation** ; il appelle `syncUiFromRuntime()` (lecture seule) pour resynchroniser le miroir Compose depuis le runtime. Le service est l’**unique moteur d’accumulation**. *Comportement device de B4 non encore validé (cf. §6, §7).*
-- **Runtime découplé de l’UI** (B5) : le `TripRuntime` n’importe plus aucun type `ui.*` ; il consomme un `TripRuntimeEvent` pur. Le ViewModel traduit `TripMeterUiEvent → TripRuntimeEvent` ; le service appelle directement `runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)`.
+- **Runtime découplé de l’UI** (B5) : le `TripRuntime` n’importe plus aucun type `ui.*` ; il consomme un `TripRuntimeEvent` pur. Le ViewModel traduit `TripMeterUiEvent → TripRuntimeEvent` ; le service appelle directement `runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)`. Le modèle runtime a ensuite été **purifié** (`dc910c5`) : retrait des événements UI-only (`Options`, `RefreshLocationPermission`), désormais traités côté ViewModel ; le mapping UI→runtime est couvert par un test direct (`125a112`).
 
 | Chantier / commit | Statut |
 |---|---|
@@ -46,6 +48,8 @@ Depuis, le pump UI a été **neutralisé** comme source d’accumulation (**B4**
 | Correctif filtre — plancher selon disponibilité de la vitesse (`8530fa8`) | Implémenté, CI verte, **vérifié sur route** (écart ≈ 1,35 % ; voir §5) |
 | B4 — neutralisation du pump UI comme source d’accumulation (`d7d4a9f`) | Implémenté, CI verte, **validation device EN ATTENTE** (cf. §7) |
 | B5 — modèle d’événement runtime pur / découplage runtime–UI (`e7b858b`) | Implémenté, CI verte ; refactor pur (mapping 1:1 garanti par le compilateur), **sans validation device requise** |
+| Mapping UI→runtime — test direct des 13 variantes (`125a112`) | Implémenté, CI verte (test-only) |
+| Retrait des événements UI-only du modèle runtime (`dc910c5`) | Implémenté, CI verte ; comportement préservé (`Options` / `RefreshLocationPermission` traités côté ViewModel) |
 
 ## 4. Validations réalisées
 
@@ -70,7 +74,7 @@ Depuis, le pump UI a été **neutralisé** comme source d’accumulation (**B4**
 
 ## 7. Prochaines étapes recommandées
 
-1. **Valider B4 sur device (priorité)** : au premier plan `Running`, distance/GPS avancent (service seul accumulateur) ; arrière-plan → premier plan, l’UI rattrape immédiatement (resynchro) ; pas de double comptage ; pause/reprise/terminer corrects ; non-régression écran éteint. Plan : [`runtime_gps_b4_pump_neutralization_plan_2026_06_10.md`](runtime_gps_b4_pump_neutralization_plan_2026_06_10.md). Puis **documenter** la validation B4.
+1. **Valider B4 sur device (priorité)** : au premier plan `Running`, distance/GPS avancent (service seul accumulateur) ; arrière-plan → premier plan, l’UI rattrape immédiatement (resynchro) ; pas de double comptage ; pause/reprise/terminer corrects ; non-régression écran éteint. Plan : [`runtime_gps_b4_pump_neutralization_plan_2026_06_10.md`](runtime_gps_b4_pump_neutralization_plan_2026_06_10.md). **Protocole exécutable** : [`b4_device_validation_protocol_2026_06_11.md`](b4_device_validation_protocol_2026_06_11.md). Puis **documenter** la validation B4.
 2. **Confirmer le correctif anti-dérive sur d’autres trajets** : le trajet du 2026-06-10 donne ≈ 1,35 % (sous-comptage 6,3 % non reproduit) ; surveiller aussi le bureau (≈ 0,02 km / 5 min).
 3. **Étendre la validation B3 écran éteint** (autres trajets, autres appareils). Rapport du 2026-06-10 : [`road_validation_2026_06_10.md`](road_validation_2026_06_10.md).
 4. **Calibration terrain** : seulement après plusieurs trajets de référence cohérents (pas sur une mesure unique).
