@@ -143,3 +143,8 @@ sous-accumulation du gate, puis P4.3 : réglage fin des seuils sur corpus élarg
 P4.2 active le gate stationnaire. Les distances fantômes à l'arrêt sont fortement
 réduites, tandis que le mouvement reste dans la cible M2, notamment le log route
 référencé à 6.80 km.
+
+---
+
+Suite : voir `audit_post_P4_2_gate_stationnaire_2026_06_12.md` (audit de clôture de
+la série P4 et options pour P5).
