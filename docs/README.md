@@ -18,7 +18,7 @@ indique seulement quoi lire, dans quel ordre, et **quels documents font foi**.
 
 ## Ce qui fait autorité — `docs/contrats/` (normatif)
 
-Sept contrats, tous au statut VALIDÉ. Ils sont la référence ; le code s'y conforme.
+Huit contrats, tous au statut VALIDÉ. Ils sont la référence ; le code s'y conforme.
 
 | Contrat | Objet |
 |---|---|
@@ -28,6 +28,7 @@ Sept contrats, tous au statut VALIDÉ. Ils sont la référence ; le code s'y con
 | `locationengine_v0_1.md` | Contrat d'acquisition GPS (cible). |
 | `distanceengine_v0_1_2.md` | Calcul métrique brut (Haversine). |
 | `gps_accumulation_filter_v0_1.md` | Filtre d'accumulation = **mesure brute** : machine stationnaire/mouvement, verdicts, invariants. |
+| `observabilite_jsonl_v0_1.md` | Format JSONL d'observabilité (schéma versionné, sémantique des verdicts) — interface du replay et de la CI. |
 | `tripdisplay_v0_1_2.md` | Affichage, et application du **coefficient utilisateur de calibration** (correction d'affichage). |
 
 > Séparation clé portée par les contrats : le **filtre GPS** produit une distance
