@@ -184,3 +184,10 @@ mouvement couplée à l'inversion de l'ancre), bornée par M1 (arrêt) et M2
 Le corpus contient désormais assez d'éléments pour préparer P4-machine : les logs
 d'arrêt bornent M1, les logs mouvement bornent M2, et le log route avec odomètre
 6.80 km sert de première référence externe.
+
+## 15. Suite — design P4-machine
+
+L'architecture de P4-machine (machine stationnaire/mouvement : MOUVEMENT = P3
+préservé, ARRÊT neutralisé par gate net, transitions, verdicts, stratégie de
+patchs P4.1 neutre puis P4.2 comportemental) est décrite dans
+`design_P4_machine_stationnaire_mouvement_2026_06_12.md`.
