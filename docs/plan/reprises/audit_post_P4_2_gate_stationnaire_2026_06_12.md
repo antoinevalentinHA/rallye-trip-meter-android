@@ -156,3 +156,7 @@ soit la capture d'un log marche lente avant d'ouvrir P5.
 
 Clôture : voir `cloture_chantier_P4_gate_stationnaire_2026_06_12.md` (clôture
 formelle de la série P4 et prérequis pour P5).
+
+Capture urbaine référencée post-P4.2 : voir
+`capture_urbain_P4_2_2026_06_12_odom_8_20km.md` (odomètre 8,20 km / trip meter
+7,98 km ≈ −2,7 %, possible sous-accumulation urbaine à instruire en P5).
