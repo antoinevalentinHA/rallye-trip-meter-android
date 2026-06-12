@@ -1,5 +1,7 @@
 # Roadmap runtime GPS v0.1
 
+> **⚠️ Document historique — antérieur aux clôtures P1→P4.** Note de travail conservée pour l'historique. Plusieurs constats formulés au présent (boucle runtime GPS « inerte », acquisition « non validée sur appareil », filtrage de cohérence incomplet) **ne reflètent plus l'état du système** : la boucle runtime est active et validée sur appareil, et la mesure brute est désormais contractualisée. Pour l'état courant, voir `docs/contrats/gps_accumulation_filter_v0_1.md` et les reprises P4 dans `docs/plan/reprises/`. Aucune information n'est retirée de ce document.
+
 ## 1. Statut
 
 - Document de **planification**, non normatif (les contrats `docs/contrats/` restent la référence).
