@@ -122,7 +122,82 @@ class DistanceTripProgressEngine(
         return FilterResult(
             state = progress.state,
             verdict = progress.verdict,
-            nextState = FilterState(anchor = currentSample)
+            // P4.1 : l'ancre avance comme en P4.a (accumulation strictement
+            // inchangée). On calcule en plus l'état machine observé, transporté
+            // par le FilterState suivant, sans gouverner l'accumulation. Le gate
+            // stationnaire qui exploitera cet état arrive en P4.2.
+            nextState = detectMachineState(filterState, currentSample)
+        )
+    }
+
+    /*
+     * P4.1 — détection stationnaire/mouvement, NEUTRE.
+     *
+     * Produit le FilterState suivant. L'ancre avance exactement comme en P4.a
+     * (`anchor = currentSample`), donc l'accumulation est strictement inchangée :
+     * l'état machine est observé et transporté, il ne gouverne pas encore
+     * l'accumulation (gate activé en P4.2).
+     *
+     * Détection par déplacement net (et non vitesse seule) avec hystérésis :
+     * - STATIONARY : centre fixe ; bascule en MOVING après
+     *   detectionHysteresisSamples échantillons consécutifs à plus de
+     *   movementTriggerMeters du centre.
+     * - MOVING : centre suivant l'appareil (déplacement pas-à-pas) ; rebascule en
+     *   STATIONARY après detectionHysteresisSamples pas consécutifs sous
+     *   stillnessRadiusMeters.
+     */
+    private fun detectMachineState(
+        filterState: FilterState,
+        currentSample: LocationSample
+    ): FilterState {
+        val center = filterState.stationaryCenter ?: currentSample
+        val displacementMeters = distanceEngine.computeDistanceMeters(
+            center.point,
+            currentSample.point
+        )
+
+        var machineState = filterState.machineState
+        var stationaryCenter = center
+        var movingStreak = filterState.movingStreak
+        var stationaryStreak = filterState.stationaryStreak
+
+        when (filterState.machineState) {
+            MachineState.STATIONARY -> {
+                if (displacementMeters > tuning.movementTriggerMeters) {
+                    movingStreak += 1
+                    if (movingStreak >= tuning.detectionHysteresisSamples) {
+                        machineState = MachineState.MOVING
+                        stationaryCenter = currentSample
+                        movingStreak = 0
+                        stationaryStreak = 0
+                    }
+                } else {
+                    movingStreak = 0
+                }
+            }
+
+            MachineState.MOVING -> {
+                if (displacementMeters < tuning.stillnessRadiusMeters) {
+                    stationaryStreak += 1
+                } else {
+                    stationaryStreak = 0
+                }
+                if (stationaryStreak >= tuning.detectionHysteresisSamples) {
+                    machineState = MachineState.STATIONARY
+                    movingStreak = 0
+                    stationaryStreak = 0
+                }
+                // En mouvement, le centre suit l'appareil (mesure pas-à-pas).
+                stationaryCenter = currentSample
+            }
+        }
+
+        return FilterState(
+            anchor = currentSample,
+            machineState = machineState,
+            stationaryCenter = stationaryCenter,
+            movingStreak = movingStreak,
+            stationaryStreak = stationaryStreak
         )
     }
 

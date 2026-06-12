@@ -31,4 +31,16 @@ data class FilterTuning(
     val stationarySpeedMetersPerSecond: Double = 0.5,
     /** Vitesse implicite maximale plausible, en km/h (MAX_PLAUSIBLE_SPEED_KMH historique). */
     val maxPlausibleSpeedKmh: Double = 200.0,
+    /*
+     * P4.1 — constantes de détection stationnaire/mouvement. SANS effet sur
+     * l'accumulation tant que le gate stationnaire n'est pas activé (P4.2) :
+     * elles ne servent qu'au calcul de l'état machine observé. Valeurs par
+     * défaut = hypothèses, à régler par replay en P4.2.
+     */
+    /** Déplacement net (m) au-delà duquel on quitte la zone d'arrêt. */
+    val movementTriggerMeters: Double = 15.0,
+    /** Déplacement pas-à-pas (m) en deçà duquel on considère l'appareil immobile. */
+    val stillnessRadiusMeters: Double = 3.0,
+    /** Nombre d'échantillons consécutifs confirmant une transition (anti-flapping). */
+    val detectionHysteresisSamples: Int = 3,
 )
