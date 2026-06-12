@@ -43,3 +43,29 @@ pas un roadbook numérique ni une carte de navigation (cf. contrat fonctionnel).
 
 CI : GitHub Actions (`.github/workflows/android-ci.yml`) exécute la même commande
 sur `push` et `pull_request`. minSdk 28, targetSdk 36.
+
+## Licence
+
+Ce projet est distribué sous **GNU General Public License v3.0 ou ultérieure**
+(`GPL-3.0-or-later`). Texte intégral : [`LICENSE`](LICENSE).
+
+En pratique, cela te donne la liberté d'**utiliser**, d'**étudier**, de
+**modifier** et de **redistribuer** le logiciel. En contrepartie (copyleft) : toute
+version **redistribuée**, y compris un APK, doit l'être **sous la même licence** et
+avec son **code source** disponible. Le code ne peut donc pas être repris dans un
+produit **propriétaire fermé**.
+
+Copyright (C) 2026 Antoine VALENTIN.
+
+## Contributions
+
+Les contributions sont **bienvenues**. Le projet est maintenu principalement par son
+auteur, sans bureaucratie inutile :
+
+- **pas de CLA** ; tu conserves ton copyright ;
+- ta contribution est acceptée **sous la licence du projet** (`GPL-3.0-or-later`,
+  inbound = outbound) ;
+- un **DCO** (Developer Certificate of Origin) léger est requis : chaque commit est
+  signé via `git commit -s`.
+
+Détails (workflow PR, DCO, exemple de signature) : [`CONTRIBUTING.md`](CONTRIBUTING.md).
