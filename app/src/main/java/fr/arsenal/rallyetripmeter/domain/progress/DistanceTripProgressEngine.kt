@@ -34,7 +34,7 @@ import fr.arsenal.rallyetripmeter.domain.model.TripState
 class DistanceTripProgressEngine(
     private val distanceEngine: DistanceEngine,
     private val calibrationFactor: Double = 1.0
-) : TripProgressEngine {
+) : TripProgressEngine, GpsAccumulationFilter {
     override fun applyLocationSample(
         state: TripState,
         previousSample: LocationSample?,
@@ -92,6 +92,36 @@ class DistanceTripProgressEngine(
                 partialDistanceMeters = state.partialDistanceMeters + correctedDistanceMeters
             ),
             verdict = SampleVerdict.ACCEPTED_SEGMENT
+        )
+    }
+
+    /*
+     * Contrat P3.a (GpsAccumulationFilter) : adaptation mécanique du moteur
+     * existant. Strictement la même logique de verdict et d'accumulation que
+     * `applyLocationSampleWithVerdict` — mêmes gardes, même ordre, mêmes
+     * constantes — à laquelle s'ajoute le seul transport explicite de l'ancre.
+     *
+     * Sémantique d'ancre héritée et conservée volontairement : l'ancre du
+     * FilterState suivant devient l'échantillon courant à chaque application,
+     * y compris lorsque le verdict est un rejet. C'est le miroir exact du
+     * runtime actuel, qui fait avancer `previousLocationSample` avant de
+     * calculer le verdict. Ce point n'est pas corrigé ici (inversé en P4).
+     */
+    override fun apply(
+        tripState: TripState,
+        filterState: FilterState,
+        currentSample: LocationSample
+    ): FilterResult {
+        val progress = applyLocationSampleWithVerdict(
+            state = tripState,
+            previousSample = filterState.anchor,
+            currentSample = currentSample
+        )
+
+        return FilterResult(
+            state = progress.state,
+            verdict = progress.verdict,
+            nextState = FilterState(anchor = currentSample)
         )
     }
 
