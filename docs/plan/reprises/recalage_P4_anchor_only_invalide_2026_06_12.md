@@ -162,3 +162,9 @@ dans le code) :
 P4.b anchor-only est invalidé. Le prochain chantier recommandé est P4-machine :
 correction couplée de l'ancre et de l'état stationnaire/mouvement, avec preuve
 par replay.
+
+## Prérequis avant P4-machine
+
+P4-machine ne peut démarrer sans un corpus permettant de vérifier arrêt **et**
+mouvement. Aucun log de mouvement n'existe à ce jour. Procédure de capture :
+voir `preparation_capture_mouvement_P4_machine_2026_06_12.md`.
