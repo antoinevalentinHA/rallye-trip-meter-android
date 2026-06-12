@@ -18,7 +18,8 @@ import fr.arsenal.rallyetripmeter.domain.persistence.PeriodicSaveThrottle
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
 import fr.arsenal.rallyetripmeter.domain.persistence.toTripStateSnapshot
 import fr.arsenal.rallyetripmeter.domain.progress.DistanceTripProgressEngine
-import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
+import fr.arsenal.rallyetripmeter.domain.progress.FilterState
+import fr.arsenal.rallyetripmeter.domain.progress.GpsAccumulationFilter
 
 /*
  * ARSENAL RALLYE — Trip runtime
@@ -27,7 +28,8 @@ import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
  * - Autorité unique de l'état métier du trip meter (TripState).
  * - Route les événements métier vers le contrôleur immutable.
  * - Consomme un LocationEngine injecté pour le statut GPS et les échantillons.
- * - Route les échantillons vers le moteur de progression métier.
+ * - Route les échantillons vers le filtre d'accumulation GPS, qui détient
+ *   l'ancre via un FilterState transporté de façon opaque.
  * - Décide et applique la persistance (simple + throttle périodique).
  * - Émet une entrée d'observabilité par tick ApplyLocationSample (P1.c),
  *   via un TickLogSink injecté (no-op par défaut).
@@ -45,7 +47,7 @@ import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
  */
 class TripRuntime(
     private val controller: TripController = ImmutableTripController(),
-    private val progressEngine: TripProgressEngine = DistanceTripProgressEngine(
+    private val gpsAccumulationFilter: GpsAccumulationFilter = DistanceTripProgressEngine(
         distanceEngine = HaversineDistanceEngine()
     ),
     private val locationEngine: LocationEngine = UnavailableLocationEngine(),
@@ -60,7 +62,7 @@ class TripRuntime(
     var state: TripState = initialState
         private set
 
-    private var previousLocationSample: LocationSample? = null
+    private var filterState: FilterState = FilterState()
 
     fun onEvent(event: TripRuntimeEvent) {
         state = handleTripRuntimeEvent(
@@ -151,11 +153,11 @@ class TripRuntime(
 
             TripRuntimeEvent.ApplyLocationSample -> applyLocationEngineSample(state)
 
-            TripRuntimeEvent.SimulateLocationStep -> progressEngine.applyLocationSample(
-                state = state,
-                previousSample = simulatedPreviousLocationSample(),
+            TripRuntimeEvent.SimulateLocationStep -> gpsAccumulationFilter.apply(
+                tripState = state,
+                filterState = FilterState(anchor = simulatedPreviousLocationSample()),
                 currentSample = simulatedCurrentLocationSample()
-            )
+            ).state
         }
     }
 
@@ -174,7 +176,7 @@ class TripRuntime(
             logTick(
                 state = stateWithGpsStatus,
                 currentSample = null,
-                previousSample = previousLocationSample,
+                previousSample = filterState.anchor,
                 sampleIsNew = null,
                 verdict = SampleVerdict.IGNORED_NO_SAMPLE,
                 deltaTotalMeters = 0.0
@@ -182,11 +184,11 @@ class TripRuntime(
             return stateWithGpsStatus
         }
 
-        val previousSample = previousLocationSample
+        val previousSample = filterState.anchor
 
-        // Relecture du cache sans nouveau fix : verdict runtime, ancre intacte.
-        // Comportement inchangé : le moteur aurait retourné le même état
-        // (segment nul sous le plancher) et l'ancre aurait reçu une valeur égale.
+        // Relecture du cache sans nouveau fix : verdict de niveau runtime
+        // (IGNORED_DUPLICATE, jamais produit par le filtre). L'état filtre reste
+        // intact : l'ancre n'avance pas. Comportement inchangé.
         if (currentSample == previousSample) {
             logTick(
                 state = stateWithGpsStatus,
@@ -199,25 +201,17 @@ class TripRuntime(
             return stateWithGpsStatus
         }
 
-        previousLocationSample = currentSample
-
-        if (previousSample == null) {
-            logTick(
-                state = stateWithGpsStatus,
-                currentSample = currentSample,
-                previousSample = null,
-                sampleIsNew = true,
-                verdict = SampleVerdict.IGNORED_NO_ANCHOR,
-                deltaTotalMeters = 0.0
-            )
-            return stateWithGpsStatus
-        }
-
-        val result = progressEngine.applyLocationSampleWithVerdict(
-            state = stateWithGpsStatus,
-            previousSample = previousSample,
+        // Le filtre détient désormais l'ancre : il produit le verdict, le nouvel
+        // état métier et l'état filtre suivant. Le runtime lit l'ancre pour la
+        // déduplication de cache ci-dessus, mais ne l'avance jamais lui-même :
+        // seul result.nextState fait avancer l'ancre — y compris sur rejet
+        // (sémantique héritée conservée, transport opaque).
+        val result = gpsAccumulationFilter.apply(
+            tripState = stateWithGpsStatus,
+            filterState = filterState,
             currentSample = currentSample
         )
+        filterState = result.nextState
 
         logTick(
             state = result.state,

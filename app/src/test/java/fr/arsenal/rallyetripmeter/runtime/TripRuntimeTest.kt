@@ -12,8 +12,9 @@ import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.domain.persistence.PeriodicSaveThrottle
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateSnapshot
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
-import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
-import fr.arsenal.rallyetripmeter.domain.progress.TripProgressResult
+import fr.arsenal.rallyetripmeter.domain.progress.FilterResult
+import fr.arsenal.rallyetripmeter.domain.progress.FilterState
+import fr.arsenal.rallyetripmeter.domain.progress.GpsAccumulationFilter
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -149,7 +150,7 @@ class TripRuntimeTest {
                     )
                 )
             ),
-            progressEngine = FakeTripProgressEngine(
+            gpsAccumulationFilter = FakeTripProgressEngine(
                 resultState = TripState(
                     totalDistanceMeters = 3_000.0,
                     partialDistanceMeters = 700.0
@@ -177,7 +178,7 @@ class TripRuntimeTest {
                     )
                 )
             ),
-            progressEngine = FakeTripProgressEngine(
+            gpsAccumulationFilter = FakeTripProgressEngine(
                 resultState = TripState(
                     totalDistanceMeters = 3_000.0,
                     partialDistanceMeters = 700.0,
@@ -239,7 +240,7 @@ class TripRuntimeTest {
         var now = 0L
         val store = FakeTripStateStore()
         val runtime = TripRuntime(
-            progressEngine = FakeTripProgressEngine(
+            gpsAccumulationFilter = FakeTripProgressEngine(
                 resultState = TripState(
                     sessionState = TripSessionState.Running,
                     totalDistanceMeters = 3_000.0,
@@ -566,27 +567,26 @@ class TripRuntimeTest {
     private class FakeTripProgressEngine(
         private val resultState: TripState,
         private val verdict: SampleVerdict = SampleVerdict.ACCEPTED_SEGMENT
-    ) : TripProgressEngine {
-        override fun applyLocationSample(
-            state: TripState,
-            previousSample: LocationSample?,
+    ) : GpsAccumulationFilter {
+        override fun apply(
+            tripState: TripState,
+            filterState: FilterState,
             currentSample: LocationSample
-        ): TripState {
-            return applyLocationSampleWithVerdict(
-                state = state,
-                previousSample = previousSample,
-                currentSample = currentSample
-            ).state
-        }
-
-        override fun applyLocationSampleWithVerdict(
-            state: TripState,
-            previousSample: LocationSample?,
-            currentSample: LocationSample
-        ): TripProgressResult {
-            return TripProgressResult(
+        ): FilterResult {
+            // Miroir du vrai moteur sur la seule branche que le runtime
+            // déléguait déjà : sans ancre, aucun segment, état métier inchangé.
+            // L'ancre avance dans tous les cas (sémantique héritée conservée).
+            if (filterState.anchor == null) {
+                return FilterResult(
+                    state = tripState,
+                    verdict = SampleVerdict.IGNORED_NO_ANCHOR,
+                    nextState = FilterState(anchor = currentSample)
+                )
+            }
+            return FilterResult(
                 state = resultState,
-                verdict = verdict
+                verdict = verdict,
+                nextState = FilterState(anchor = currentSample)
             )
         }
     }

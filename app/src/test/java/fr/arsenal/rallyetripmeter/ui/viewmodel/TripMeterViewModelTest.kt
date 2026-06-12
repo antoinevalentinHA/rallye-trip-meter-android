@@ -9,8 +9,9 @@ import fr.arsenal.rallyetripmeter.domain.model.TripState
 import fr.arsenal.rallyetripmeter.domain.permission.LocationPermissionState
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateSnapshot
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
-import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
-import fr.arsenal.rallyetripmeter.domain.progress.TripProgressResult
+import fr.arsenal.rallyetripmeter.domain.progress.FilterResult
+import fr.arsenal.rallyetripmeter.domain.progress.FilterState
+import fr.arsenal.rallyetripmeter.domain.progress.GpsAccumulationFilter
 import fr.arsenal.rallyetripmeter.runtime.TripRuntime
 import fr.arsenal.rallyetripmeter.runtime.TripRuntimeEvent
 import fr.arsenal.rallyetripmeter.ui.model.TripMeterUiEvent
@@ -295,7 +296,7 @@ class TripMeterViewModelTest {
                     )
                 )
             ),
-            progressEngine = FakeTripProgressEngine(
+            gpsAccumulationFilter = FakeTripProgressEngine(
                 resultState = TripState(
                     totalDistanceMeters = 3_000.0,
                     partialDistanceMeters = 700.0,
@@ -341,7 +342,7 @@ class TripMeterViewModelTest {
     @Test
     fun simulateLocationStep_usesInjectedProgressEngine() {
         val viewModel = TripMeterViewModel(
-            progressEngine = FakeTripProgressEngine(
+            gpsAccumulationFilter = FakeTripProgressEngine(
                 resultState = TripState(
                     totalDistanceMeters = 2_000.0,
                     partialDistanceMeters = 500.0,
@@ -616,27 +617,26 @@ class TripMeterViewModelTest {
     private class FakeTripProgressEngine(
         private val resultState: TripState,
         private val verdict: SampleVerdict = SampleVerdict.ACCEPTED_SEGMENT
-    ) : TripProgressEngine {
-        override fun applyLocationSample(
-            state: TripState,
-            previousSample: LocationSample?,
+    ) : GpsAccumulationFilter {
+        override fun apply(
+            tripState: TripState,
+            filterState: FilterState,
             currentSample: LocationSample
-        ): TripState {
-            return applyLocationSampleWithVerdict(
-                state = state,
-                previousSample = previousSample,
-                currentSample = currentSample
-            ).state
-        }
-
-        override fun applyLocationSampleWithVerdict(
-            state: TripState,
-            previousSample: LocationSample?,
-            currentSample: LocationSample
-        ): TripProgressResult {
-            return TripProgressResult(
+        ): FilterResult {
+            // Miroir du vrai moteur sur la seule branche que le runtime
+            // déléguait déjà : sans ancre, aucun segment, état métier inchangé.
+            // L'ancre avance dans tous les cas (sémantique héritée conservée).
+            if (filterState.anchor == null) {
+                return FilterResult(
+                    state = tripState,
+                    verdict = SampleVerdict.IGNORED_NO_ANCHOR,
+                    nextState = FilterState(anchor = currentSample)
+                )
+            }
+            return FilterResult(
                 state = resultState,
-                verdict = verdict
+                verdict = verdict,
+                nextState = FilterState(anchor = currentSample)
             )
         }
     }

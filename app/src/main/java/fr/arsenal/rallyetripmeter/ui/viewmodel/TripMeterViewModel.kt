@@ -20,7 +20,7 @@ import fr.arsenal.rallyetripmeter.domain.persistence.NoOpTripStateStore
 import fr.arsenal.rallyetripmeter.domain.persistence.PeriodicSaveThrottle
 import fr.arsenal.rallyetripmeter.domain.persistence.TripStateStore
 import fr.arsenal.rallyetripmeter.domain.progress.DistanceTripProgressEngine
-import fr.arsenal.rallyetripmeter.domain.progress.TripProgressEngine
+import fr.arsenal.rallyetripmeter.domain.progress.GpsAccumulationFilter
 import fr.arsenal.rallyetripmeter.runtime.TripRuntime
 import fr.arsenal.rallyetripmeter.runtime.TripRuntimeEvent
 import fr.arsenal.rallyetripmeter.ui.mapper.toTripDisplayState
@@ -57,7 +57,7 @@ class TripMeterViewModel(
     private val startForegroundService: () -> Unit = {},
     private val stopForegroundService: () -> Unit = {},
     private val controller: TripController = ImmutableTripController(),
-    private val progressEngine: TripProgressEngine = DistanceTripProgressEngine(
+    private val gpsAccumulationFilter: GpsAccumulationFilter = DistanceTripProgressEngine(
         distanceEngine = HaversineDistanceEngine()
     ),
     private val locationEngine: LocationEngine = UnavailableLocationEngine(),
@@ -71,7 +71,7 @@ class TripMeterViewModel(
     ),
     private val runtime: TripRuntime = TripRuntime(
         controller = controller,
-        progressEngine = progressEngine,
+        gpsAccumulationFilter = gpsAccumulationFilter,
         locationEngine = locationEngine,
         tripStateStore = tripStateStore,
         periodicSaveThrottle = periodicSaveThrottle,
