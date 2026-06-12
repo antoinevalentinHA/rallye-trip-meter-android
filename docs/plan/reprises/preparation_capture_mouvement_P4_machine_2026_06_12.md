@@ -158,3 +158,10 @@ Chaque log déposé devient une régression permanente du corpus.
 
 Le prochain prérequis avant P4-machine est la capture d'au moins un log de
 mouvement exploitable, idéalement marche lente + voiture urbaine + route stable.
+
+## 9. Suite — corpus mouvement capturé
+
+Trois logs voiture (urbain ×2, route ×1 avec odomètre 6.80 km) ont été ajoutés au
+corpus. Leur audit chiffré M1/M2 figure dans
+`audit_corpus_M1_M2_avant_P4_machine_2026_06_12.md`. Reste recommandé avant
+P4-machine : un log de marche lente avec référence.
