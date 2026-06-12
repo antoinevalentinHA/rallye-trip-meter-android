@@ -257,3 +257,11 @@ plan-maître §8 « Ordre de patchs ».
 
 P3 est clôturé. Le prochain chantier recommandé est P4 : correction contrôlée de
 l'avancement d'ancre sur rejet, avec preuve par replay et tests dédiés.
+
+## Recalage P4 (2026-06-12)
+
+Le découpage « P4.b = correction isolée de l'ancre » a été **invalidé** après
+simulation fidèle : geler l'ancre sur rejet, sans logique stationnaire/mouvement,
+**aggrave** les distances fantômes sur les trois corpus d'arrêt. Voir
+`recalage_P4_anchor_only_invalide_2026_06_12.md`. P4 redevient un chantier unique
+de machine stationnaire/mouvement.
