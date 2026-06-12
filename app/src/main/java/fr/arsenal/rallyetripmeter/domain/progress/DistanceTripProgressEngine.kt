@@ -33,7 +33,8 @@ import fr.arsenal.rallyetripmeter.domain.model.TripState
  */
 class DistanceTripProgressEngine(
     private val distanceEngine: DistanceEngine,
-    private val calibrationFactor: Double = 1.0
+    private val calibrationFactor: Double = 1.0,
+    private val tuning: FilterTuning = FilterTuning()
 ) : TripProgressEngine, GpsAccumulationFilter {
     override fun applyLocationSample(
         state: TripState,
@@ -127,7 +128,7 @@ class DistanceTripProgressEngine(
 
     private fun isStationarySpeed(sample: LocationSample): Boolean {
         val speed = sample.speedMetersPerSecond ?: return false
-        return speed < STATIONARY_SPEED_MPS
+        return speed < tuning.stationarySpeedMetersPerSecond
     }
 
     private fun movementFloorMeters(
@@ -135,17 +136,17 @@ class DistanceTripProgressEngine(
         currentSample: LocationSample
     ): Double {
         // Vitesse source présente : le rejet stationnaire a déjà écarté les vitesses
-        // < STATIONARY_SPEED_MPS, donc on est en déplacement réel -> plancher minimal
-        // (le plancher accuracy guillotinerait de vrais segments urbains lents à 1 Hz).
+        // sous le seuil de quasi-immobilité, donc on est en déplacement réel -> plancher
+        // minimal (le plancher accuracy guillotinerait de vrais segments urbains lents à 1 Hz).
         if (currentSample.speedMetersPerSecond != null) {
-            return NOISE_FLOOR_METERS
+            return tuning.noiseFloorMeters
         }
 
         // Vitesse absente : impossible de distinguer mouvement et dérive -> garde
         // anti-dérive basé sur l'incertitude GPS (préserve le 0 m à l'arrêt).
         val accuracyFloor = worstAccuracyMeters(previousSample, currentSample) *
-            ACCURACY_FLOOR_FACTOR
-        return maxOf(NOISE_FLOOR_METERS, accuracyFloor)
+            tuning.accuracyFloorFactor
+        return maxOf(tuning.noiseFloorMeters, accuracyFloor)
     }
 
     private fun worstAccuracyMeters(
@@ -172,14 +173,11 @@ class DistanceTripProgressEngine(
 
         val elapsedSeconds = elapsedMillis / MILLIS_PER_SECOND
         val speedKmh = distanceMeters / elapsedSeconds * METERS_PER_SECOND_TO_KMH
-        return speedKmh > MAX_PLAUSIBLE_SPEED_KMH
+        return speedKmh > tuning.maxPlausibleSpeedKmh
     }
 
     private companion object {
-        const val NOISE_FLOOR_METERS = 2.0
-        const val ACCURACY_FLOOR_FACTOR = 1.0
-        const val STATIONARY_SPEED_MPS = 0.5
-        const val MAX_PLAUSIBLE_SPEED_KMH = 200.0
+        // Conversions d'unités physiques (non accordables) : restent internes.
         const val MILLIS_PER_SECOND = 1000.0
         const val METERS_PER_SECOND_TO_KMH = 3.6
     }
