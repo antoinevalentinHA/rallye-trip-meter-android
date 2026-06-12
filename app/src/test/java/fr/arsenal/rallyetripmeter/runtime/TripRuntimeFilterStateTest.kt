@@ -65,20 +65,19 @@ class TripRuntimeFilterStateTest {
     }
 
     @Test
-    fun rejectedSample_stillAdvancesAnchor_carriedByFilterState() {
+    fun stationaryDrift_freezesAnchor_carriedByFilterState() {
         val sink = RecordingTickLogSink()
         val runtime = TripRuntime(
             // Vrai moteur : verdicts et distances réels, aucune simulation.
             locationEngine = FakeLocationEngine(
                 gpsStatus = GpsStatus.Fixed,
                 samples = listOf(
-                    // A : premier fix -> IGNORED_NO_ANCHOR, l'ancre devient A.
+                    // A : premier fix -> IGNORED_NO_ANCHOR, l'ancre/centre devient A.
                     sampleAt(timestamp = 1_000L, lat = 44.8378, lon = -0.5792, speed = 0.2),
-                    // B : quasi-immobile -> REJECTED_STATIONARY. Sous le bug
-                    // conservé, l'ancre avance tout de même vers B.
+                    // B : ~13,6 m de A (< seuil de départ) -> dérive neutralisée (gate).
                     sampleAt(timestamp = 2_000L, lat = 44.8379, lon = -0.5793, speed = 0.2),
-                    // C : en mouvement. Le segment évalué est B->C si (et seulement
-                    // si) l'ancre a bien avancé vers le B rejeté.
+                    // C : ~37 m de A mais 1 seul fix > seuil (hystérésis 8 non atteinte)
+                    // -> encore neutralisé. La machine reste STATIONARY tout du long.
                     sampleAt(timestamp = 3_000L, lat = 44.8381, lon = -0.5794, speed = 8.0)
                 )
             ),
@@ -93,13 +92,13 @@ class TripRuntimeFilterStateTest {
         assertEquals(3, sink.entries.size)
         assertEquals(SampleVerdict.IGNORED_NO_ANCHOR, sink.entries[0].verdict)
         assertEquals(SampleVerdict.REJECTED_STATIONARY, sink.entries[1].verdict)
-        assertEquals(SampleVerdict.ACCEPTED_SEGMENT, sink.entries[2].verdict)
+        assertEquals(SampleVerdict.REJECTED_STATIONARY, sink.entries[2].verdict)
 
-        // Preuve directe du bug conservé : la référence du segment accepté est
-        // l'échantillon REJETÉ B (t=2000), pas l'ancre initiale A (t=1000).
-        // L'ancre a donc avancé malgré le rejet.
-        assertEquals(2_000L, sink.entries[2].previousTimestampMillis)
-        assertTrue(runtime.state.totalDistanceMeters > 0.0)
+        // Contrat P4.2 (inversé vs P4.a) : en STATIONARY, l'ancre NE suit PAS la
+        // dérive. La référence du 3e tick reste l'ancre initiale A (t=1000), gelée
+        // au centre — jamais le B rejeté (t=2000). Et rien n'est accumulé.
+        assertEquals(1_000L, sink.entries[2].previousTimestampMillis)
+        assertEquals(0.0, runtime.state.totalDistanceMeters, 0.0)
     }
 
     // ------------------------------------------------------------------

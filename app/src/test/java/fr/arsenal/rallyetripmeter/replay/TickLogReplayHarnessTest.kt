@@ -7,6 +7,7 @@ import fr.arsenal.rallyetripmeter.domain.diag.TickLogMeta
 import fr.arsenal.rallyetripmeter.domain.model.GpsStatus
 import fr.arsenal.rallyetripmeter.domain.model.TripSessionState
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -189,23 +190,24 @@ class TickLogReplayHarnessTest {
     }
 
     @Test
-    fun syntheticCouchFixture_replaysFaithfullyThroughRealPipeline() {
+    fun syntheticCouchFixture_replayGatesPhantomUnderP4_2() {
         val parsed = TickLogReplayReader.parseResource(COUCH_FIXTURE)
         val report = TickLogReplayAnalyzer.analyze(parsed)
 
         val replayed = TickLogPipelineReplay.replay(parsed)
         val comparison = TickLogPipelineReplay.compare(report, replayed)
 
-        assertTrue(
-            "Total rejoué (${comparison.replayedTotalMeters}) != " +
-                "total enregistré (${comparison.recordedTotalMeters}).",
+        // La fixture encode le comportement P4.a : 65,25 m de distance fantôme
+        // à l'arrêt (segments de dérive acceptés).
+        assertEquals(65.25, comparison.recordedTotalMeters, 0.01)
+
+        // P4.2 — gate stationnaire actif : rejoué via le pipeline réel, le canapé
+        // reste STATIONARY et la dérive n'est plus accumulée -> 0 m. La divergence
+        // avec l'enregistrement P4.a est donc INTENTIONNELLE (fantôme neutralisé).
+        assertEquals(0.0, comparison.replayedTotalMeters, 0.01)
+        assertFalse(
+            "Le replay P4.2 doit diverger de l'enregistrement P4.a (fantôme retiré).",
             comparison.totalsMatch
-        )
-        assertTrue(
-            "Comptages de verdicts divergents : " +
-                "rejoué=${comparison.replayedVerdictCounts} " +
-                "enregistré=${comparison.recordedVerdictCounts}.",
-            comparison.verdictsMatch
         )
     }
 

@@ -303,55 +303,34 @@ class TripRuntimeTest {
 
     @Test
     fun applyLocationSample_repeatedTicksOnSameFix_doNotDoubleAccumulate() {
-        // Baseline : un tick par fix (cadence simple).
+        // Baseline : un tick par fix (mouvement soutenu vers le nord pour franchir
+        // le gate P4.2 et accumuler réellement).
+        val baselineSamples = movingNorthSamples(count = 10)
         val single = TripRuntime(
             locationEngine = FakeLocationEngine(
                 gpsStatus = GpsStatus.Fixed,
-                samples = listOf(
-                    LocationSample(
-                        point = GeoPoint(latitude = 44.8378, longitude = -0.5792)
-                    ),
-                    LocationSample(
-                        point = GeoPoint(latitude = 44.8380, longitude = -0.5794)
-                    )
-                )
+                samples = baselineSamples
             ),
             initialState = TripState(sessionState = TripSessionState.Running)
         )
-        single.onEvent(TripRuntimeEvent.ApplyLocationSample)
-        single.onEvent(TripRuntimeEvent.ApplyLocationSample)
+        repeat(baselineSamples.size) { single.onEvent(TripRuntimeEvent.ApplyLocationSample) }
         val baseline = single.state.totalDistanceMeters
         assertTrue(baseline > 0.0)
 
         // Double tick : chaque fix relu deux fois (pump UI + boucle service partageant
-        // le meme runtime). Le previousLocationSample partage doit paver le trajet une
-        // seule fois -> total identique a la baseline, aucune double accumulation.
+        // le meme runtime). Le dédoublonnage de cache (== ancre) doit paver le trajet
+        // une seule fois -> total identique a la baseline, aucune double accumulation.
+        val doubledSamples = baselineSamples.flatMap { listOf(it, it) }
         val doubled = TripRuntime(
             locationEngine = FakeLocationEngine(
                 gpsStatus = GpsStatus.Fixed,
-                samples = listOf(
-                    LocationSample(
-                        point = GeoPoint(latitude = 44.8378, longitude = -0.5792)
-                    ),
-                    LocationSample(
-                        point = GeoPoint(latitude = 44.8378, longitude = -0.5792)
-                    ),
-                    LocationSample(
-                        point = GeoPoint(latitude = 44.8380, longitude = -0.5794)
-                    ),
-                    LocationSample(
-                        point = GeoPoint(latitude = 44.8380, longitude = -0.5794)
-                    )
-                )
+                samples = doubledSamples
             ),
             initialState = TripState(sessionState = TripSessionState.Running)
         )
-        doubled.onEvent(TripRuntimeEvent.ApplyLocationSample)
-        doubled.onEvent(TripRuntimeEvent.ApplyLocationSample)
-        doubled.onEvent(TripRuntimeEvent.ApplyLocationSample)
-        doubled.onEvent(TripRuntimeEvent.ApplyLocationSample)
+        repeat(doubledSamples.size) { doubled.onEvent(TripRuntimeEvent.ApplyLocationSample) }
 
-        assertEquals(baseline, doubled.state.totalDistanceMeters, 0.0)
+        assertEquals(baseline, doubled.state.totalDistanceMeters, 1.0E-6)
     }
 
     // ------------------------------------------------------------------
@@ -450,39 +429,33 @@ class TripRuntimeTest {
     @Test
     fun applyLocationSample_acceptedByEngine_logsEngineVerdictAndDelta() {
         val sink = RecordingTickLogSink()
+        // P4.2 : un segment n'est crédité qu'une fois l'état MOVING confirmé
+        // (hystérésis 8). On enchaîne 10 fix vers le nord (mouvement soutenu) pour
+        // exercer le chemin « accepté » du couple runtime+moteur.
         val runtime = TripRuntime(
             locationEngine = FakeLocationEngine(
                 gpsStatus = GpsStatus.Fixed,
-                samples = listOf(
-                    LocationSample(
-                        point = GeoPoint(latitude = 44.8378, longitude = -0.5792)
-                    ),
-                    LocationSample(
-                        point = GeoPoint(latitude = 44.8380, longitude = -0.5794)
-                    )
-                )
+                samples = movingNorthSamples(count = 10)
             ),
             tickLogSink = sink,
             initialState = TripState(sessionState = TripSessionState.Running)
         )
 
-        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
-        runtime.onEvent(TripRuntimeEvent.ApplyLocationSample)
+        repeat(10) { runtime.onEvent(TripRuntimeEvent.ApplyLocationSample) }
 
         assertTrue(runtime.state.totalDistanceMeters > 0.0)
-        assertEquals(2, sink.entries.size)
-        val accepted = sink.entries[1]
+        assertEquals(10, sink.entries.size)
+
+        // Le dernier tick est un segment accepté en MOVING : verdict, nouveauté,
+        // delta strictement positif et total courant sont journalisés.
+        val accepted = sink.entries.last()
         assertEquals(SampleVerdict.ACCEPTED_SEGMENT, accepted.verdict)
         assertEquals(true, accepted.sampleIsNew)
-        assertEquals(
-            runtime.state.totalDistanceMeters,
-            accepted.deltaTotalMeters,
-            0.0
-        )
+        assertTrue(accepted.deltaTotalMeters > 0.0)
         assertEquals(
             runtime.state.totalDistanceMeters,
             accepted.totalMeters,
-            0.0
+            1.0E-9
         )
     }
 
@@ -545,7 +518,30 @@ class TripRuntimeTest {
         assertEquals(3, sink.entries.size)
         assertEquals(SampleVerdict.IGNORED_NO_SAMPLE, sink.entries[0].verdict)
         assertEquals(SampleVerdict.IGNORED_NO_ANCHOR, sink.entries[1].verdict)
-        assertEquals(SampleVerdict.ACCEPTED_SEGMENT, sink.entries[2].verdict)
+        // P4.2 : le 1er déplacement (1 seul fix au-delà du seuil, hystérésis 8
+        // non atteinte) est neutralisé par le gate -> REJECTED_STATIONARY. Le test
+        // fige ici l'invariant « exactement une entrée par tick », pas un verdict
+        // d'acceptation (cf. acceptedByEngine pour le chemin accepté).
+        assertEquals(SampleVerdict.REJECTED_STATIONARY, sink.entries[2].verdict)
+    }
+
+    private fun movingNorthSamples(count: Int): List<LocationSample?> {
+        // Fix colinéaires sur un méridien, 20 m au nord l'un de l'autre, à 1 Hz.
+        // Au-delà de l'hystérésis (8), le gate confirme MOVING et crédite le trajet.
+        val baseLat = 44.8378
+        val lon = -0.5792
+        val metersPerDegreeLat = 111_320.0
+        return (0 until count).map { i ->
+            LocationSample(
+                point = GeoPoint(
+                    latitude = baseLat + (i * 20.0) / metersPerDegreeLat,
+                    longitude = lon,
+                    timestampMillis = i * 1_000L
+                ),
+                accuracyMeters = 4.0,
+                speedMetersPerSecond = 12.0
+            )
+        }
     }
 
     private class RecordingTickLogSink : TickLogSink {

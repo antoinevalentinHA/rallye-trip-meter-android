@@ -32,15 +32,20 @@ data class FilterTuning(
     /** Vitesse implicite maximale plausible, en km/h (MAX_PLAUSIBLE_SPEED_KMH historique). */
     val maxPlausibleSpeedKmh: Double = 200.0,
     /*
-     * P4.1 — constantes de détection stationnaire/mouvement. SANS effet sur
-     * l'accumulation tant que le gate stationnaire n'est pas activé (P4.2) :
-     * elles ne servent qu'au calcul de l'état machine observé. Valeurs par
-     * défaut = hypothèses, à régler par replay en P4.2.
+     * P4.2 — constantes de détection stationnaire/mouvement, ACTIVES (gouvernent
+     * le gate). Réglées par replay du corpus M1/M2 :
+     * - stillnessRadiusMeters=1.0 : à 3.0 (≈10.8 km/h) la conduite urbaine lente
+     *   était classée à tort « immobile » → bascule STATIONARY parasite et
+     *   distorsion (+64 % sur un log urbain). 1.0 (≈3.6 km/h) ne traite en arrêt
+     *   que la quasi-immobilité réelle.
+     * - detectionHysteresisSamples=8 : 8 échantillons consécutifs (~8 s à 1 Hz)
+     *   pour confirmer une transition → anti-flapping, préserve le mouvement.
+     * Ce ne sont pas des coefficients de correction (aucun facteur sur la distance).
      */
     /** Déplacement net (m) au-delà duquel on quitte la zone d'arrêt. */
     val movementTriggerMeters: Double = 15.0,
     /** Déplacement pas-à-pas (m) en deçà duquel on considère l'appareil immobile. */
-    val stillnessRadiusMeters: Double = 3.0,
+    val stillnessRadiusMeters: Double = 1.0,
     /** Nombre d'échantillons consécutifs confirmant une transition (anti-flapping). */
-    val detectionHysteresisSamples: Int = 3,
+    val detectionHysteresisSamples: Int = 8,
 )

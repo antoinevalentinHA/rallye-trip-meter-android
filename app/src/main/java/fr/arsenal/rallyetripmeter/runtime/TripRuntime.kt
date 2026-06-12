@@ -20,6 +20,7 @@ import fr.arsenal.rallyetripmeter.domain.persistence.toTripStateSnapshot
 import fr.arsenal.rallyetripmeter.domain.progress.DistanceTripProgressEngine
 import fr.arsenal.rallyetripmeter.domain.progress.FilterState
 import fr.arsenal.rallyetripmeter.domain.progress.GpsAccumulationFilter
+import fr.arsenal.rallyetripmeter.domain.progress.MachineState
 
 /*
  * ARSENAL RALLYE — Trip runtime
@@ -155,7 +156,16 @@ class TripRuntime(
 
             TripRuntimeEvent.SimulateLocationStep -> gpsAccumulationFilter.apply(
                 tripState = state,
-                filterState = FilterState(anchor = simulatedPreviousLocationSample()),
+                // Un pas simulé est, par intention, un DÉPLACEMENT injecté pour
+                // tester le compteur. L'état transitoire est donc déclaré MOVING :
+                // sinon le gate stationnaire (P4.2) neutraliserait le pas (l'état
+                // transitoire par défaut serait STATIONARY). L'état filtre PERSISTANT
+                // n'est pas touché (transport opaque préservé).
+                filterState = FilterState(
+                    anchor = simulatedPreviousLocationSample(),
+                    machineState = MachineState.MOVING,
+                    stationaryCenter = simulatedPreviousLocationSample()
+                ),
                 currentSample = simulatedCurrentLocationSample()
             ).state
         }

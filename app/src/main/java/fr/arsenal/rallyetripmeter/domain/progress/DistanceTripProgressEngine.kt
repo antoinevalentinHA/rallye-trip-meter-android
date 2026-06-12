@@ -113,91 +113,145 @@ class DistanceTripProgressEngine(
         filterState: FilterState,
         currentSample: LocationSample
     ): FilterResult {
-        val progress = applyLocationSampleWithVerdict(
-            state = tripState,
-            previousSample = filterState.anchor,
-            currentSample = currentSample
-        )
+        // Cas neutres (pas d'ancre / session non active) : on délègue à la
+        // primitive (IGNORED_NO_ANCHOR / IGNORED_NOT_RUNNING, état inchangé) et on
+        // initialise/maintient la machine. Le gate ne s'applique qu'en course.
+        if (filterState.anchor == null || tripState.sessionState != TripSessionState.Running) {
+            val progress = applyLocationSampleWithVerdict(
+                state = tripState,
+                previousSample = filterState.anchor,
+                currentSample = currentSample
+            )
+            return FilterResult(
+                state = progress.state,
+                verdict = progress.verdict,
+                nextState = filterState.copy(
+                    anchor = currentSample,
+                    stationaryCenter = filterState.stationaryCenter ?: currentSample
+                )
+            )
+        }
 
-        return FilterResult(
-            state = progress.state,
-            verdict = progress.verdict,
-            // P4.1 : l'ancre avance comme en P4.a (accumulation strictement
-            // inchangée). On calcule en plus l'état machine observé, transporté
-            // par le FilterState suivant, sans gouverner l'accumulation. Le gate
-            // stationnaire qui exploitera cet état arrive en P4.2.
-            nextState = detectMachineState(filterState, currentSample)
-        )
+        // P4.2 — gate stationnaire actif : l'état machine gouverne l'accumulation.
+        return when (filterState.machineState) {
+            MachineState.STATIONARY -> applyWhileStationary(tripState, filterState, currentSample)
+            MachineState.MOVING -> applyWhileMoving(tripState, filterState, currentSample)
+        }
     }
 
     /*
-     * P4.1 — détection stationnaire/mouvement, NEUTRE.
+     * STATIONARY — gate actif : la dérive ne s'accumule pas.
      *
-     * Produit le FilterState suivant. L'ancre avance exactement comme en P4.a
-     * (`anchor = currentSample`), donc l'accumulation est strictement inchangée :
-     * l'état machine est observé et transporté, il ne gouverne pas encore
-     * l'accumulation (gate activé en P4.2).
-     *
-     * Détection par déplacement net (et non vitesse seule) avec hystérésis :
-     * - STATIONARY : centre fixe ; bascule en MOVING après
-     *   detectionHysteresisSamples échantillons consécutifs à plus de
-     *   movementTriggerMeters du centre.
-     * - MOVING : centre suivant l'appareil (déplacement pas-à-pas) ; rebascule en
-     *   STATIONARY après detectionHysteresisSamples pas consécutifs sous
-     *   stillnessRadiusMeters.
+     * Le déplacement net est mesuré depuis le centre stationnaire FIGÉ. Tant qu'il
+     * reste sous movementTriggerMeters (ou que l'hystérésis n'est pas atteinte), on
+     * neutralise l'accumulation : l'état métier est rendu inchangé et l'ancre reste
+     * gelée au centre (on n'avance pas sur la dérive — c'est ce qui évite l'effet
+     * pervers de P4.b anchor-only). Au franchissement (detectionHysteresisSamples
+     * échantillons consécutifs au-delà du seuil), on bascule en MOVING en créditant
+     * le segment de départ depuis le centre : le vrai mouvement initial n'est pas perdu.
      */
-    private fun detectMachineState(
+    private fun applyWhileStationary(
+        tripState: TripState,
         filterState: FilterState,
         currentSample: LocationSample
-    ): FilterState {
+    ): FilterResult {
         val center = filterState.stationaryCenter ?: currentSample
         val displacementMeters = distanceEngine.computeDistanceMeters(
             center.point,
             currentSample.point
         )
 
-        var machineState = filterState.machineState
-        var stationaryCenter = center
-        var movingStreak = filterState.movingStreak
-        var stationaryStreak = filterState.stationaryStreak
-
-        when (filterState.machineState) {
-            MachineState.STATIONARY -> {
-                if (displacementMeters > tuning.movementTriggerMeters) {
-                    movingStreak += 1
-                    if (movingStreak >= tuning.detectionHysteresisSamples) {
-                        machineState = MachineState.MOVING
-                        stationaryCenter = currentSample
-                        movingStreak = 0
+        if (displacementMeters > tuning.movementTriggerMeters) {
+            val movingStreak = filterState.movingStreak + 1
+            if (movingStreak >= tuning.detectionHysteresisSamples) {
+                // Transition STATIONARY -> MOVING : crédite le segment de départ
+                // depuis le centre via la primitive (mêmes gardes que P3/P4.1).
+                val progress = applyLocationSampleWithVerdict(
+                    state = tripState,
+                    previousSample = center,
+                    currentSample = currentSample
+                )
+                return FilterResult(
+                    state = progress.state,
+                    verdict = progress.verdict,
+                    nextState = FilterState(
+                        anchor = currentSample,
+                        machineState = MachineState.MOVING,
+                        stationaryCenter = currentSample,
+                        movingStreak = 0,
                         stationaryStreak = 0
-                    }
-                } else {
-                    movingStreak = 0
-                }
+                    )
+                )
             }
-
-            MachineState.MOVING -> {
-                if (displacementMeters < tuning.stillnessRadiusMeters) {
-                    stationaryStreak += 1
-                } else {
-                    stationaryStreak = 0
-                }
-                if (stationaryStreak >= tuning.detectionHysteresisSamples) {
-                    machineState = MachineState.STATIONARY
-                    movingStreak = 0
-                    stationaryStreak = 0
-                }
-                // En mouvement, le centre suit l'appareil (mesure pas-à-pas).
-                stationaryCenter = currentSample
-            }
+            return gatedStationary(tripState, center, movingStreak = movingStreak, stationaryStreak = 0)
         }
 
-        return FilterState(
-            anchor = currentSample,
-            machineState = machineState,
-            stationaryCenter = stationaryCenter,
-            movingStreak = movingStreak,
-            stationaryStreak = stationaryStreak
+        return gatedStationary(tripState, center, movingStreak = 0, stationaryStreak = filterState.stationaryStreak)
+    }
+
+    /*
+     * Échantillon neutralisé par le gate : aucune accumulation, ancre gelée au
+     * centre. Verdict REJECTED_STATIONARY (réutilisé — pas de nouveau verdict,
+     * JSONL inchangé) : le sample est rejeté au titre de la stationnarité machine.
+     */
+    private fun gatedStationary(
+        tripState: TripState,
+        center: LocationSample,
+        movingStreak: Int,
+        stationaryStreak: Int
+    ): FilterResult {
+        return FilterResult(
+            state = tripState,
+            verdict = SampleVerdict.REJECTED_STATIONARY,
+            nextState = FilterState(
+                anchor = center,
+                machineState = MachineState.STATIONARY,
+                stationaryCenter = center,
+                movingStreak = movingStreak,
+                stationaryStreak = stationaryStreak
+            )
+        )
+    }
+
+    /*
+     * MOVING — comportement P3/P4.1 strictement préservé : accumulation depuis
+     * l'ancre via la primitive, l'ancre avance à chaque échantillon. En plus, on
+     * détecte l'immobilité pas-à-pas (centre suivant l'appareil) : après
+     * detectionHysteresisSamples pas consécutifs sous stillnessRadiusMeters, on
+     * rebascule en STATIONARY (la dérive cessera alors d'être accumulée).
+     */
+    private fun applyWhileMoving(
+        tripState: TripState,
+        filterState: FilterState,
+        currentSample: LocationSample
+    ): FilterResult {
+        val progress = applyLocationSampleWithVerdict(
+            state = tripState,
+            previousSample = filterState.anchor,
+            currentSample = currentSample
+        )
+
+        val previousPoint = filterState.stationaryCenter ?: filterState.anchor!!
+        val stepMeters = distanceEngine.computeDistanceMeters(
+            previousPoint.point,
+            currentSample.point
+        )
+        val stationaryStreak =
+            if (stepMeters < tuning.stillnessRadiusMeters) filterState.stationaryStreak + 1 else 0
+        val nextMachineState =
+            if (stationaryStreak >= tuning.detectionHysteresisSamples) MachineState.STATIONARY
+            else MachineState.MOVING
+
+        return FilterResult(
+            state = progress.state,
+            verdict = progress.verdict,
+            nextState = FilterState(
+                anchor = currentSample,
+                machineState = nextMachineState,
+                stationaryCenter = currentSample,
+                movingStreak = 0,
+                stationaryStreak = if (nextMachineState == MachineState.STATIONARY) 0 else stationaryStreak
+            )
         )
     }
 
