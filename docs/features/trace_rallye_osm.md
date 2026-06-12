@@ -77,8 +77,9 @@ navigation pendant l'épreuve** ; cette feature est une **visualisation a
 posteriori** (souvenir, historique), qui n'assiste jamais la course. Les deux
 positions sont compatibles une fois nommées.
 
-Action proposée (à appliquer délibérément au contrat normatif, hors de ce
-document) : ajouter au contrat fonctionnel une note du type —
+Action **appliquée** au contrat normatif (`docs/contrats/contrat_fonctionnel_v0_2.md`,
+§ « Périmètre négatif (D6) » → « Précision : trace consultée a posteriori ≠ carte de
+navigation »). La note qui y figure désormais —
 
 > La carte est exclue **en tant qu'aide à la navigation pendant l'épreuve**.
 > Une visualisation de trace **a posteriori** (post-rallye, non temps réel)

@@ -50,6 +50,20 @@ corrige des distances. Elle ne gère pas :
 
 Elle reste un **trip meter** : un instrument de mesure de distance, lisible et corrigeable.
 
+#### Précision : trace consultée a posteriori ≠ carte de navigation
+
+L'exclusion de la « carte » et de la « navigation » (ci-dessus, ainsi qu'en §1 et
+§12) vise la carte **en tant qu'aide à la navigation pendant l'épreuve** : carte
+temps réel, guidage, enchaînement d'instructions. Elle **ne couvre pas** une
+visualisation ou un export **a posteriori** de la trace réellement parcourue
+(post-rallye, hors temps réel, à des fins de souvenir ou d'historique), qui est une
+**fonctionnalité distincte, sans effet sur le calcul du trip meter** et **sans
+assistance à la course**.
+
+Cette visualisation a posteriori n'est à ce jour **ni planifiée ni validée** :
+cf. `docs/features/trace_rallye_osm.md`. La présente note ne fait que lever
+l'ambiguïté de vocabulaire ; elle n'engage aucun développement.
+
 ---
 
 ## 1. Décision v0.1
