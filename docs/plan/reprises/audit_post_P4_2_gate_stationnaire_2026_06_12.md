@@ -151,3 +151,8 @@ sous-accumulation piétonne n'est pas bornée.
 
 P4.2 est validé fonctionnellement. La suite recommandée est soit la clôture P4,
 soit la capture d'un log marche lente avant d'ouvrir P5.
+
+---
+
+Clôture : voir `cloture_chantier_P4_gate_stationnaire_2026_06_12.md` (clôture
+formelle de la série P4 et prérequis pour P5).
