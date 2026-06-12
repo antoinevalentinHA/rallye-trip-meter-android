@@ -159,3 +159,7 @@ qu'en **P3.b**, le patch portant la preuve par replay bit-à-bit et le log v2.
 7. Si une capture terrain est prévue (canapé conditions d'origine, fenêtre,
    marche, urbain, routier) : la faire **avant ou pendant** P3 — chaque log
    enrichit la preuve de neutralité sans bloquer le refactor.
+
+## Suite
+
+P3 a été clôturé : voir `cloture_chantier_P3_reprise_P4_2026_06_12.md`.
