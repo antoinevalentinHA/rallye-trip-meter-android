@@ -64,6 +64,22 @@ Cette visualisation a posteriori n'est à ce jour **ni planifiée ni validée** 
 cf. `docs/features/trace_rallye_osm.md`. La présente note ne fait que lever
 l'ambiguïté de vocabulaire ; elle n'engage aucun développement.
 
+##### Interdiction ferme (décision produit)
+
+Décision produit ferme : **toute carte ou visualisation de trace est interdite
+pendant une session active** (état `Running` ou `Paused`). En particulier, pendant
+une session active :
+
+- aucune carte affichée ;
+- aucune position live sur carte ;
+- aucun guidage ;
+- aucune aide à la navigation en cours.
+
+La trace n'est **consultable, exportable ou visualisable qu'a posteriori**,
+c'est-à-dire **après l'arrêt ou la fin de la session** (session terminée, état non
+actif). Cette règle est **inconditionnelle** et prime sur toute évolution future de
+la fonctionnalité trace, laquelle demeure par ailleurs ni planifiée ni validée.
+
 ---
 
 ## 1. Décision v0.1

@@ -14,6 +14,12 @@ Aucun développement engagé.
 
 Cette fonctionnalité n'a pas vocation à assister la navigation pendant l'épreuve.
 
+Décision produit ferme : aucune carte, aucune position live, aucun guidage ni aide
+à la navigation pendant une **session active** ; la trace n'est consultable et
+exportable qu'**a posteriori**, après l'arrêt ou la fin de la session (cf. contrat
+fonctionnel, « Interdiction ferme (décision produit) »). Cette interdiction ne
+planifie ni ne valide la fonctionnalité, qui reste au statut indiqué ci-dessus.
+
 Elle constitue un historique visuel et un souvenir du rallye réalisé.
 
 ## Objectifs
