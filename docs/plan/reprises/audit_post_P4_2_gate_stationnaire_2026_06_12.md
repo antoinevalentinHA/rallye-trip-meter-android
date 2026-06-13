@@ -162,6 +162,6 @@ Capture urbaine référencée post-P4.2 : voir
 7,98 km ≈ −2,7 %, possible sous-accumulation urbaine à instruire en P5).
 
 Capture marche lente référencée post-P4.2 : voir
-`capture_marche_lente_P4_2_2026_06_13_ref_520m.md` (référence 520 m ; régime basse
+`capture_marche_lente_P4_2_2026_06_13_ref_533m.md` (référence 533 m, corrigée depuis 520 m ; régime basse
 vitesse explicitement reporté en clôture P4 ; replay à intégrer, mesures à
 relever lors de l'intégration).
