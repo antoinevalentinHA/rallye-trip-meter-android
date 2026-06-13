@@ -57,6 +57,24 @@ class DistanceTripProgressEngine(
         state: TripState,
         previousSample: LocationSample?,
         currentSample: LocationSample
+    ): TripProgressResult = applyLocationSampleWithVerdict(
+        state = state,
+        previousSample = previousSample,
+        currentSample = currentSample,
+        moving = false
+    )
+
+    /*
+     * P5.c-3 étape A — plancher de bruit dépendant de l'état machine. Le paramètre
+     * `moving` ne change que le plancher de REJECTED_NOISE en présence de vitesse :
+     * movingNoiseFloorMeters en mouvement confirmé (MOVING), noiseFloorMeters sinon.
+     * Toutes les autres gardes, l'ordre, les verdicts et I-AVANCE-MOUV sont inchangés.
+     */
+    private fun applyLocationSampleWithVerdict(
+        state: TripState,
+        previousSample: LocationSample?,
+        currentSample: LocationSample,
+        moving: Boolean
     ): TripProgressResult {
         if (previousSample == null) {
             return TripProgressResult(state, SampleVerdict.IGNORED_NO_ANCHOR)
@@ -77,7 +95,7 @@ class DistanceTripProgressEngine(
 
         // Filtrage : immobilite (vitesse source), bruit/derive (plancher lie a
         // l'accuracy), et sauts implausibles. Hors perimetre : REFERENCE_ONLY / watchdog.
-        if (distanceMeters < movementFloorMeters(previousSample, currentSample)) {
+        if (distanceMeters < movementFloorMeters(previousSample, currentSample, moving)) {
             return TripProgressResult(state, SampleVerdict.REJECTED_NOISE)
         }
 
@@ -228,7 +246,8 @@ class DistanceTripProgressEngine(
         val progress = applyLocationSampleWithVerdict(
             state = tripState,
             previousSample = filterState.anchor,
-            currentSample = currentSample
+            currentSample = currentSample,
+            moving = true
         )
 
         val previousPoint = filterState.stationaryCenter ?: filterState.anchor!!
@@ -262,17 +281,20 @@ class DistanceTripProgressEngine(
 
     private fun movementFloorMeters(
         previousSample: LocationSample,
-        currentSample: LocationSample
+        currentSample: LocationSample,
+        moving: Boolean
     ): Double {
         // Vitesse source présente : le rejet stationnaire a déjà écarté les vitesses
         // sous le seuil de quasi-immobilité, donc on est en déplacement réel -> plancher
         // minimal (le plancher accuracy guillotinerait de vrais segments urbains lents à 1 Hz).
+        // En mouvement confirmé (MOVING), plancher réduit pour ne pas détruire les petits
+        // pas piétons cohérents à ~1 Hz (P5.c-3 étape A) ; sinon plancher historique.
         if (currentSample.speedMetersPerSecond != null) {
-            return tuning.noiseFloorMeters
+            return if (moving) tuning.movingNoiseFloorMeters else tuning.noiseFloorMeters
         }
 
         // Vitesse absente : impossible de distinguer mouvement et dérive -> garde
-        // anti-dérive basé sur l'incertitude GPS (préserve le 0 m à l'arrêt).
+        // anti-dérive basé sur l'incertitude GPS (préserve le 0 m à l'arrêt). INCHANGÉ.
         val accuracyFloor = worstAccuracyMeters(previousSample, currentSample) *
             tuning.accuracyFloorFactor
         return maxOf(tuning.noiseFloorMeters, accuracyFloor)

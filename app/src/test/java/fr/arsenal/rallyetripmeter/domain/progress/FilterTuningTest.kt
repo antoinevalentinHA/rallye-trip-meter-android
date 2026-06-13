@@ -34,6 +34,14 @@ class FilterTuningTest {
     }
 
     @Test
+    fun defaultTuning_movingNoiseFloor_isLocked() {
+        // P5.c-3 étape A : plancher réduit en MOVING. Verrou de la valeur par défaut.
+        assertEquals(1.4, FilterTuning().movingNoiseFloorMeters, 0.0)
+        // Le plancher historique reste 2.0 (STATIONARY / vitesse-absente inchangés).
+        assertEquals(2.0, FilterTuning().noiseFloorMeters, 0.0)
+    }
+
+    @Test
     fun engineWithDefaultTuning_matchesExplicitHistoricalTuning() {
         // Tuning historique explicite, valeurs ressaisies indépendamment du défaut.
         val historical = FilterTuning(

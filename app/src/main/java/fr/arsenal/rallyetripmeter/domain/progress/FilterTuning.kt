@@ -25,6 +25,14 @@ package fr.arsenal.rallyetripmeter.domain.progress
 data class FilterTuning(
     /** Plancher de bruit minimal, en mètres (NOISE_FLOOR_METERS historique). */
     val noiseFloorMeters: Double = 2.0,
+    /**
+     * Plancher de bruit appliqué UNIQUEMENT en mouvement confirmé (état MOVING),
+     * en mètres. Plus bas que noiseFloorMeters : à ~1 Hz, un pas piéton lent
+     * (~1,2 m/tick) passait sous 2 m et était rejeté en REJECTED_NOISE
+     * (marche lente sous-comptée ≈ −89 %, cf. P5.c-1). Confiné à MOVING : le gate
+     * stationnaire et la branche vitesse-absente gardent noiseFloorMeters (P5.c-3 étape A).
+     */
+    val movingNoiseFloorMeters: Double = 1.4,
     /** Facteur appliqué au plancher d'incertitude (ACCURACY_FLOOR_FACTOR historique). */
     val accuracyFloorFactor: Double = 1.0,
     /** Seuil de quasi-immobilité, en m/s (STATIONARY_SPEED_MPS historique). */

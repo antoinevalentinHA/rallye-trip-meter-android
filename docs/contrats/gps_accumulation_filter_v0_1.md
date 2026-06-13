@@ -253,11 +253,14 @@ inchangé sauf la dernière.
 4. Calcul `distance = DistanceEngine.computeDistanceMeters(prev, current)`
    (Haversine, altitude ignorée).
 5. **Plancher de mouvement** : `distance < plancher` → `REJECTED_NOISE`, où
-   - si `current.speed != null` : plancher = `noiseFloorMeters` (la vitesse source
-     atteste un déplacement réel ; le plancher accuracy guillotinerait de vrais
-     segments urbains lents à 1 Hz) ;
+   - si `current.speed != null` : plancher = `noiseFloorMeters`, **réduit à
+     `movingNoiseFloorMeters` lorsque la machine est en état MOVING** (mouvement
+     confirmé) — un pas piéton lent (~1,2 m/tick à 1 Hz) passait sous 2 m et était
+     détruit (P5.c-3 étape A). Hors MOVING (crédit de départ, primitive sans état),
+     le plancher reste `noiseFloorMeters`. Dans tous les cas, le plancher accuracy
+     guillotinerait de vrais segments lents à 1 Hz, d'où la branche vitesse-présente ;
    - sinon : plancher = `max(noiseFloorMeters, pireAccuracy × accuracyFloorFactor)`
-     (garde anti-dérive quand la vitesse est absente).
+     (garde anti-dérive quand la vitesse est absente — **inchangée**).
 6. **Saut implausible** : `Δt ≤ 0` **ou** vitesse implicite `> maxPlausibleSpeedKmh`
    → `REJECTED_IMPLAUSIBLE_JUMP`.
 7. Sinon → `ACCEPTED_SEGMENT` : `total += distance × calibrationFactor` et
@@ -312,6 +315,7 @@ distance.
 | Constante | Valeur | Rôle |
 |---|---|---|
 | `noiseFloorMeters` | 2.0 | Plancher de bruit minimal (m). |
+| `movingNoiseFloorMeters` | 1.4 | Plancher de bruit en MOVING confirmé (m), &lt; noiseFloorMeters (P5.c-3 étape A). |
 | `accuracyFloorFactor` | 1.0 | Facteur appliqué au plancher d'incertitude. |
 | `stationarySpeedMetersPerSecond` | 0.5 | Seuil de quasi-immobilité par vitesse source (m/s). |
 | `maxPlausibleSpeedKmh` | 200.0 | Vitesse implicite maximale plausible (km/h). |
