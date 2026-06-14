@@ -50,14 +50,15 @@ accumulée. Les deux étages sont étanches. Régler l'un n'a pas vocation à co
 l'autre.
 
 > Note factuelle sur `calibrationFactor` (à ne pas confondre avec le coefficient
-> utilisateur). Le constructeur de `DistanceTripProgressEngine` porte un paramètre
-> interne `calibrationFactor: Double = 1.0`, multiplié à la distance retenue avant
-> accumulation. À sa valeur par défaut (1.0) il est neutre ; il n'est positionné à
-> une autre valeur que dans un test unitaire, et n'est câblé ni par `TripRuntime`
-> ni par le ViewModel. Il est **distinct** du coefficient utilisateur ci-dessus.
-> Son éventuel retrait relève d'une hygiène interne du moteur brut (inscrite au
-> plan P6 du dépôt) et **ne concerne pas** le coefficient utilisateur ; ce contrat
-> ne le traite pas.
+> utilisateur). Le moteur brut `DistanceTripProgressEngine` portait historiquement
+> un paramètre interne `calibrationFactor: Double = 1.0`, multiplié à la distance
+> retenue avant accumulation (neutre à 1.0, non câblé par `TripRuntime` ni le
+> ViewModel). Ce vestige a été **purgé** (chantier P6.b, commit `4e1e350`) : le
+> moteur accumule désormais la distance **brute non corrigée**, et le seul test qui
+> validait ce paramètre a été supprimé. La purge est prouvée neutre par replay
+> bit-à-bit du corpus réel (totaux identiques avant/après). Le moteur brut ne porte
+> donc plus aucun mécanisme de correction utilisateur ; cette correction relève
+> exclusivement de l'affichage (coefficient utilisateur, cf. ci-dessus et I-SEP).
 
 ---
 
@@ -263,9 +264,9 @@ inchangé sauf la dernière.
      (garde anti-dérive quand la vitesse est absente — **inchangée**).
 6. **Saut implausible** : `Δt ≤ 0` **ou** vitesse implicite `> maxPlausibleSpeedKmh`
    → `REJECTED_IMPLAUSIBLE_JUMP`.
-7. Sinon → `ACCEPTED_SEGMENT` : `total += distance × calibrationFactor` et
-   `partiel += distance × calibrationFactor` (avec `calibrationFactor = 1.0`,
-   neutre, cf. §0).
+7. Sinon → `ACCEPTED_SEGMENT` : `total += distance` et `partiel += distance`
+   (distance brute non corrigée ; le coefficient utilisateur n'intervient qu'à
+   l'affichage, cf. §0 et I-SEP — le vestige `calibrationFactor` est purgé, P6.b).
 
 ---
 
