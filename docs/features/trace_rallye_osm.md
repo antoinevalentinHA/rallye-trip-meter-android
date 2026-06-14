@@ -9,8 +9,14 @@ Idée validée.
 trace parcourue est exportée en GPX dans `Downloads/gpslogs/`, dérivée du JSONL de
 session existant. C'est un **artefact de sortie**, pas une carte.
 
-**Visualisation cartographique (carte de relecture) : non planifiée, aucun
-développement engagé.** La partie « carte » de cette feature reste au stade d'idée.
+**Relecture en polyligne (visualiseur local) : engagée et validée** (cf.
+`docs/plan/reprises/cloture_trace_replay_v1_2026_06_14.md`). Un écran hors session
+liste les traces et dessine la **forme** du parcours sur un Canvas Compose
+(polyligne + départ/arrivée + résumé). **Ce n'est pas une vraie carte** : ni fond
+géographique, ni tuiles, ni réseau, ni repères cartographiques.
+
+**Vraie carte de fond (tuiles / repères géographiques) : non engagée.** Cette partie
+de la feature reste au stade d'idée (V2 distincte éventuelle ; cf. cadrage).
 
 ## Vision
 

@@ -3,6 +3,11 @@
 > **Nature** : document de cadrage, non normatif. Phase 1 (audit + décision
 > d'architecture). **Aucun code, aucune dépendance, aucune carte implémentée par ce
 > document.** Il prépare un éventuel chantier de relecture **hors session**.
+>
+> **Statut : V1 RÉALISÉE ET VALIDÉE** (commit `1f29cc5`, validée sur appareil). La
+> V1 proposée ci-dessous a été implémentée telle que cadrée (visualiseur de
+> polyligne local, sans carte ni dépendance). Voir
+> `docs/plan/reprises/cloture_trace_replay_v1_2026_06_14.md`.
 
 ## 0. Règle impérative (rappel, non négociable)
 
@@ -147,14 +152,14 @@ ou de l'export GPX (hors correction strictement nécessaire).
 
 ## 9. Suite recommandée
 
-- Si ce cadrage est validé, la **V1 d'implémentation** peut être engagée comme
-  chantier distinct : parseur GPX + écran liste + écran détail Canvas + garde-fous,
-  **sans aucune dépendance ni permission nouvelle**.
+- **V1 d'implémentation : réalisée et validée** (commit `1f29cc5`) — parseur GPX +
+  écran liste + écran détail Canvas + garde-fous, sans aucune dépendance ni
+  permission nouvelle, conforme au cadrage.
 - La **V2 (fond de carte osmdroid)** reste une option ultérieure distincte, à
   n'engager que si la relecture vectorielle se révèle insuffisante, avec son propre
   cadrage (réseau, licence des tuiles).
-- Ce document **n'engage pas** l'implémentation ; il fixe seulement l'architecture
-  cible et les garde-fous.
+- Ce document a fixé l'architecture cible et les garde-fous ; la clôture de la V1
+  est consignée dans `docs/plan/reprises/cloture_trace_replay_v1_2026_06_14.md`.
 
 ---
 
