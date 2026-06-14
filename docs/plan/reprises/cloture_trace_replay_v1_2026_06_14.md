@@ -1,5 +1,11 @@
 # Clôture — V1 relecture de trace a posteriori (visualiseur local)
 
+> **Navigation** — [← index des reprises](README.md) ·
+> Actualise : feature [`trace_rallye_osm.md`](../../features/trace_rallye_osm.md),
+> cadrage [`trace_replay_cadrage_2026_06_14.md`](../../features/trace_replay_cadrage_2026_06_14.md),
+> contrat [`contrat_fonctionnel_v0_2.md`](../../contrats/contrat_fonctionnel_v0_2.md) ·
+> [état courant](../../ETAT.md)
+
 > **Nature** : document de clôture, non normatif. Il consigne la V1 du visualiseur
 > de trace **hors session**. **Aucun moteur GPS, seuil, accumulation, schéma JSONL,
 > export GPX, contrat moteur ni test métier modifié par ce document.** La clôture

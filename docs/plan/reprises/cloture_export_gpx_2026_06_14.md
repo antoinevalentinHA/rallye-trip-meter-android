@@ -1,5 +1,11 @@
 # Clôture — export GPX a posteriori de la trace de session
 
+> **Navigation** — [← index des reprises](README.md) ·
+> Actualise : [`observabilite_jsonl_v0_1.md`](../../contrats/observabilite_jsonl_v0_1.md),
+> [`contrat_fonctionnel_v0_2.md`](../../contrats/contrat_fonctionnel_v0_2.md),
+> feature [`trace_rallye_osm.md`](../../features/trace_rallye_osm.md) ·
+> [état courant](../../ETAT.md)
+
 > **Nature** : document de clôture, non normatif. Il consigne le chantier d'export
 > GPX de la trace parcourue. **Aucun moteur GPS, seuil, logique d'accumulation,
 > contrat moteur, test métier ni schéma JSONL modifié.** Le changement est un ajout

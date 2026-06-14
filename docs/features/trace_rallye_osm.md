@@ -1,5 +1,13 @@
 # Fonctionnalité — Trace Rallye et Visualisation Cartographique
 
+> **Navigation** (non normatif) — Clôtures de réalisation :
+> [export GPX](../plan/reprises/cloture_export_gpx_2026_06_14.md) (livré),
+> [relecture de trace V1](../plan/reprises/cloture_trace_replay_v1_2026_06_14.md)
+> (livrée, polyligne locale). La **vraie carte de fond reste non engagée**
+> (cf. statut ci-dessous). Cadrage :
+> [`trace_replay_cadrage_2026_06_14.md`](trace_replay_cadrage_2026_06_14.md).
+> État courant : [`../ETAT.md`](../ETAT.md).
+
 ## Statut
 
 Idée validée.

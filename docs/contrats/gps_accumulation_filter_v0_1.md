@@ -1,5 +1,11 @@
 # Trip Meter Rallye Android — GpsAccumulationFilter v0.1
 
+> **Navigation** (non normatif) — Implémentation / clôtures liées :
+> [P4.2 gate stationnaire](../plan/reprises/cloture_P4_2_gate_stationnaire_actif_2026_06_12.md),
+> [P5.c-3 plancher mouvement](../plan/reprises/cloture_p5c3_moving_noise_floor_2026_06_13.md),
+> [P6.b purge `calibrationFactor`](../plan/reprises/cloture_p6b_purge_calibrationfactor_2026_06_14.md).
+> État courant : [`ETAT.md`](../ETAT.md). Historique : [reprises](../plan/reprises/README.md).
+
 Statut : VALIDÉ (descriptif)
 Dépend de :
 

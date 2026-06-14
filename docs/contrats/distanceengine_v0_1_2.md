@@ -1,5 +1,11 @@
 # Trip Meter Rallye Android — DistanceEngine v0.1.2
 
+> **Navigation** (non normatif) — Implémentation / clôtures liées :
+> [P6.b purge `calibrationFactor`](../plan/reprises/cloture_p6b_purge_calibrationfactor_2026_06_14.md)
+> (le moteur accumule une distance brute non corrigée).
+> Filtre d'accumulation associé : [`gps_accumulation_filter_v0_1.md`](gps_accumulation_filter_v0_1.md).
+> État courant : [`ETAT.md`](../ETAT.md). Historique : [reprises](../plan/reprises/README.md).
+
 Statut : VALIDÉ  
 Dépend de :
 

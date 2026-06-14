@@ -1,5 +1,12 @@
 # Trip Meter Rallye Android — TripDisplay v0.1.2
 
+> **Navigation** (non normatif) — Implémentation / clôtures liées :
+> [UI paysage](../plan/reprises/cloture_ui_paysage_2026_06_14.md)
+> (disposition deux colonnes ; le mode paysage cible de ce contrat),
+> [P6.b purge `calibrationFactor`](../plan/reprises/cloture_p6b_purge_calibrationfactor_2026_06_14.md)
+> (sépare mesure brute et coefficient d'affichage). État courant :
+> [`ETAT.md`](../ETAT.md). Historique : [reprises](../plan/reprises/README.md).
+
 Statut : VALIDÉ (recadrage navigation au roadbook)  
 Dépend de :
 

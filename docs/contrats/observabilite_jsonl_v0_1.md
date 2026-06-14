@@ -1,5 +1,11 @@
 # Trip Meter Rallye Android — Observabilité JSONL v0.1 (`TickLogJsonl`)
 
+> **Navigation** (non normatif) — Consommateurs / clôtures liées :
+> [export GPX a posteriori](../plan/reprises/cloture_export_gpx_2026_06_14.md)
+> (le GPX dérive de ce JSONL),
+> [relecture de trace V1](../plan/reprises/cloture_trace_replay_v1_2026_06_14.md).
+> État courant : [`ETAT.md`](../ETAT.md). Historique : [reprises](../plan/reprises/README.md).
+
 Statut : VALIDÉ (descriptif)
 Dépend de :
 

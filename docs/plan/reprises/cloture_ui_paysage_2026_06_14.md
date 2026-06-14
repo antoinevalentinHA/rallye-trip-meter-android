@@ -1,5 +1,10 @@
 # Clôture — chantier UI paysage (écran principal)
 
+> **Navigation** — [← index des reprises](README.md) ·
+> Actualise : [`tripdisplay_v0_1_2.md`](../../contrats/tripdisplay_v0_1_2.md),
+> jalon [`usable_rally_milestone_2026_06_11.md`](../usable_rally_milestone_2026_06_11.md) ·
+> [état courant](../../ETAT.md)
+
 > **Nature** : document de clôture, non normatif. Il consigne le chantier d'ergonomie
 > de l'écran principal en orientation paysage. **Aucun moteur GPS, seuil, contrat
 > moteur, test métier ni JSONL modifié.** Le changement est strictement UI

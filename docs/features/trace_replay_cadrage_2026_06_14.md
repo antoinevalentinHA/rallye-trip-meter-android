@@ -7,7 +7,7 @@
 > **Statut : V1 RÉALISÉE ET VALIDÉE** (commit `1f29cc5`, validée sur appareil). La
 > V1 proposée ci-dessous a été implémentée telle que cadrée (visualiseur de
 > polyligne local, sans carte ni dépendance). Voir
-> `docs/plan/reprises/cloture_trace_replay_v1_2026_06_14.md`.
+> [`../plan/reprises/cloture_trace_replay_v1_2026_06_14.md`](../plan/reprises/cloture_trace_replay_v1_2026_06_14.md).
 
 ## 0. Règle impérative (rappel, non négociable)
 

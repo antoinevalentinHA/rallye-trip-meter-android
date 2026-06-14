@@ -1,5 +1,9 @@
 # Clôture P5.c-3 étape A — plancher de bruit réduit en MOVING
 
+> **Navigation** — [← index des reprises](README.md) ·
+> Actualise : [`gps_accumulation_filter_v0_1.md`](../../contrats/gps_accumulation_filter_v0_1.md) ·
+> [état courant](../../ETAT.md)
+
 > **Nature** : document de clôture, non normatif. Il consigne l'étape A de P5.c-3
 > (correction basse vitesse). **Aucun code, test, JSONL ou seuil modifié par ce
 > document.** La clôture est **actée** : la validation verte est acquise (voir §4).

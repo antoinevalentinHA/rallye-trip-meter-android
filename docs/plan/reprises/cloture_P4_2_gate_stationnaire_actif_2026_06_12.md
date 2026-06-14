@@ -1,5 +1,9 @@
 # Clôture P4.2 — gate stationnaire actif
 
+> **Navigation** — [← index des reprises](README.md) ·
+> Actualise : [`gps_accumulation_filter_v0_1.md`](../../contrats/gps_accumulation_filter_v0_1.md) ·
+> [état courant](../../ETAT.md)
+
 P4.2 active le gate stationnaire : en `MachineState.STATIONARY` la dérive GPS
 n'est plus accumulée ; en `MachineState.MOVING` le comportement P3/P4.1 est
 préservé. Objectif tenu : M1 fortement réduit sans dégrader M2.

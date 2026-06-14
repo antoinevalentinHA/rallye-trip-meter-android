@@ -1,5 +1,10 @@
 # Clôture P6.b — purge du vestige `calibrationFactor` du moteur brut
 
+> **Navigation** — [← index des reprises](README.md) ·
+> Actualise : [`distanceengine_v0_1_2.md`](../../contrats/distanceengine_v0_1_2.md),
+> [`gps_accumulation_filter_v0_1.md`](../../contrats/gps_accumulation_filter_v0_1.md) ·
+> [état courant](../../ETAT.md)
+
 > **Nature** : document de clôture, non normatif. Il consigne le chantier P6.b
 > (purification de la mesure brute). **Aucun code, test, JSONL ou seuil modifié par
 > ce document** : le changement de code est porté par le commit `4e1e350`, déjà

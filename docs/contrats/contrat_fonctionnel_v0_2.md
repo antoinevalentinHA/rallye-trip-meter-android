@@ -1,5 +1,13 @@
 # Trip Meter Rallye Android — Contrat fonctionnel v0.2
 
+> **Navigation** (non normatif) — Réalisations a posteriori liées :
+> [export GPX](../plan/reprises/cloture_export_gpx_2026_06_14.md),
+> [relecture de trace V1](../plan/reprises/cloture_trace_replay_v1_2026_06_14.md).
+> Ces artefacts sont **a posteriori** ; la vraie carte / navigation live **reste
+> exclue** (cf. « Interdiction ferme » ci-dessous). Feature associée :
+> [`trace_rallye_osm.md`](../features/trace_rallye_osm.md). État courant :
+> [`ETAT.md`](../ETAT.md).
+
 Statut : VALIDÉ  
 Objet : application Android de trip meter rallye, orientée navigation au roadbook  
 Priorité : affichage fiable du compteur partiel de navigation, du kilométrage total et de la vitesse instantanée.
