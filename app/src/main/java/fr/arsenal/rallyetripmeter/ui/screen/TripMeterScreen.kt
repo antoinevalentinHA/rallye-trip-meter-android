@@ -16,9 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -160,7 +158,8 @@ private fun PortraitLayout(
  * droite regroupe le secondaire (TOTAL, VITESSE, statut) et les commandes
  * (corrections du partiel, action de session) à portée du pouce. Aucune carte,
  * aucune aide à la navigation : strictement les mêmes informations et commandes
- * qu'en portrait, réagencées. La colonne droite défile si la hauteur manque.
+ * qu'en portrait, réagencées. Tout tient à l'écran sans scroll : la colonne droite
+ * répartit l'espace par poids (TOTAL/VITESSE flexibles, statut et commandes en bas).
  */
 @Composable
 private fun LandscapeLayout(
@@ -200,27 +199,41 @@ private fun LandscapeLayout(
                 fillHeight = true
             )
 
-            // Colonne droite : secondaire + commandes, défilable si trop court.
+            // Colonne droite : secondaire + commandes, réparti par poids,
+            // sans scroll — tout doit tenir à l'écran en paysage.
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxHeight()
-                    .verticalScroll(rememberScrollState()),
+                    .fillMaxHeight(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                TripValueCard(
-                    label = "TOTAL",
-                    value = state.totalDistanceText,
-                    emphasis = TripValueEmphasis.Secondary
-                )
+                // TOTAL et VITESSE côte à côte pour économiser la hauteur.
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TripValueCard(
+                        label = "TOTAL",
+                        value = state.totalDistanceText,
+                        emphasis = TripValueEmphasis.Secondary,
+                        modifier = Modifier.weight(1f),
+                        fillHeight = true,
+                        compact = true
+                    )
 
-                TripValueCard(
-                    label = "VITESSE",
-                    value = state.speedText,
-                    emphasis = TripValueEmphasis.Tertiary
-                )
+                    TripValueCard(
+                        label = "VITESSE",
+                        value = state.speedText,
+                        emphasis = TripValueEmphasis.Tertiary,
+                        modifier = Modifier.weight(1f),
+                        fillHeight = true,
+                        compact = true
+                    )
+                }
 
-                StatusBar(
+                CompactStatusBar(
                     gpsStatus = state.gpsStatusText,
                     gpsAccuracy = state.gpsAccuracyText,
                     sessionStatus = state.sessionStatusText,
@@ -229,12 +242,14 @@ private fun LandscapeLayout(
 
                 PartialCorrectionControls(
                     enabled = state.arePartialControlsEnabled,
-                    onEvent = onEvent
+                    onEvent = onEvent,
+                    buttonHeight = 64.dp
                 )
 
                 SessionControls(
                     sessionActionLabel = state.sessionActionText,
-                    onEvent = onEvent
+                    onEvent = onEvent,
+                    buttonHeight = 60.dp
                 )
             }
         }
@@ -248,19 +263,28 @@ private fun TripValueCard(
     emphasis: TripValueEmphasis,
     onClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
-    fillHeight: Boolean = false
+    fillHeight: Boolean = false,
+    heightOverride: Dp? = null,
+    compact: Boolean = false
 ) {
     val valueStyle = when (emphasis) {
         TripValueEmphasis.Primary -> MaterialTheme.typography.displayLarge
-        TripValueEmphasis.Secondary -> MaterialTheme.typography.displayMedium
-        TripValueEmphasis.Tertiary -> MaterialTheme.typography.headlineLarge
+        TripValueEmphasis.Secondary ->
+            if (compact) MaterialTheme.typography.headlineMedium
+            else MaterialTheme.typography.displayMedium
+        TripValueEmphasis.Tertiary ->
+            if (compact) MaterialTheme.typography.headlineMedium
+            else MaterialTheme.typography.headlineLarge
     }
 
-    val cardHeight = when (emphasis) {
+    val cardHeight = heightOverride ?: when (emphasis) {
         TripValueEmphasis.Primary -> 150.dp
         TripValueEmphasis.Secondary -> 120.dp
         TripValueEmphasis.Tertiary -> 96.dp
     }
+
+    val labelAlign = if (compact) Alignment.CenterStart else Alignment.TopStart
+    val innerVerticalPadding = if (compact) 8.dp else 14.dp
 
     Box(
         modifier = modifier
@@ -283,14 +307,14 @@ private fun TripValueCard(
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 shape = RoundedCornerShape(18.dp)
             )
-            .padding(horizontal = 20.dp, vertical = 14.dp)
+            .padding(horizontal = 20.dp, vertical = innerVerticalPadding)
     ) {
         Text(
             text = label,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.align(Alignment.TopStart)
+            modifier = Modifier.align(labelAlign)
         )
 
         Text(
@@ -355,10 +379,65 @@ private fun StatusBar(
     }
 }
 
+/*
+ * Variante compacte de la barre de statut pour la colonne paysage étroite.
+ * Les libellés sont empilés et clairement séparés (et non juxtaposés par
+ * SpaceBetween, qui les collait visuellement en colonne étroite — symptôme
+ * "GPS RECHERCHEPOSITION REFUSÉEARRÊTÉ"). Hauteur réduite, lisibilité préservée.
+ */
+@Composable
+private fun CompactStatusBar(
+    gpsStatus: String,
+    gpsAccuracy: String?,
+    sessionStatus: String,
+    locationPermissionStatus: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(14.dp)
+            )
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = gpsStatus,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            if (gpsAccuracy != null) {
+                Text(
+                    text = gpsAccuracy,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Text(
+                text = locationPermissionStatus,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Text(
+            text = sessionStatus,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
 @Composable
 private fun PartialCorrectionControls(
     enabled: Boolean,
-    onEvent: (TripMeterUiEvent) -> Unit
+    onEvent: (TripMeterUiEvent) -> Unit,
+    buttonHeight: Dp = 80.dp
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -369,7 +448,7 @@ private fun PartialCorrectionControls(
             onClick = { onEvent(TripMeterUiEvent.AdjustPartialMinus100) },
             enabled = enabled,
             modifier = Modifier.weight(1f),
-            height = 80.dp
+            height = buttonHeight
         )
 
         TripButton(
@@ -377,7 +456,7 @@ private fun PartialCorrectionControls(
             onClick = { onEvent(TripMeterUiEvent.AdjustPartialMinus10) },
             enabled = enabled,
             modifier = Modifier.weight(1f),
-            height = 80.dp
+            height = buttonHeight
         )
 
         TripButton(
@@ -385,7 +464,7 @@ private fun PartialCorrectionControls(
             onClick = { onEvent(TripMeterUiEvent.AdjustPartialPlus10) },
             enabled = enabled,
             modifier = Modifier.weight(1f),
-            height = 80.dp
+            height = buttonHeight
         )
 
         TripButton(
@@ -393,7 +472,7 @@ private fun PartialCorrectionControls(
             onClick = { onEvent(TripMeterUiEvent.AdjustPartialPlus100) },
             enabled = enabled,
             modifier = Modifier.weight(1f),
-            height = 80.dp
+            height = buttonHeight
         )
     }
 }
@@ -611,12 +690,14 @@ private fun OptionsMenu(
 @Composable
 private fun SessionControls(
     sessionActionLabel: String,
-    onEvent: (TripMeterUiEvent) -> Unit
+    onEvent: (TripMeterUiEvent) -> Unit,
+    buttonHeight: Dp = 72.dp
 ) {
     TripButton(
         label = sessionActionLabel,
         onClick = { onEvent(TripMeterUiEvent.SessionAction) },
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
+        height = buttonHeight
     )
 }
 
