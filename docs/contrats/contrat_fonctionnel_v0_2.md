@@ -60,9 +60,13 @@ visualisation ou un export **a posteriori** de la trace réellement parcourue
 **fonctionnalité distincte, sans effet sur le calcul du trip meter** et **sans
 assistance à la course**.
 
-Cette visualisation a posteriori n'est à ce jour **ni planifiée ni validée** :
+L'**export a posteriori** de la trace (GPX) est désormais **livré et validé** : à
+l'arrêt de session, la trace est exportée dans `Downloads/gpslogs/`, dérivée du JSONL
+de session, sans aucun effet sur le calcul du trip meter (cf.
+`docs/plan/reprises/cloture_export_gpx_2026_06_14.md`). La **visualisation
+cartographique** (carte de relecture) reste à ce jour **ni planifiée ni validée** :
 cf. `docs/features/trace_rallye_osm.md`. La présente note ne fait que lever
-l'ambiguïté de vocabulaire ; elle n'engage aucun développement.
+l'ambiguïté de vocabulaire ; l'interdiction ferme ci-dessous demeure inchangée.
 
 ##### Interdiction ferme (décision produit)
 

@@ -4,9 +4,13 @@
 
 Idée validée.
 
-Non planifiée.
+**Export GPX a posteriori : engagé et validé** (cf.
+`docs/plan/reprises/cloture_export_gpx_2026_06_14.md`). À l'arrêt de session, la
+trace parcourue est exportée en GPX dans `Downloads/gpslogs/`, dérivée du JSONL de
+session existant. C'est un **artefact de sortie**, pas une carte.
 
-Aucun développement engagé.
+**Visualisation cartographique (carte de relecture) : non planifiée, aucun
+développement engagé.** La partie « carte » de cette feature reste au stade d'idée.
 
 ## Vision
 
