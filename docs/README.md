@@ -42,26 +42,16 @@ Huit contrats, tous au statut VALIDÉ. Ils sont la référence ; le code s'y con
   Certains documents anciens portent un bandeau **« Document historique »** : à lire
   comme du contexte, pas comme l'état actuel.
 - **`docs/plan/reprises/`** — clôtures et notes de reprise de chantier (P2→P4,
-  design, captures de logs). Utile pour comprendre *comment* on en est arrivé là.
+  design, captures de logs). Index navigable :
+  [`plan/reprises/README.md`](plan/reprises/README.md). Utile pour comprendre
+  *comment* on en est arrivé là.
 - **`docs/features/`** — idées de fonctionnalités **non planifiées ni validées**
   (ex. `features/trace_rallye_osm.md`, visualisation de trace a posteriori).
 
-## État du projet (synthèse)
+## État du projet
 
-Tag courant : **`v0.3.0-preview`** (utilisable, validé sur appareil).
-
-Livré et validé sur appareil : trip meter fonctionnel ; runtime GPS foreground
-(acquisition, permissions, pause/reprise, persistance) ; **filtre anti-dérive**
-(série P1→P5 — la dérive à l'arrêt est neutralisée sans dégrader la mesure en
-mouvement, contrat `gps_accumulation_filter_v0_1`) ; **observabilité JSONL** +
-harness de replay ; **export GPX a posteriori** ; **mode paysage** exploitable en
-voiture ; **relecture locale de trace GPX** en polyligne (Canvas), hors session.
-
-À ne pas surpromettre : pas encore de **validation terrain finale (P6.a)**, pas de
-précision métrologique certifiée, pas de vraie carte (fond géographique), pas de
-Play Store, pas d'Android Auto.
-
-**Prochaine étape** : P6.a (campagne terrain / validation réelle), puis P6.c
-(doctrine de clôture du filtre, une fois les données terrain disponibles).
+La synthèse vivante (capacités livrées, limites, chantiers ouverts, prochaine
+étape, tag courant) est centralisée dans **[`ETAT.md`](ETAT.md)** — source unique,
+pour éviter la duplication.
 
 Pour la vue d'ensemble du dépôt (code, build, CI), voir le `README.md` à la racine.

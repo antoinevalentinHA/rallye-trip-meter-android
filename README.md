@@ -12,24 +12,13 @@ pas un roadbook numérique ni une carte de navigation (cf. contrat fonctionnel).
 Tag courant : **`v0.3.0-preview`** (utilisable, validé sur appareil ; validation
 terrain finale non encore faite).
 
-Livré et validé sur appareil :
+Livré : trip meter fonctionnel, runtime GPS foreground, filtre anti-dérive,
+observabilité JSONL, export GPX a posteriori, mode paysage, relecture locale de
+trace en polyligne. Non encore : validation terrain (P6.a), précision certifiée,
+vraie carte, Play Store, Android Auto.
 
-- **trip meter fonctionnel** (partiel, total, vitesse, corrections, calibration) ;
-- **runtime GPS foreground** (acquisition, permissions, pause/reprise, persistance) ;
-- **filtre anti-dérive** (machine stationnaire/mouvement neutralisant la dérive à
-  l'arrêt sans dégrader la mesure en mouvement) — contrat
-  `docs/contrats/gps_accumulation_filter_v0_1.md` ;
-- **observabilité JSONL** par session (+ harness de replay) ;
-- **export GPX a posteriori** à l'arrêt de session ;
-- **mode paysage** exploitable en voiture ;
-- **relecture locale de trace GPX** en polyligne (Canvas), hors session.
-
-À ne pas surpromettre : **pas encore de validation terrain finale (P6.a)**, pas de
-précision métrologique certifiée, pas de vraie carte (fond géographique), pas de
-Play Store, pas d'Android Auto.
-
-**Prochaine étape** : P6.a (campagne terrain / validation réelle), puis P6.c
-(doctrine de clôture du filtre, une fois les données terrain disponibles).
+Détail vivant (capacités, limites, chantiers ouverts, prochaine étape) :
+**[`docs/ETAT.md`](docs/ETAT.md)**.
 
 ## Doctrine
 
