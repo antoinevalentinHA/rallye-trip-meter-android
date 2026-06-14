@@ -27,13 +27,13 @@ import fr.arsenal.rallyetripmeter.domain.model.TripState
  * - Ignore un échantillon dont la vitesse source indique une quasi-immobilité.
  * - Ignore un segment plus court que l'incertitude GPS (plancher lié a l'accuracy).
  * - Ignore les sauts implausibles (vitesse calculée trop élevée).
- * - Applique un coefficient de calibration global a la distance retenue.
+ * - Accumule la distance brute retenue (aucune correction utilisateur ici : le
+ *   coefficient de calibration ne s'applique qu'a l'affichage, via TripDisplayMapper).
  * - Expose un verdict d'observabilite miroir de la branche prise (P1.b),
  *   sans aucune nouvelle decision.
  */
 class DistanceTripProgressEngine(
     private val distanceEngine: DistanceEngine,
-    private val calibrationFactor: Double = 1.0,
     private val tuning: FilterTuning = FilterTuning()
 ) : TripProgressEngine, GpsAccumulationFilter {
     override fun applyLocationSample(
@@ -103,12 +103,10 @@ class DistanceTripProgressEngine(
             return TripProgressResult(state, SampleVerdict.REJECTED_IMPLAUSIBLE_JUMP)
         }
 
-        val correctedDistanceMeters = distanceMeters * calibrationFactor
-
         return TripProgressResult(
             state = state.copy(
-                totalDistanceMeters = state.totalDistanceMeters + correctedDistanceMeters,
-                partialDistanceMeters = state.partialDistanceMeters + correctedDistanceMeters
+                totalDistanceMeters = state.totalDistanceMeters + distanceMeters,
+                partialDistanceMeters = state.partialDistanceMeters + distanceMeters
             ),
             verdict = SampleVerdict.ACCEPTED_SEGMENT
         )
