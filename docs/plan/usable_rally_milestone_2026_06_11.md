@@ -34,7 +34,10 @@
 - **Filtre anti-dérive** inchangé, à confirmer sur d'autres trajets.
 - **Robustesse OEM non exhaustive** (optimisations batterie constructeur) ; `START_NOT_STICKY` (pas de redémarrage auto si le process est tué).
 - **UI non finalisée** (pas de polish complet).
-- **Mode paysage non optimisé** : l'orientation n'est pas verrouillée, mais le layout est pensé portrait ; l'affichage en paysage n'est pas adapté (à trancher : verrouiller en portrait, ou layout paysage dédié).
+- **Mode paysage** : disposition deux colonnes **réalisée et validée sur appareil**
+  (PARTIEL dominant à gauche ; TOTAL/VITESSE, StatusBar, corrections et bouton de
+  session START/PAUSE/REPRISE/TERMINER à droite, **visibles sans scroll**). Le mode
+  portrait reste préservé. Détail : [`reprises/cloture_ui_paysage_2026_06_14.md`](reprises/cloture_ui_paysage_2026_06_14.md).
 
 ## 5. Hors périmètre (inchangé)
 
@@ -43,7 +46,6 @@
 - Validation multi-appareils.
 - **Publication Play Store** : build release signé, fiche store, et — du fait de la localisation + foreground service location — **politique de confidentialité** et **déclaration d'usage de la localisation** ; non réalisé.
 - **Android Auto** : nécessiterait la **Car App Library** (`CarAppService` + templates imposés) et la **revue anti-distraction** de Google ; chantier séparé non engagé (l'UI Compose actuelle ne s'y exécute pas telle quelle).
-- **Mode paysage dédié** (layout deux colonnes) non réalisé.
 
 ## 6. Ce qui ne doit pas être affirmé
 
