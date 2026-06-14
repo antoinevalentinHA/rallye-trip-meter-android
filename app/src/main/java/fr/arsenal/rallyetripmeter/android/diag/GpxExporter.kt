@@ -58,6 +58,11 @@ object GpxExporter {
 
             val displayName = jsonlFile.nameWithoutExtension + GPX_EXTENSION
 
+            // Copie INTERNE (à côté du JSONL, sans permission) : c'est cette copie
+            // que l'écran de relecture a posteriori liste et lit. N'altère pas
+            // l'export utilisateur ci-dessous.
+            writeInternalCopy(jsonlFile, displayName, gpx)
+
             val values = ContentValues().apply {
                 put(MediaStore.MediaColumns.DISPLAY_NAME, displayName)
                 put(MediaStore.MediaColumns.MIME_TYPE, MIME_TYPE)
@@ -80,6 +85,18 @@ object GpxExporter {
             true
         } catch (_: Exception) {
             false
+        }
+    }
+
+    private fun writeInternalCopy(jsonlFile: File, displayName: String, gpx: String) {
+        // Le JSONL de session vit dans <gpslogs interne> : on dépose le .gpx au même
+        // endroit pour que TraceFileSource le retrouve sans permission de stockage.
+        val directory = jsonlFile.parentFile ?: return
+        try {
+            File(directory, displayName).writeText(gpx, Charsets.UTF_8)
+        } catch (_: Exception) {
+            // Best-effort : l'échec de la copie interne ne doit pas faire échouer
+            // l'export utilisateur vers Downloads.
         }
     }
 

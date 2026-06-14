@@ -54,7 +54,8 @@ import fr.arsenal.rallyetripmeter.ui.theme.RallyeTripMeterTheme
 @Composable
 fun TripMeterScreen(
     state: TripDisplayState,
-    onEvent: (TripMeterUiEvent) -> Unit
+    onEvent: (TripMeterUiEvent) -> Unit,
+    onOpenTraces: () -> Unit = {}
 ) {
     val view = LocalView.current
 
@@ -73,9 +74,9 @@ fun TripMeterScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         if (isLandscape) {
-            LandscapeLayout(state = state, onEvent = onEvent)
+            LandscapeLayout(state = state, onEvent = onEvent, onOpenTraces = onOpenTraces)
         } else {
-            PortraitLayout(state = state, onEvent = onEvent)
+            PortraitLayout(state = state, onEvent = onEvent, onOpenTraces = onOpenTraces)
         }
     }
 }
@@ -83,7 +84,8 @@ fun TripMeterScreen(
 @Composable
 private fun PortraitLayout(
     state: TripDisplayState,
-    onEvent: (TripMeterUiEvent) -> Unit
+    onEvent: (TripMeterUiEvent) -> Unit,
+    onOpenTraces: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -100,7 +102,9 @@ private fun PortraitLayout(
                 isStopEnabled = state.isStopEnabled,
                 calibrationText = state.calibrationText,
                 isCalibrationActive = state.isCalibrationActive,
-                onEvent = onEvent
+                onEvent = onEvent,
+                isSessionStopped = state.sessionStatus == UiSessionStatus.Stopped,
+                onOpenTraces = onOpenTraces
             )
 
             TripValueCard(
@@ -164,7 +168,8 @@ private fun PortraitLayout(
 @Composable
 private fun LandscapeLayout(
     state: TripDisplayState,
-    onEvent: (TripMeterUiEvent) -> Unit
+    onEvent: (TripMeterUiEvent) -> Unit,
+    onOpenTraces: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -178,7 +183,9 @@ private fun LandscapeLayout(
             isStopEnabled = state.isStopEnabled,
             calibrationText = state.calibrationText,
             isCalibrationActive = state.isCalibrationActive,
-            onEvent = onEvent
+            onEvent = onEvent,
+            isSessionStopped = state.sessionStatus == UiSessionStatus.Stopped,
+            onOpenTraces = onOpenTraces
         )
 
         Row(
@@ -510,7 +517,9 @@ private fun OptionsMenu(
     isStopEnabled: Boolean,
     calibrationText: String,
     isCalibrationActive: Boolean,
-    onEvent: (TripMeterUiEvent) -> Unit
+    onEvent: (TripMeterUiEvent) -> Unit,
+    isSessionStopped: Boolean = false,
+    onOpenTraces: () -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
     var showResetTotalConfirmation by remember { mutableStateOf(false) }
@@ -580,6 +589,17 @@ private fun OptionsMenu(
                         expanded = false
                         showCalibrationDialog = true
                     }
+                )
+
+                DropdownMenuItem(
+                    text = { Text("Traces") },
+                    onClick = {
+                        expanded = false
+                        onOpenTraces()
+                    },
+                    // Garde-fou : accessible uniquement session arrêtée. La relecture
+                    // est strictement a posteriori (aucune carte en session active).
+                    enabled = isSessionStopped
                 )
             }
         }
