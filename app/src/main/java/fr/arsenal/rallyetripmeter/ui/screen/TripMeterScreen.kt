@@ -1,5 +1,6 @@
 package fr.arsenal.rallyetripmeter.ui.screen
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -8,13 +9,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -33,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -62,39 +67,147 @@ fun TripMeterScreen(
         }
     }
 
+    val isLandscape = LocalConfiguration.current.orientation ==
+        Configuration.ORIENTATION_LANDSCAPE
+
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.background
     ) {
+        if (isLandscape) {
+            LandscapeLayout(state = state, onEvent = onEvent)
+        } else {
+            PortraitLayout(state = state, onEvent = onEvent)
+        }
+    }
+}
+
+@Composable
+private fun PortraitLayout(
+    state: TripDisplayState,
+    onEvent: (TripMeterUiEvent) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(WindowInsets.statusBars.asPaddingValues())
+            .padding(WindowInsets.navigationBars.asPaddingValues())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(WindowInsets.statusBars.asPaddingValues())
-                .padding(WindowInsets.navigationBars.asPaddingValues())
-                .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            OptionsMenu(
+                isStopEnabled = state.isStopEnabled,
+                calibrationText = state.calibrationText,
+                isCalibrationActive = state.isCalibrationActive,
+                onEvent = onEvent
+            )
+
+            TripValueCard(
+                label = "PARTIEL",
+                value = state.partialDistanceText,
+                emphasis = TripValueEmphasis.Primary,
+                onClick = if (state.arePartialControlsEnabled) {
+                    { onEvent(TripMeterUiEvent.ResetPartial) }
+                } else {
+                    null
+                }
+            )
+
+            TripValueCard(
+                label = "TOTAL",
+                value = state.totalDistanceText,
+                emphasis = TripValueEmphasis.Secondary
+            )
+
+            TripValueCard(
+                label = "VITESSE",
+                value = state.speedText,
+                emphasis = TripValueEmphasis.Tertiary
+            )
+
+            StatusBar(
+                gpsStatus = state.gpsStatusText,
+                gpsAccuracy = state.gpsAccuracyText,
+                sessionStatus = state.sessionStatusText,
+                locationPermissionStatus = state.locationPermissionStatusText
+            )
+        }
+
+        Column(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            PartialCorrectionControls(
+                enabled = state.arePartialControlsEnabled,
+                onEvent = onEvent
+            )
+
+            SessionControls(
+                sessionActionLabel = state.sessionActionText,
+                onEvent = onEvent
+            )
+        }
+    }
+}
+
+/*
+ * Disposition paysage (voiture, téléphone à l'horizontale).
+ *
+ * Objectif d'ergonomie : le PARTIEL — instrument de travail de la navigation au
+ * roadbook — occupe une grande colonne gauche, lisible en un regard. La colonne
+ * droite regroupe le secondaire (TOTAL, VITESSE, statut) et les commandes
+ * (corrections du partiel, action de session) à portée du pouce. Aucune carte,
+ * aucune aide à la navigation : strictement les mêmes informations et commandes
+ * qu'en portrait, réagencées. La colonne droite défile si la hauteur manque.
+ */
+@Composable
+private fun LandscapeLayout(
+    state: TripDisplayState,
+    onEvent: (TripMeterUiEvent) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(WindowInsets.statusBars.asPaddingValues())
+            .padding(WindowInsets.navigationBars.asPaddingValues())
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        OptionsMenu(
+            isStopEnabled = state.isStopEnabled,
+            calibrationText = state.calibrationText,
+            isCalibrationActive = state.isCalibrationActive,
+            onEvent = onEvent
+        )
+
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Colonne gauche : PARTIEL géant, pleine hauteur.
+            TripValueCard(
+                label = "PARTIEL",
+                value = state.partialDistanceText,
+                emphasis = TripValueEmphasis.Primary,
+                onClick = if (state.arePartialControlsEnabled) {
+                    { onEvent(TripMeterUiEvent.ResetPartial) }
+                } else {
+                    null
+                },
+                modifier = Modifier.weight(1.5f),
+                fillHeight = true
+            )
+
+            // Colonne droite : secondaire + commandes, défilable si trop court.
             Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OptionsMenu(
-                    isStopEnabled = state.isStopEnabled,
-                    calibrationText = state.calibrationText,
-                    isCalibrationActive = state.isCalibrationActive,
-                    onEvent = onEvent
-                )
-
-                TripValueCard(
-                    label = "PARTIEL",
-                    value = state.partialDistanceText,
-                    emphasis = TripValueEmphasis.Primary,
-                    onClick = if (state.arePartialControlsEnabled) {
-                        { onEvent(TripMeterUiEvent.ResetPartial) }
-                    } else {
-                        null
-                    }
-                )
-
                 TripValueCard(
                     label = "TOTAL",
                     value = state.totalDistanceText,
@@ -113,11 +226,7 @@ fun TripMeterScreen(
                     sessionStatus = state.sessionStatusText,
                     locationPermissionStatus = state.locationPermissionStatusText
                 )
-            }
 
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
                 PartialCorrectionControls(
                     enabled = state.arePartialControlsEnabled,
                     onEvent = onEvent
@@ -137,7 +246,9 @@ private fun TripValueCard(
     label: String,
     value: String,
     emphasis: TripValueEmphasis,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    modifier: Modifier = Modifier,
+    fillHeight: Boolean = false
 ) {
     val valueStyle = when (emphasis) {
         TripValueEmphasis.Primary -> MaterialTheme.typography.displayLarge
@@ -152,9 +263,15 @@ private fun TripValueCard(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
-            .height(cardHeight)
+            .then(
+                if (fillHeight) {
+                    Modifier.fillMaxHeight()
+                } else {
+                    Modifier.height(cardHeight)
+                }
+            )
             .then(
                 if (onClick != null) {
                     Modifier.clickable { onClick() }
@@ -548,6 +665,17 @@ private fun previewTripState(): TripState {
 @Preview(showBackground = true)
 @Composable
 private fun TripMeterScreenPreview() {
+    RallyeTripMeterTheme {
+        TripMeterScreen(
+            state = previewTripState().toTripDisplayState(),
+            onEvent = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 740, heightDp = 360)
+@Composable
+private fun TripMeterScreenLandscapePreview() {
     RallyeTripMeterTheme {
         TripMeterScreen(
             state = previewTripState().toTripDisplayState(),
