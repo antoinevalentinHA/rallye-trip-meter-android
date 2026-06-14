@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import fr.arsenal.rallyetripmeter.android.diag.GpxExporter
 import fr.arsenal.rallyetripmeter.android.diag.TickLogExporter
 import fr.arsenal.rallyetripmeter.android.diag.TickLogSessionFactory
 import fr.arsenal.rallyetripmeter.android.diag.TickLogSinkHolder
@@ -92,6 +93,9 @@ class TripMeterForegroundService : Service() {
         TickLogSinkHolder.clearSessionSink()?.let { sessionSink ->
             sessionSink.close()
             TickLogExporter.exportToDownloads(applicationContext, sessionSink.file)
+            // Trace GPX a posteriori : dérivée du JSONL de session déjà écrit,
+            // produite uniquement à l'arrêt (jamais pendant une session active).
+            GpxExporter.exportSessionTrace(applicationContext, sessionSink.file)
         }
         LocationEngineHolder.getEngine(applicationContext).stop()
         stopForeground(STOP_FOREGROUND_REMOVE)
