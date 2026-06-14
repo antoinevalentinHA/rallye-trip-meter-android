@@ -283,7 +283,6 @@ private fun TripValueCard(
         TripValueEmphasis.Tertiary -> 96.dp
     }
 
-    val labelAlign = if (compact) Alignment.CenterStart else Alignment.TopStart
     val innerVerticalPadding = if (compact) 8.dp else 14.dp
 
     Box(
@@ -309,22 +308,51 @@ private fun TripValueCard(
             )
             .padding(horizontal = 20.dp, vertical = innerVerticalPadding)
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.align(labelAlign)
-        )
+        if (compact) {
+            // Compact (paysage TOTAL/VITESSE) : label en haut, valeur centrée
+            // dans l'espace restant — une Column évite les deux alignements
+            // concurrents du Box qui faisaient se chevaucher label et valeur.
+            Column(modifier = Modifier.fillMaxSize()) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
 
-        Text(
-            text = value,
-            style = valueStyle,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.align(Alignment.Center)
-        )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = value,
+                        style = valueStyle,
+                        fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        } else {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.align(Alignment.TopStart)
+            )
+
+            Text(
+                text = value,
+                style = valueStyle,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
     }
 }
 
