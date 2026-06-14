@@ -2,7 +2,7 @@
 
 > **Nature** : document de clôture, non normatif. Il consigne l'étape A de P5.c-3
 > (correction basse vitesse). **Aucun code, test, JSONL ou seuil modifié par ce
-> document.** La clôture est **conditionnée** à la validation verte (voir §4).
+> document.** La clôture est **actée** : la validation verte est acquise (voir §4).
 
 ## 1. Contexte
 
@@ -53,16 +53,16 @@ poussé ; confirmation autoritative = exécution Gradle / CI, §4.)
   - `./gradlew :app:testDebugUnitTest`
   - `./gradlew assembleDebug`
   - `git diff --check` ; `git status --porcelain`
-- **Statut tests locaux** : **non exécutés dans l'environnement de préparation**
-  (Gradle indisponible hors réseau Maven/Google). À confirmer par le mainteneur.
-- **Statut CI GitHub Actions** : **non vérifié** — l'API GitHub a renvoyé
-  HTTP 403 (limite de débit) depuis cet environnement. **Aucun statut vert n'est
-  affirmé ici.** À confirmer sur la page Actions du dépôt pour le commit `5e0d8f3`.
+- **Statut tests locaux** : **OK** — `./gradlew :app:testDebugUnitTest` et
+  `./gradlew assembleDebug` exécutés verts par le mainteneur en fin de session
+  (validation côté poste outillé, hors environnement de préparation).
+- **Statut CI GitHub Actions** : **verte** — workflow `android-ci.yml`
+  (`testDebugUnitTest` + `assembleDebug`) au vert pour le HEAD de clôture `6cfadf6`.
 - **Vérifications statiques faites lors de la préparation** : périmètre (aucun JSONL,
   aucun golden), `git diff --check` propre, `git apply --check` OK, accolades et sites
   d'appel cohérents.
 
-> **La clôture n'est effective qu'une fois ces validations confirmées vertes.**
+> **Ces validations étant vertes (Gradle local + CI), la clôture est effective.**
 
 ## 5. Garanties conservées
 
@@ -86,9 +86,9 @@ poussé ; confirmation autoritative = exécution Gradle / CI, §4.)
 
 ## 7. Verdict
 
-- **P5.c-3 étape A est clôturable si tests/CI verts** (§4). En l'état, la validation
-  autoritative reste **à confirmer**.
-- Sous cette réserve, la machine GPS est désormais **plus équilibrée** :
+- **P5.c-3 étape A est clôturée** : tests locaux et CI verts (§4). La validation
+  autoritative est **acquise**.
+- Validation acquise, la machine GPS est désormais **plus équilibrée** :
   - **arrêt tenu** (0 m) ;
   - **route tenue** (−1,4 %) ;
   - **urbain surveillé** (−2,6 %) ;
@@ -104,4 +104,4 @@ poussé ; confirmation autoritative = exécution Gradle / CI, §4.)
 ---
 
 Clôture documentaire P5.c-3 étape A. Aucun code, test, JSONL ou seuil modifié ;
-validation autoritative (Gradle/CI) à confirmer par le mainteneur.
+validation autoritative (Gradle local + CI) acquise pour le HEAD de clôture `6cfadf6`.
