@@ -50,6 +50,7 @@ Plus récent en haut.
 
 | Date | Sujet | Document |
 |---|---|---|
+| 2026-06-15 | Capture marche lente (réf. 784 m, post-P5.c-3/P6.b) | [`capture_marche_lente_20260615_ref_784m.md`](capture_marche_lente_20260615_ref_784m.md) |
 | 2026-06-13 | Capture marche lente (réf. 533 m) | [`capture_marche_lente_P4_2_2026_06_13_ref_533m.md`](capture_marche_lente_P4_2_2026_06_13_ref_533m.md) |
 | 2026-06-12 | Capture urbaine (odomètre 8,20 km) | [`capture_urbain_P4_2_2026_06_12_odom_8_20km.md`](capture_urbain_P4_2_2026_06_12_odom_8_20km.md) |
 | 2026-06-12 | Préparation capture mouvement (P4-machine) | [`preparation_capture_mouvement_P4_machine_2026_06_12.md`](preparation_capture_mouvement_P4_machine_2026_06_12.md) |
