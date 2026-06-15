@@ -34,6 +34,9 @@ terrain finale non encore faite.
 
 - **P6.a** — campagne terrain / validation réelle (transformer des captures
   référencées en régressions permanentes ; vérifier M1–M5).
+- **Batterie de tests filtre T1–T10 + M4 runtime** (synthétiques, déterministes) :
+  spécifiée dans [`plan/tests_filtre_specification_T1_T10_M4_2026_06_15.md`](plan/tests_filtre_specification_T1_T10_M4_2026_06_15.md),
+  pas encore implémentée.
 - **P6.c** — doctrine de clôture du filtre, une fois les données terrain disponibles.
 
 ## Prochains jalons possibles
