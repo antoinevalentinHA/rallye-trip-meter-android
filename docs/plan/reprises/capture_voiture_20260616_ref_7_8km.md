@@ -8,91 +8,95 @@
 
 > **Nature** : fiche de métadonnées terrain, non normative. Elle conserve les
 > informations d'une capture de **trajet voiture référencé** (régime routier/urbain
-> mixte), réalisée le 2026-06-16. Elle complète la capture voiture du même ordre de
-> grandeur réalisée la veille ([réf. 7,8 km du 2026-06-15](capture_voiture_20260615_ref_7_8km.md)).
+> mixte, agglomération bordelaise), réalisée le 2026-06-16.
 
-> **État d'intégration** : la paire de traces cible **est présente dans le dépôt**
-> (`app/src/test/resources/replay/real_urbain_voiture_20260616_ref_7_8km.jsonl` +
-> `.gpx`) et a été **réellement relue** ; les champs ci-dessous sont renseignés
-> depuis le JSONL, pas de mémoire. Le `total_m` final est la mesure enregistrée par
-> l'appareil. **Données brutes conservées telles quelles, sans correction.**
+> **Particularité — trajet en deux segments (pause au milieu)** : une **pause** a
+> été faite au milieu du trajet, ce qui a produit **deux paires de fichiers** de
+> log consécutives. Les deux segments se raccordent exactement (cf. §« Raccordement »)
+> et reconstituent le trajet complet de `total_m = 0` à `total_m ≈ 7706 m`.
+
+> **État d'intégration** : les **quatre** fichiers cible sont présents dans le dépôt
+> et ont été **réellement relus** ; les champs ci-dessous sont renseignés depuis les
+> JSONL, pas de mémoire. **Données brutes conservées telles quelles, sans correction.**
 
 ## Métadonnées terrain
 
 | Champ | Valeur |
 |---|---|
-| Fichier replay (cible) | `app/src/test/resources/replay/real_urbain_voiture_20260616_ref_7_8km.jsonl` |
-| Trace GPX associée (brute, inerte aux tests) | `app/src/test/resources/replay/real_urbain_voiture_20260616_ref_7_8km.gpx` |
-| Fichier source Android | `gpslog_20260616_095554.jsonl` / `.gpx` (`/storage/emulated/0/Download/gpslogs/`) |
+| Segment 1 (avant pause) — replay | `app/src/test/resources/replay/real_urbain_voiture_20260616_ref_7_8km_seg1.jsonl` |
+| Segment 1 — GPX brut (inerte aux tests) | `…/real_urbain_voiture_20260616_ref_7_8km_seg1.gpx` |
+| Segment 2 (après pause) — replay | `…/real_urbain_voiture_20260616_ref_7_8km_seg2.jsonl` |
+| Segment 2 — GPX brut (inerte aux tests) | `…/real_urbain_voiture_20260616_ref_7_8km_seg2.gpx` |
+| Fichiers source Android | `gpslog_20260616_094413.{jsonl,gpx}` (seg1) · `gpslog_20260616_095554.{jsonl,gpx}` (seg2) — `/storage/emulated/0/Download/gpslogs/` |
 | Date | 2026-06-16 |
-| Type de trajet | voiture (routier/urbain mixte, agglomération bordelaise) |
-| Distance de référence (compteur) | **7,8 km** (compteur de trajet voiture, Audi) — référence terrain pratique, **pas une vérité métrologique** |
-| Distance affichée par le Trip Meter | **7,71 km** (lecture utilisateur en fin de session) |
-| Écart observé (utilisateur) | **≈ −90 m**, soit **≈ −1,15 %** (7,71 km vs 7,8 km) |
+| Type de trajet | voiture (routier/urbain mixte, agglomération bordelaise), **avec une pause au milieu** |
+| Distance de référence (compteur) | **7,8 km** (compteur de trajet voiture, Audi) — référence terrain pratique, **pas une vérité métrologique absolue** |
+| Distance affichée par le Trip Meter (fin) | **7,71 km** (lecture utilisateur) |
+| Écart observé | **≈ −90 m / −1,15 %** (lecture 7,71 km) ; **−94 m / −1,20 %** sur le `total_m` exact (7706 m) |
 | Moteur actif à la capture | HEAD courant (post-P5.c-3 / P6.b) |
 | Calibration | **1.0** (neutre — mesure brute ; `commit` du meta = `"1.0"`) |
 | Appareil | Pixel 10 Pro Fold |
-| Session proprement clôturée | **oui** (dernier tick `session_state = Running`, export JSONL + GPX produits) |
-| Contexte | trajet réel pour enrichir le corpus de traces de référence terrain en régime de roulage. |
+| Sessions proprement clôturées | **oui** (export JSONL + GPX produits pour chaque segment) |
 
-## Mesures (lues dans le replay intégré)
+## Mesures (lues dans les replays intégrés)
 
-| Mesure | Valeur |
+| Mesure | Segment 1 (avant pause) | Segment 2 (après pause) | Trajet complet |
+|---|---|---|---|
+| Fenêtre samples (UTC) | 07:44:12Z → 07:52:46Z | 07:52:46Z → 08:05:43Z | 07:44:12Z → 08:05:43Z |
+| Durée fenêtre | ~8,6 min (514 s) | ~12,9 min (777 s) | ~21,5 min (hors durée de pause) |
+| Ticks | 514 | 590 | 1104 |
+| `total_m` début → fin | **0 → 2231,8 m** | **2231,8 → 7706,4 m** | **0 → 7706,4 m** |
+| Σ `delta_total_m` | 2231,8 m | 5474,6 m | **7706,4 m** (7,71 km) |
+| Vitesse max | ~59,7 km/h | ~62,0 km/h | ~62 km/h |
+| Verdicts | `ACCEPTED_SEGMENT` 256 · `REJECTED_STATIONARY` 243 · `IGNORED_DUPLICATE` 7 · `REJECTED_NOISE` 6 · `IGNORED_NO_ANCHOR` 1 · `IGNORED_NO_SAMPLE` 1 | `ACCEPTED_SEGMENT` 497 · `REJECTED_STATIONARY` 87 · `IGNORED_DUPLICATE` 4 · `REJECTED_NOISE` 2 | — |
+| Σ verdicts = ticks | **oui** (514) | **oui** (590) | — |
+
+> Le segment 1 est nettement plus « arrêté » que le segment 2 (243 verdicts
+> `REJECTED_STATIONARY` sur 514, ~47 %, contre ~15 % en seg2) : départ urbain dense.
+> Les deux premiers ticks de seg1 sont `IGNORED_NO_SAMPLE` / `IGNORED_NO_ANCHOR`
+> (initialisation de session, aucune ancre encore disponible) — normal.
+
+## Raccordement des deux segments (vérifié, exact)
+
+Au point de jonction (la pause), seg1.fin et seg2.début coïncident **au bit près** :
+
+| Grandeur au raccord | Valeur (identique des deux côtés) |
 |---|---|
-| Fenêtre couverte (samples) | 2026-06-16T07:52:46Z → 08:05:43Z (UTC) |
-| Durée de la fenêtre journalisée | ~12,9 min (777 s d'horodatage échantillon ; ~590 s d'horloge app) |
-| Ticks totaux | 590 |
-| Points GPX | 590 (un par tick, dérivés du JSONL) |
-| Vitesse max (samples) | ~62 km/h (17,23 m/s) |
-| `total_m` au **premier** tick journalisé | **2231 m** (2,23 km) — voir §« Réserve de lecture » |
-| `total_m` au **dernier** tick (= total Trip Meter) | **7706 m** (7,71 km) |
-| Distance ajoutée **dans la fenêtre journalisée** (Σ `delta_total_m`) | ~5475 m (5,47 km) |
-| Longueur brute **dans la fenêtre** (somme haversine, tous trkpt) | ~5512 m (5,51 km) |
-| Verdicts | `ACCEPTED_SEGMENT` 497 · `REJECTED_STATIONARY` 87 · `IGNORED_DUPLICATE` 4 · `REJECTED_NOISE` 2 |
+| `total_m` | `2231.783833286014` |
+| `(lat, lon)` | `(44.86005008686334, -0.609057666733861)` |
+| `sample_ts_ms` | `1781596366000` (07:52:46Z) |
 
-## Écarts vs référence (7,8 km) — au niveau du **total de session**
+Conséquence : **le compteur de distance est continu à travers la pause** (le
+`total_m` est persisté), et la somme des deux segments restitue exactement le total
+final. Le démarrage du seg2 à 2231 m — qui, pris isolément, ressemblait à une fenêtre
+amputée — s'explique **entièrement** par la pause : ce n'est pas un trou
+d'observabilité, c'est le second des deux fichiers de log du trajet.
+
+## Écart vs référence (7,8 km) — au niveau du **trajet complet**
 
 | Grandeur | Valeur | Écart vs 7,8 km |
 |---|---|---|
-| **Trip Meter (lecture utilisateur)** | 7,71 km | **≈ −1,15 %** (≈ −90 m) |
-| **Trip Meter (`total_m` final exact, JSONL)** | 7,706 km | **−1,2 %** (−94 m) |
+| Trip Meter (lecture utilisateur) | 7,71 km | **≈ −1,15 %** (≈ −90 m) |
+| Trip Meter (`total_m` final exact) | 7,706 km | **−1,20 %** (−94 m) |
 
-> Les deux lignes décrivent la **même grandeur** (le total affiché en fin de
-> course), à l'arrondi près : 7,71 km est la lecture à l'écran, 7706 m la valeur
-> exacte enregistrée dans le JSONL. L'écart de −1,15 % / −1,2 % se situe **dans
-> l'incertitude propre du compteur voiture**.
-
-## Réserve de lecture — fenêtre journalisée partielle (important)
-
-Cette capture présente une particularité à ne pas masquer :
-
-- Le `total_m` ne part **pas de 0** dans le fichier : le **premier** tick journalisé
-  porte déjà `total_m ≈ 2231 m`. Le fichier (JSONL **et** GPX, qui couvrent la même
-  fenêtre 07:52:46Z→08:05:43Z) ne contient donc **que le dernier segment** de
-  l'accumulation, de ~2,23 km à ~7,71 km, soit ~5,5 km parcourus sur ~12,9 min.
-- **Conséquence directe** : la longueur de la trace *contenue dans le fichier*
-  (~5,5 km, que ce soit par la somme des `delta_total_m` ou par la somme haversine
-  du GPX) **n'est pas** la distance du trajet. La distance du trajet (7,71 km) n'est
-  lisible que via le `total_m` **final**, qui est un compteur courant transporté à
-  l'entrée et à la sortie de la fenêtre.
-- C'est pourquoi l'écart vs 7,8 km se raisonne **au niveau du total de session**
-  (`total_m` final), et **non** au niveau de la longueur du segment journalisé.
-- La cause exacte du démarrage à 2231 m (journalisation d'observabilité démarrée
-  après le début de l'accumulation) n'est pas tranchée par cette fiche et **n'est
-  pas une conclusion algorithmique** : c'est une simple note d'intégrité de la donnée.
+Même grandeur (le total affiché en fin de course), à l'arrondi près. L'écart se
+situe **dans l'incertitude propre du compteur voiture** (un odomètre auto se trompe
+couramment de +1 à +3 %) : c'est un **bon point terrain cohérent** — et cohérent
+avec la capture de la veille (−0,7 %) — **pas une preuve métrologique absolue**.
 
 ## Rôle dans le corpus
 
-Intégrée comme régression **structurelle** : auto-découverte et rejouée par
-`RealLogReplayTest` (invariant « un verdict par tick », vérifié ici :
-Σ verdicts = 590 = nombre de ticks).
+Les deux JSONL sont intégrés comme régressions **structurelles** : auto-découverts
+et rejoués **indépendamment** par `RealLogReplayTest` (invariant « un verdict par
+tick », vérifié : 514 et 590). Le harnais ne recolle pas les segments ; la
+reconstitution du trajet complet (0 → 7,71 km) est **documentaire** (cette fiche),
+pas assertée par un test.
 
-**Aucune borne chiffrée** n'est ajoutée à `LowSpeedRegressionReplayTest` : c'est
-hors périmètre, et ce serait par ailleurs **inapproprié** pour cette trace, dont la
-fenêtre journalisée ne part pas de 0 (la longueur du segment ≠ distance de trajet).
-L'intégration reste donc **documentaire + données**, sans assertion de distance.
+**Aucune borne chiffrée** n'est ajoutée à `LowSpeedRegressionReplayTest` (hors
+périmètre). L'intégration reste **documentaire + données**, sans assertion de
+distance.
 
-La trace GPX est jointe comme **artefact brut** (souvenir/historique) ; elle n'est
-**lue par aucun test** (le harnais de replay ne sélectionne que les `real_*.jsonl`).
-Elle est strictement le compagnon a posteriori du JSONL, conforme à l'export GPX
-clôturé le [2026-06-14](cloture_export_gpx_2026_06_14.md).
+Les deux GPX sont joints comme **artefacts bruts** (souvenir/historique) ; ils ne
+sont **lus par aucun test** (le harnais ne sélectionne que les `real_*.jsonl`),
+conformément à l'export GPX clôturé le
+[2026-06-14](cloture_export_gpx_2026_06_14.md).
